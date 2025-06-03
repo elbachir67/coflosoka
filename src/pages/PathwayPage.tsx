@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { api } from "../config/api";
+import { Pathway, ResourceType, PathwayResource } from "../types";
 import {
   Clock,
   CheckCircle,
@@ -23,7 +24,6 @@ import {
   Brain,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
-import { Pathway, ResourceType, PathwayResource } from "../types";
 import AdaptiveRecommendations from "../components/AdaptiveRecommendations";
 import LearningProgressChart from "../components/LearningProgressChart";
 
@@ -72,7 +72,14 @@ function PathwayPage() {
         }
 
         const data = await response.json();
-        setPathway(data);
+
+        // Ensure adaptiveRecommendations is always an array
+        const pathwayData = {
+          ...data,
+          adaptiveRecommendations: data.adaptiveRecommendations || [],
+        };
+
+        setPathway(pathwayData);
 
         // Fetch progress data for the chart
         const progressResponse = await fetch(
@@ -155,26 +162,34 @@ function PathwayPage() {
             Authorization: `Bearer ${user.token}`,
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({
-            action,
-          }),
+          body: JSON.stringify({ action }),
         }
       );
 
       if (!response.ok) {
-        throw new Error("Erreur lors de la mise à jour de la recommandation");
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Erreur lors de la mise à jour");
       }
 
       const updatedPathway = await response.json();
-      setPathway(updatedPathway);
 
-      if (action === "start") {
-        toast.success("Recommandation démarrée");
-      } else if (action === "skip") {
-        toast.success("Recommandation ignorée");
-      } else {
-        toast.success("Recommandation complétée");
-      }
+      // Update the pathway state with the new recommendations
+      setPathway(prev => {
+        if (!prev) return updatedPathway;
+
+        return {
+          ...prev,
+          adaptiveRecommendations: updatedPathway.adaptiveRecommendations || [],
+        };
+      });
+
+      const actionMessages = {
+        start: "Recommandation démarrée",
+        skip: "Recommandation ignorée",
+        complete: "Recommandation complétée",
+      };
+
+      toast.success(actionMessages[action]);
     } catch (error) {
       console.error("Error:", error);
       toast.error("Erreur lors de la mise à jour de la recommandation");
@@ -209,74 +224,6 @@ function PathwayPage() {
       toast.error("Erreur lors de la réinitialisation du quiz");
     }
   };
-
-  const WelcomeModal = () => (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-gray-900 rounded-xl p-8 max-w-md w-full mx-4">
-        <div className="text-center mb-6">
-          <div className="w-16 h-16 bg-purple-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Rocket className="w-8 h-8 text-purple-400" />
-          </div>
-          <h3 className="text-2xl font-bold text-gray-100 mb-2">
-            Bienvenue dans votre parcours !
-          </h3>
-          <p className="text-gray-400 mb-6">
-            Voici comment progresser dans votre apprentissage :
-          </p>
-        </div>
-
-        <div className="space-y-4 mb-6">
-          <div className="flex items-start space-x-3 p-4 bg-gray-800/50 rounded-lg">
-            <div className="p-2 bg-purple-500/20 rounded-lg">
-              <BookOpen className="w-5 h-5 text-purple-400" />
-            </div>
-            <div>
-              <h4 className="font-medium text-gray-200">
-                1. Consultez les ressources
-              </h4>
-              <p className="text-sm text-gray-400">
-                Étudiez le contenu de chaque module dans l'ordre
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-start space-x-3 p-4 bg-gray-800/50 rounded-lg">
-            <div className="p-2 bg-green-500/20 rounded-lg">
-              <CheckCircle className="w-5 h-5 text-green-400" />
-            </div>
-            <div>
-              <h4 className="font-medium text-gray-200">
-                2. Marquez votre progression
-              </h4>
-              <p className="text-sm text-gray-400">
-                Indiquez les ressources terminées pour suivre votre avancement
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-start space-x-3 p-4 bg-gray-800/50 rounded-lg">
-            <div className="p-2 bg-blue-500/20 rounded-lg">
-              <Brain className="w-5 h-5 text-blue-400" />
-            </div>
-            <div>
-              <h4 className="font-medium text-gray-200">3. Passez les quiz</h4>
-              <p className="text-sm text-gray-400">
-                Validez vos connaissances à la fin de chaque module
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <button
-          onClick={() => setShowWelcomeModal(false)}
-          className="w-full py-3 px-4 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors flex items-center justify-center"
-        >
-          Commencer l'apprentissage
-          <ArrowRight className="w-5 h-5 ml-2" />
-        </button>
-      </div>
-    </div>
-  );
 
   if (loading) {
     return (
@@ -488,17 +435,16 @@ function PathwayPage() {
         </div>
 
         {/* Recommandations adaptatives */}
-        {pathway.adaptiveRecommendations?.length > 0 && (
-          <div className="mt-8">
-            <AdaptiveRecommendations
-              recommendations={pathway.adaptiveRecommendations}
-              onRecommendationAction={handleRecommendationAction}
-            />
-          </div>
-        )}
+        {pathway.adaptiveRecommendations &&
+          pathway.adaptiveRecommendations.length > 0 && (
+            <div className="mt-8">
+              <AdaptiveRecommendations
+                recommendations={pathway.adaptiveRecommendations}
+                onRecommendationAction={handleRecommendationAction}
+              />
+            </div>
+          )}
       </div>
-
-      {showWelcomeModal && pathway && <WelcomeModal />}
     </div>
   );
 }

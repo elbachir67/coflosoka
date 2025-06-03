@@ -32,11 +32,15 @@ router.post("/generate", auth, async (req, res) => {
         .json({ error: "Un parcours existe déjà pour cet objectif" });
     }
 
-    // Generate pathway using the service
-    const pathway = await PathwayGenerationService.generatePathway(
+    // Generate pathway data using the service
+    const pathwayData = await PathwayGenerationService.generatePathway(
       userId,
       goalId
     );
+
+    // Create new pathway document
+    const pathway = new Pathway(pathwayData);
+    await pathway.save();
 
     // Populate the goal details
     await pathway.populate("goalId");
@@ -45,6 +49,77 @@ router.post("/generate", auth, async (req, res) => {
   } catch (error) {
     logger.error("Error generating pathway:", error);
     res.status(500).json({ error: "Erreur lors de la génération du parcours" });
+  }
+});
+
+// Get specific pathway
+router.get("/:pathwayId", auth, async (req, res) => {
+  try {
+    const { pathwayId } = req.params;
+    const userId = req.user.id;
+
+    // Find pathway and populate goal details
+    const pathway = await Pathway.findOne({
+      _id: pathwayId,
+      userId,
+    }).populate("goalId");
+
+    if (!pathway) {
+      return res.status(404).json({ error: "Parcours non trouvé" });
+    }
+
+    // Ensure adaptiveRecommendations is always an array
+    const pathwayData = {
+      ...pathway.toObject(),
+      adaptiveRecommendations: pathway.adaptiveRecommendations || [],
+    };
+
+    res.json(pathwayData);
+  } catch (error) {
+    logger.error("Error fetching pathway:", error);
+    res.status(500).json({ error: "Erreur lors du chargement du parcours" });
+  }
+});
+
+// Update recommendation status
+router.put("/:pathwayId/recommendations/:index", auth, async (req, res) => {
+  try {
+    const { pathwayId, index } = req.params;
+    const { action } = req.body;
+    const userId = req.user.id;
+
+    // Validate action
+    if (!["start", "skip", "complete"].includes(action)) {
+      return res.status(400).json({ error: "Action invalide" });
+    }
+
+    // Find pathway
+    const pathway = await Pathway.findOne({ _id: pathwayId, userId });
+    if (!pathway) {
+      return res.status(404).json({ error: "Parcours non trouvé" });
+    }
+
+    // Update recommendation status
+    if (!pathway.adaptiveRecommendations?.[index]) {
+      return res.status(404).json({ error: "Recommandation non trouvée" });
+    }
+
+    pathway.adaptiveRecommendations[index].status =
+      action === "start"
+        ? "pending"
+        : action === "skip"
+        ? "skipped"
+        : "completed";
+
+    await pathway.save();
+    await pathway.populate("goalId");
+
+    res.json(pathway);
+  } catch (error) {
+    logger.error("Error updating recommendation:", error);
+    res
+      .status(500)
+      .json({ error: "Erreur lors de la mise à jour de la recommandation" });
   }
 });
 
@@ -130,91 +205,6 @@ router.get("/user/dashboard", auth, async (req, res) => {
     res
       .status(500)
       .json({ error: "Erreur lors du chargement du tableau de bord" });
-  }
-});
-
-// Get specific pathway
-router.get("/:pathwayId", auth, async (req, res) => {
-  try {
-    const pathway = await Pathway.findOne({
-      _id: req.params.pathwayId,
-      userId: req.user.id,
-    }).populate("goalId");
-
-    if (!pathway) {
-      return res.status(404).json({ error: "Parcours non trouvé" });
-    }
-
-    res.json(pathway);
-  } catch (error) {
-    logger.error("Error fetching pathway:", error);
-    res.status(500).json({ error: "Erreur lors du chargement du parcours" });
-  }
-});
-
-// Update module progress
-router.put("/:pathwayId/modules/:moduleIndex", auth, async (req, res) => {
-  try {
-    const { pathwayId, moduleIndex } = req.params;
-    const { resourceId, completed } = req.body;
-
-    const pathway = await Pathway.findOne({
-      _id: pathwayId,
-      userId: req.user.id,
-    }).populate("goalId");
-
-    if (!pathway) {
-      return res.status(404).json({ error: "Parcours non trouvé" });
-    }
-
-    // Vérifier si le module est accessible
-    if (!pathway.isModuleAccessible(parseInt(moduleIndex))) {
-      return res.status(403).json({ error: "Module non accessible" });
-    }
-
-    // Update resource completion
-    if (resourceId) {
-      const moduleProgress = pathway.moduleProgress[moduleIndex];
-      const resourceIndex = moduleProgress.resources.findIndex(
-        r => r.resourceId === resourceId
-      );
-
-      if (resourceIndex === -1) {
-        return res.status(404).json({ error: "Ressource non trouvée" });
-      }
-
-      moduleProgress.resources[resourceIndex].completed = completed;
-      moduleProgress.resources[resourceIndex].completedAt = completed
-        ? new Date()
-        : null;
-
-      // Check if all resources are completed
-      const allResourcesCompleted = moduleProgress.resources.every(
-        r => r.completed
-      );
-
-      // If all resources are completed and quiz is passed, mark module as completed
-      if (
-        allResourcesCompleted &&
-        moduleProgress.quiz.completed &&
-        moduleProgress.quiz.score >= 70
-      ) {
-        moduleProgress.completed = true;
-      }
-    }
-
-    // Update progress and unlock next module if needed
-    await pathway.updateProgress();
-
-    // Populate goal details before sending response
-    await pathway.populate("goalId");
-
-    res.json(pathway);
-  } catch (error) {
-    logger.error("Error updating module progress:", error);
-    res
-      .status(500)
-      .json({ error: "Erreur lors de la mise à jour de la progression" });
   }
 });
 
