@@ -18,19 +18,51 @@ router.get("/:id", async (req, res) => {
     }
 
     logger.info(`Fetching goal with ID: ${id}`);
-    const goal = await Goal.findById(id).populate("requiredConcepts").lean();
 
-    if (!goal) {
+    // Fetch goal without lean() first to see full document
+    const goalDoc = await Goal.findById(id).populate("requiredConcepts");
+
+    if (!goalDoc) {
       logger.warn(`Goal not found with ID: ${id}`);
       return res.status(404).json({ error: "Objectif non trouvé" });
     }
+
+    // Log the raw document
+    logger.info(`Raw goal document:`, {
+      id: goalDoc._id,
+      title: goalDoc.title,
+      hasModules: Boolean(goalDoc.modules?.length),
+      moduleCount: goalDoc.modules?.length || 0,
+    });
+
+    // Convert to lean object
+    const goal = goalDoc.toObject();
+
+    // Verify critical fields
+    if (!goal.title || !goal.modules) {
+      logger.error(`Invalid goal data for ID ${id}:`, {
+        hasTitle: Boolean(goal.title),
+        hasModules: Boolean(goal.modules),
+        goalFields: Object.keys(goal),
+      });
+      return res
+        .status(500)
+        .json({ error: "Données de l'objectif invalides ou incomplètes" });
+    }
+
+    // Log successful fetch with key data points
+    logger.info(`Successfully fetched goal ${id}:`, {
+      title: goal.title,
+      moduleCount: goal.modules.length,
+      category: goal.category,
+      level: goal.level,
+    });
 
     // Disable caching
     res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
     res.setHeader("Pragma", "no-cache");
     res.setHeader("Expires", "0");
 
-    logger.info(`Successfully fetched goal: ${id}`);
     res.json(goal);
   } catch (error) {
     logger.error("Error fetching goal:", error);

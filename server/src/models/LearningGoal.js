@@ -18,6 +18,27 @@ const prerequisiteSchema = new mongoose.Schema({
   ],
 });
 
+const resourceSchema = new mongoose.Schema({
+  title: {
+    type: String,
+    required: true,
+  },
+  url: {
+    type: String,
+    required: true,
+  },
+  type: {
+    type: String,
+    enum: ["article", "video", "course", "book", "use_case"],
+    required: true,
+    default: "article",
+  },
+  duration: {
+    type: Number,
+    required: true,
+  },
+});
+
 const moduleSchema = new mongoose.Schema({
   title: {
     type: String,
@@ -25,7 +46,7 @@ const moduleSchema = new mongoose.Schema({
   },
   description: String,
   duration: {
-    type: Number, // en heures
+    type: Number,
     required: true,
   },
   skills: [
@@ -37,25 +58,7 @@ const moduleSchema = new mongoose.Schema({
       },
     },
   ],
-  resources: [
-    {
-      title: String,
-      type: {
-        type: String,
-        enum: [
-          "video",
-          "article",
-          "book",
-          "practice",
-          "project",
-          "tutorial",
-          "course",
-        ],
-      },
-      url: String,
-      duration: Number, // en minutes
-    },
-  ],
+  resources: [resourceSchema],
   validationCriteria: [String],
 });
 
