@@ -1,100 +1,55 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { toast } from "react-hot-toast";
-import { api } from "../config/api";
-import { Goal, GoalDifficulty, ResourceType } from "../types";
 import { useAuth } from "../contexts/AuthContext";
+import { api } from "../config/api";
+import { Goal, Module, Resource, GoalDifficulty } from "../types";
 import {
   Clock,
-  GraduationCap,
-  Target,
-  BookOpen,
-  Video,
-  Code,
-  Laptop,
-  ChevronDown,
-  BrainCircuit,
-  Trophy,
-  Building,
-  DollarSign,
-  Loader2,
-  Users,
-  Star,
-  ArrowRight,
   CheckCircle,
   Calendar,
   Award,
+  Loader2,
   AlertCircle,
+  BookOpen,
+  Video,
+  GraduationCap,
+  Laptop,
+  Bot,
+  ChevronDown,
   Play,
+  ArrowRight,
+  RefreshCcw,
+  Rocket,
+  Brain,
+  Building,
+  DollarSign,
   LayoutDashboard,
+  BrainCircuit,
 } from "lucide-react";
+import { toast } from "react-hot-toast";
 
 interface ResourceTypeConfig {
   icon: typeof BookOpen;
   color: string;
   bg: string;
-  label: string;
 }
 
-const resourceTypeConfig: Record<ResourceType, ResourceTypeConfig> = {
-  article: {
-    icon: BookOpen,
-    color: "text-blue-500",
-    bg: "bg-blue-500/20",
-    label: "Article",
-  },
-  video: {
-    icon: Video,
-    color: "text-red-500",
-    bg: "bg-red-500/20",
-    label: "Vidéo",
-  },
+const resourceTypeConfig: Record<string, ResourceTypeConfig> = {
+  article: { icon: BookOpen, color: "text-blue-400", bg: "bg-blue-400/20" },
+  video: { icon: Video, color: "text-red-400", bg: "bg-red-400/20" },
   course: {
     icon: GraduationCap,
-    color: "text-green-500",
-    bg: "bg-green-500/20",
-    label: "Cours",
+    color: "text-green-400",
+    bg: "bg-green-400/20",
   },
-  book: {
-    icon: BookOpen,
-    color: "text-purple-500",
-    bg: "bg-purple-500/20",
-    label: "Livre",
-  },
-  use_case: {
-    icon: Laptop,
-    color: "text-orange-500",
-    bg: "bg-orange-500/20",
-    label: "Cas pratique",
-  },
+  book: { icon: BookOpen, color: "text-purple-400", bg: "bg-purple-400/20" },
+  use_case: { icon: Laptop, color: "text-orange-400", bg: "bg-orange-400/20" },
 };
 
-interface LevelConfig {
-  color: string;
-  bg: string;
-  border: string;
-  label: string;
-}
-
-const levelConfig: Record<GoalDifficulty, LevelConfig> = {
-  beginner: {
-    color: "text-emerald-400",
-    bg: "bg-emerald-400/10",
-    border: "border-emerald-400/20",
-    label: "Débutant",
-  },
-  intermediate: {
-    color: "text-blue-400",
-    bg: "bg-blue-400/10",
-    border: "border-blue-400/20",
-    label: "Intermédiaire",
-  },
-  advanced: {
-    color: "text-purple-400",
-    bg: "bg-purple-400/10",
-    border: "border-purple-400/20",
-    label: "Avancé",
-  },
+const levelConfig: Record<GoalDifficulty, { color: string; bg: string }> = {
+  beginner: { color: "text-green-400", bg: "bg-green-500/20" },
+  intermediate: { color: "text-blue-400", bg: "bg-blue-500/20" },
+  advanced: { color: "text-purple-400", bg: "bg-purple-500/20" },
 };
 
 function GoalDetailPage() {
@@ -213,12 +168,12 @@ function GoalDetailPage() {
     }));
   };
 
-  const SuccessModal = () => (
+  const WelcomeModal = () => (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-gray-900 rounded-xl p-8 max-w-md w-full mx-4">
         <div className="text-center mb-6">
-          <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-            <CheckCircle className="w-8 h-8 text-green-400" />
+          <div className="w-16 h-16 bg-purple-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Rocket className="w-8 h-8 text-purple-400" />
           </div>
           <h3 className="text-2xl font-bold text-gray-100 mb-2">
             Parcours généré avec succès !
@@ -304,11 +259,13 @@ function GoalDetailPage() {
                   <span
                     className={`px-4 py-2 rounded-lg text-sm font-medium ${
                       levelConfig[goal.level].bg
-                    } ${levelConfig[goal.level].color} border ${
-                      levelConfig[goal.level].border
-                    }`}
+                    } ${levelConfig[goal.level].color}`}
                   >
-                    {levelConfig[goal.level].label}
+                    {goal.level === "beginner"
+                      ? "Débutant"
+                      : goal.level === "intermediate"
+                      ? "Intermédiaire"
+                      : "Avancé"}
                   </span>
                 </div>
                 <button
@@ -369,7 +326,7 @@ function GoalDetailPage() {
         )}
 
         <div className="space-y-6">
-          {goal.modules?.map((module, index) => (
+          {goal.modules?.map((module: Module, index: number) => (
             <div key={index} className="glass-card rounded-xl p-6">
               <button
                 onClick={() => toggleModule(index)}
@@ -414,35 +371,38 @@ function GoalDetailPage() {
                       Ressources
                     </h4>
                     <div className="grid gap-4">
-                      {module.resources?.map((resource, resourceIndex) => {
-                        const typeConfig =
-                          resourceTypeConfig[resource.type as ResourceType];
-                        const Icon = typeConfig.icon;
-                        return (
-                          <a
-                            key={resourceIndex}
-                            href={resource.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center p-4 bg-gray-800/50 rounded-lg hover:bg-gray-800/70 transition-colors group"
-                          >
-                            <div
-                              className={`p-2 rounded-lg ${typeConfig.bg} mr-4 group-hover:scale-110 transition-transform`}
+                      {module.resources?.map(
+                        (resource: Resource, resourceIndex: number) => {
+                          const typeConfig = resourceTypeConfig[resource.type];
+                          const Icon = typeConfig.icon;
+                          return (
+                            <a
+                              key={resourceIndex}
+                              href={resource.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center p-4 bg-gray-800/50 rounded-lg hover:bg-gray-800/70 transition-colors group"
                             >
-                              <Icon className={`w-5 h-5 ${typeConfig.color}`} />
-                            </div>
-                            <div className="flex-1">
-                              <h5 className="text-gray-200 font-medium mb-1">
-                                {resource.title}
-                              </h5>
-                              <p className="text-sm text-gray-400">
-                                {resource.duration} minutes
-                              </p>
-                            </div>
-                            <ArrowRight className="w-5 h-5 text-gray-400 group-hover:translate-x-1 transition-transform" />
-                          </a>
-                        );
-                      })}
+                              <div
+                                className={`p-2 rounded-lg ${typeConfig.bg} mr-4 group-hover:scale-110 transition-transform`}
+                              >
+                                <Icon
+                                  className={`w-5 h-5 ${typeConfig.color}`}
+                                />
+                              </div>
+                              <div className="flex-1">
+                                <h5 className="text-gray-200 font-medium mb-1">
+                                  {resource.title}
+                                </h5>
+                                <p className="text-sm text-gray-400">
+                                  {resource.duration} minutes
+                                </p>
+                              </div>
+                              <ArrowRight className="w-5 h-5 text-gray-400 group-hover:translate-x-1 transition-transform" />
+                            </a>
+                          );
+                        }
+                      )}
                     </div>
                   </div>
 
@@ -509,7 +469,7 @@ function GoalDetailPage() {
           </div>
         )}
       </div>
-      {showSuccessModal && <SuccessModal />}
+      {showSuccessModal && <WelcomeModal />}
     </div>
   );
 }

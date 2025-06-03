@@ -1,21 +1,55 @@
-// Types for the resources
+// Resource Types
 export type ResourceType = "article" | "video" | "course" | "book" | "use_case";
-
-// Types for the niveaux de difficulté
-export type GoalDifficulty = "beginner" | "intermediate" | "advanced";
-
-// Types for the catégories de buts
 export type GoalCategory =
   | "ml"
   | "dl"
-  | "data_science"
-  | "mlops"
   | "computer_vision"
   | "nlp"
-  | "robotics"
-  | "quantum_ml";
+  | "data_science"
+  | "mlops";
+export type GoalDifficulty = "beginner" | "intermediate" | "advanced";
 
-// Interface for les messages du chat
+export interface Resource {
+  title: string;
+  url: string;
+  type: ResourceType;
+  duration: number;
+}
+
+export interface CategoryResources {
+  books?: Resource[];
+  courses?: Resource[];
+  videos?: Resource[];
+  articles?: Resource[];
+  practice?: Resource[];
+}
+
+// Fixed interface definition for AdditionalResources
+export interface AdditionalResources {
+  ml?: CategoryResources;
+  dl?: CategoryResources;
+  computer_vision?: CategoryResources;
+  nlp?: CategoryResources;
+  data_science?: CategoryResources;
+  mlops?: CategoryResources;
+}
+
+// Question and Quiz Types
+export interface Option {
+  id: string;
+  text: string;
+  isCorrect: boolean;
+}
+
+export interface Question {
+  id: string;
+  text: string;
+  options: Option[];
+  explanation: string;
+  category: string;
+  difficulty: string;
+}
+
 export interface Message {
   id: string;
   type: "user" | "bot";
@@ -24,53 +58,23 @@ export interface Message {
   component?: React.ReactNode;
 }
 
-// Interface for les compétences
-export interface Skill {
-  name: string;
-  level: string;
+// User Types
+export interface UserProfile {
+  mathLevel: GoalDifficulty;
+  programmingLevel: GoalDifficulty;
+  domain: GoalCategory;
 }
 
-// Interface for les ressources
-export interface Resource {
-  title: string;
-  type: ResourceType;
-  url: string;
-  duration: number;
-}
-
-// Interface for les opportunités de carrière
-export interface CareerOpportunity {
-  title: string;
-  description: string;
-  averageSalary: string;
-  companies: string[];
-}
-
-// Interface for la certification
-export interface Certification {
-  available: boolean;
-  name: string;
-  provider: string;
-  url: string;
-}
-
-// Interface for les modules
+// Goal Types
 export interface Module {
   title: string;
   description: string;
   duration: number;
-  skills: Skill[];
+  skills: { name: string; level: string }[];
   resources: Resource[];
   validationCriteria: string[];
 }
 
-// Interface for les prérequis
-export interface Prerequisite {
-  category: string;
-  skills: Skill[];
-}
-
-// Interface for les buts
 export interface Goal {
   _id: string;
   title: string;
@@ -78,38 +82,74 @@ export interface Goal {
   category: GoalCategory;
   level: GoalDifficulty;
   estimatedDuration: number;
-  prerequisites: Prerequisite[];
+  prerequisites: {
+    category: string;
+    skills: { name: string; level: string }[];
+  }[];
   modules: Module[];
-  careerOpportunities: CareerOpportunity[];
-  certification?: Certification;
+  careerOpportunities: {
+    title: string;
+    description: string;
+    averageSalary: string;
+    companies: string[];
+  }[];
+  certification?: {
+    available: boolean;
+    name?: string;
+    provider?: string;
+    url?: string;
+  };
   isRecommended?: boolean;
+  matchScore?: number;
 }
 
-// Types for les quiz
-export interface Question {
-  id: string;
-  text: string;
-  category: string;
-  difficulty: "basic" | "intermediate" | "advanced";
-  options: {
-    id: string;
-    text: string;
-    isCorrect: boolean;
-  }[];
-  explanation: string;
+// Pathway Types
+export interface PathwayResource {
+  resourceId: string;
+  completed: boolean;
+  completedAt?: Date;
+  type: ResourceType;
 }
 
-export interface QuizQuestion {
-  id: string;
-  text: string;
-  category: string;
-  difficulty: "basic" | "intermediate" | "advanced";
-  options: {
-    id: string;
-    text: string;
-    isCorrect: boolean;
+export interface ModuleProgress {
+  moduleIndex: number;
+  completed: boolean;
+  locked: boolean;
+  resources: PathwayResource[];
+  quiz: {
+    completed: boolean;
+    score?: number;
+    completedAt?: Date;
+  };
+}
+
+export interface Pathway {
+  _id: string;
+  userId: string;
+  goalId: Goal;
+  status: "active" | "completed" | "paused";
+  progress: number;
+  currentModule: number;
+  moduleProgress: ModuleProgress[];
+  startedAt: Date;
+  lastAccessedAt: Date;
+  estimatedCompletionDate: Date;
+  adaptiveRecommendations?: {
+    type: "resource" | "practice" | "review";
+    description: string;
+    priority: "high" | "medium" | "low";
+    status: "pending" | "completed" | "skipped";
   }[];
-  explanation: string;
+}
+
+// Quiz Types
+export interface ModuleQuiz {
+  id: string;
+  title: string;
+  description: string;
+  timeLimit: number;
+  questions: Question[];
+  passingScore: number;
 }
 
 export interface QuizResult {
@@ -125,140 +165,31 @@ export interface QuizResult {
   }[];
 }
 
-export interface ModuleQuiz {
-  id: string;
-  title: string;
-  description: string;
-  timeLimit: number;
-  questions: QuizQuestion[];
-  passingScore: number;
-}
-
-// Interface for le progrès des modules
-export interface PathwayResource {
-  resourceId: string;
-  completed: boolean;
-  completedAt?: Date;
-  type?: ResourceType;
-}
-
-export interface ModuleProgress {
-  moduleIndex: number;
-  completed: boolean;
-  resources: PathwayResource[];
-  quiz: {
-    completed: boolean;
-    score?: number;
-    completedAt?: Date;
-  };
-}
-
-// Interface for le tableau de bord de l'apprenant
-export interface LearningStats {
-  totalHoursSpent: number;
-  completedResources: number;
-  averageQuizScore: number;
-  streakDays: number;
-}
-
-export interface Milestone {
-  goalTitle: string;
-  moduleName: string;
-  dueDate: Date;
-}
-
-export interface LearnerDashboard {
-  learningStats: LearningStats;
-  activePathways: Pathway[];
-  completedPathways: Pathway[];
-  nextMilestones: Milestone[];
-}
-
-// Interface for le parcours d'apprentissage
-export interface Pathway {
-  _id: string;
-  userId: string;
-  goalId: Goal;
-  status: "active" | "completed" | "paused";
-  progress: number;
-  currentModule: number;
-  moduleProgress: ModuleProgress[];
-  startedAt: Date;
-  lastAccessedAt: Date;
-  estimatedCompletionDate: Date;
-  adaptiveRecommendations: {
-    type: "resource" | "practice" | "review";
-    description: string;
-    priority: "high" | "medium" | "low";
-    status: "pending" | "completed" | "skipped";
-  }[];
-}
-
-// Interface for le profil utilisateur
-export interface UserProfile {
-  mathLevel: string;
-  programmingLevel: string;
-  domain: string;
-}
-
-// Interface for les résultats d'évaluation
-export interface AssessmentResult {
-  category: string;
-  level: string;
-  score: number;
-  recommendations: string[];
-}
-
-// Nouvelles interfaces pour P2 - Évaluation continue et Analytics
-
-export interface ConceptAssessment {
-  id: string;
-  conceptId: string;
-  questions: Question[];
-  passingScore: number;
-  timeLimit: number;
-  difficulty: "basic" | "intermediate" | "advanced";
-}
-
-export interface ConceptAssessmentResult {
-  score: number;
-  responses: {
-    questionId: string;
-    selectedOption: string;
-    isCorrect: boolean;
-    timeSpent: number;
-  }[];
-  recommendations: string[];
-  adaptations: {
-    title: string;
-    description: string;
-    type: string;
-  }[];
-}
-
+// Analytics Types
 export interface AnalyticsData {
   totalLearningTime: number;
   completionRate: number;
   averageScore: number;
   activeDays: number;
-  progressData: {
-    date: string;
-    progress: number;
-    quizScore?: number;
-    timeSpent?: number;
-  }[];
-  conceptMastery: {
-    conceptId: string;
-    conceptName: string;
-    masteryLevel: number;
-    confidence: number;
-  }[];
-  timeDistribution: {
-    category: string;
-    hours: number;
-  }[];
   recommendations: {
     title: string;
     description: string;
+  }[];
+}
+
+// Dashboard Types
+export interface LearnerDashboard {
+  learningStats: {
+    totalHoursSpent: number;
+    completedResources: number;
+    averageQuizScore: number;
+    streakDays: number;
+  };
+  activePathways: Pathway[];
+  completedPathways: Pathway[];
+  nextMilestones: {
+    goalTitle: string;
+    moduleName: string;
+    dueDate: Date;
   }[];
 }
