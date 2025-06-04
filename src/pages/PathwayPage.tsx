@@ -53,7 +53,6 @@ function PathwayPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [progressData, setProgressData] = useState<any[]>([]);
-  const [showWelcomeModal, setShowWelcomeModal] = useState(true);
 
   useEffect(() => {
     const fetchPathway = async () => {
@@ -72,14 +71,7 @@ function PathwayPage() {
         }
 
         const data = await response.json();
-
-        // Ensure adaptiveRecommendations is always an array
-        const pathwayData = {
-          ...data,
-          adaptiveRecommendations: data.adaptiveRecommendations || [],
-        };
-
-        setPathway(pathwayData);
+        setPathway(data);
 
         // Fetch progress data for the chart
         const progressResponse = await fetch(
@@ -167,29 +159,12 @@ function PathwayPage() {
       );
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Erreur lors de la mise à jour");
+        throw new Error("Erreur lors de la mise à jour");
       }
 
       const updatedPathway = await response.json();
-
-      // Update the pathway state with the new recommendations
-      setPathway(prev => {
-        if (!prev) return updatedPathway;
-
-        return {
-          ...prev,
-          adaptiveRecommendations: updatedPathway.adaptiveRecommendations || [],
-        };
-      });
-
-      const actionMessages = {
-        start: "Recommandation démarrée",
-        skip: "Recommandation ignorée",
-        complete: "Recommandation complétée",
-      };
-
-      toast.success(actionMessages[action]);
+      setPathway(updatedPathway);
+      toast.success("Recommandation mise à jour");
     } catch (error) {
       console.error("Error:", error);
       toast.error("Erreur lors de la mise à jour de la recommandation");
@@ -223,6 +198,13 @@ function PathwayPage() {
       console.error("Error:", error);
       toast.error("Erreur lors de la réinitialisation du quiz");
     }
+  };
+
+  // Fonction pour vérifier si un module est accessible
+  const isModuleAccessible = (moduleIndex: number): boolean => {
+    if (!pathway) return false;
+    if (moduleIndex === 0) return true;
+    return pathway.moduleProgress[moduleIndex - 1]?.completed || false;
   };
 
   if (loading) {
@@ -418,7 +400,7 @@ function PathwayPage() {
                       </button>
                     </div>
                   </div>
-                ) : (
+                ) : isModuleAccessible(index) ? (
                   <button
                     onClick={() =>
                       navigate(`/pathways/${pathwayId}/modules/${index}/quiz`)
@@ -428,6 +410,10 @@ function PathwayPage() {
                     <Play className="w-4 h-4 mr-2" />
                     Commencer le quiz
                   </button>
+                ) : (
+                  <div className="p-4 rounded-lg bg-gray-800/50 text-gray-400 text-center">
+                    Terminez le module précédent pour débloquer ce quiz
+                  </div>
                 )}
               </div>
             </div>

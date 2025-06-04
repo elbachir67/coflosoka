@@ -81,6 +81,78 @@ router.get("/:pathwayId", auth, async (req, res) => {
   }
 });
 
+// Update module progress
+router.put("/:pathwayId/modules/:moduleIndex", auth, async (req, res) => {
+  try {
+    const { pathwayId, moduleIndex } = req.params;
+    const { resourceId, completed } = req.body;
+    const userId = req.user.id;
+
+    const pathway = await Pathway.findOne({ _id: pathwayId, userId });
+    if (!pathway) {
+      return res.status(404).json({ error: "Parcours non trouvé" });
+    }
+
+    const moduleIdx = parseInt(moduleIndex);
+    if (isNaN(moduleIdx) || moduleIdx >= pathway.moduleProgress.length) {
+      return res.status(400).json({ error: "Index de module invalide" });
+    }
+
+    // Update resource completion status
+    const resourceIndex = pathway.moduleProgress[moduleIdx].resources.findIndex(
+      r => r.resourceId === resourceId
+    );
+
+    if (resourceIndex === -1) {
+      return res.status(404).json({ error: "Ressource non trouvée" });
+    }
+
+    pathway.moduleProgress[moduleIdx].resources[resourceIndex].completed =
+      completed;
+    pathway.moduleProgress[moduleIdx].resources[resourceIndex].completedAt =
+      new Date();
+
+    // Check if all resources are completed
+    const allResourcesCompleted = pathway.moduleProgress[
+      moduleIdx
+    ].resources.every(r => r.completed);
+
+    // If all resources are completed and quiz is completed, mark module as completed
+    if (
+      allResourcesCompleted &&
+      pathway.moduleProgress[moduleIdx].quiz.completed &&
+      pathway.moduleProgress[moduleIdx].quiz.score >= 70
+    ) {
+      pathway.moduleProgress[moduleIdx].completed = true;
+
+      // Unlock next module if available
+      if (moduleIdx < pathway.moduleProgress.length - 1) {
+        pathway.moduleProgress[moduleIdx + 1].locked = false;
+        pathway.currentModule = moduleIdx + 1;
+      }
+    }
+
+    // Update overall progress
+    const completedModules = pathway.moduleProgress.filter(
+      m => m.completed
+    ).length;
+    pathway.progress = Math.round(
+      (completedModules / pathway.moduleProgress.length) * 100
+    );
+
+    // Update last accessed timestamp
+    pathway.lastAccessedAt = new Date();
+
+    await pathway.save();
+    await pathway.populate("goalId");
+
+    res.json(pathway);
+  } catch (error) {
+    logger.error("Error updating module progress:", error);
+    res.status(500).json({ error: "Erreur lors de la mise à jour du module" });
+  }
+});
+
 // Update recommendation status
 router.put("/:pathwayId/recommendations/:index", auth, async (req, res) => {
   try {
