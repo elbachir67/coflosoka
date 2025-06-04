@@ -18,6 +18,8 @@ import learnerProfileRoutes from "./routes/learnerProfiles.js";
 import { pathwayRoutes } from "./routes/pathways.js";
 import { quizRoutes } from "./routes/quiz.js";
 
+import { config } from "./config/env.js";
+
 // Get the directory name of the current module
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -39,22 +41,31 @@ if (missingEnvVars.length > 0) {
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Middleware
 app.use(
   cors({
     origin: [
       "http://localhost:5173",
       "http://localhost:4173",
-      /\.netlify\.app$/,
-      /\.netlify\.live$/,
+      "https://ucad-frontend-staging.vercel.app",
+      "https://ucad-frontend-staging-*.vercel.app", // Pour les previews
     ],
     methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
   })
 );
 
 app.use(express.json());
 app.use(morgan("dev"));
+
+// Health check route
+app.get("/health", (req, res) => {
+  res.json({
+    status: "OK",
+    environment: process.env.NODE_ENV || "staging",
+    timestamp: new Date().toISOString(),
+  });
+});
 
 // Routes
 app.use("/api/auth", authRoutes);

@@ -12,8 +12,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Load environment variables from the root .env file
-dotenv.config({ path: path.resolve(__dirname, "../../../.env") });
-
+dotenv.config({ path: path.resolve(__dirname, "../../.env") });
 // Ensure we have a MongoDB URI
 const MONGODB_URI =
   process.env.MONGODB_URI || "mongodb://localhost:27017/ucad_ia";

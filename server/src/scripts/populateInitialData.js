@@ -248,7 +248,7 @@ const goals = [
           },
           {
             title: "Scikit-learn Tutorial",
-            type: "tutorial",
+            type: "article",
             url: "https://scikit-learn.org/stable/tutorial/index.html",
             duration: 60,
           },
@@ -290,7 +290,7 @@ const goals = [
           },
           {
             title: "Data Visualization with Python",
-            type: "tutorial",
+            type: "article",
             url: "https://www.kaggle.com/learn/data-visualization",
             duration: 40,
           },
@@ -362,7 +362,7 @@ const goals = [
           },
           {
             title: "FastAPI for ML",
-            type: "tutorial",
+            type: "article",
             url: "https://fastapi.tiangolo.com/tutorial/",
             duration: 60,
           },
@@ -456,7 +456,7 @@ const goals = [
           },
           {
             title: "PyTorch Tutorials",
-            type: "tutorial",
+            type: "article",
             url: "https://pytorch.org/tutorials/",
             duration: 100,
           },
@@ -558,7 +558,7 @@ const goals = [
           },
           {
             title: "Spinning Up in Deep RL",
-            type: "tutorial",
+            type: "article",
             url: "https://spinningup.openai.com/",
             duration: 180,
           },
@@ -821,7 +821,7 @@ const goals = [
           },
           {
             title: "Cloud ML Platforms",
-            type: "tutorial",
+            type: "article",
             url: "https://cloud.google.com/ml-engine/docs",
             duration: 80,
           },
@@ -851,7 +851,7 @@ const goals = [
           },
           {
             title: "MLflow Guide",
-            type: "tutorial",
+            type: "article",
             url: "https://mlflow.org/docs/latest/tutorials-and-examples/index.html",
             duration: 60,
           },
@@ -980,7 +980,7 @@ const goals = [
           },
           {
             title: "OpenCV Python Tutorials",
-            type: "tutorial",
+            type: "article",
             url: "https://docs.opencv.org/4.x/d6/d00/tutorial_py_root.html",
             duration: 80,
           },
@@ -1022,7 +1022,7 @@ const goals = [
           },
           {
             title: "Detectron2 Tutorial",
-            type: "tutorial",
+            type: "article",
             url: "https://detectron2.readthedocs.io/",
             duration: 100,
           },
@@ -1058,7 +1058,7 @@ const goals = [
           },
           {
             title: "TensorRT Optimization",
-            type: "tutorial",
+            type: "article",
             url: "https://developer.nvidia.com/tensorrt",
             duration: 80,
           },
@@ -1178,7 +1178,7 @@ const goals = [
         resources: [
           {
             title: "Transformers from Scratch",
-            type: "tutorial",
+            type: "article",
             url: "https://peterbloem.nl/blog/transformers",
             duration: 60,
           },
@@ -1226,7 +1226,7 @@ const goals = [
           },
           {
             title: "LangChain Documentation",
-            type: "tutorial",
+            type: "article",
             url: "https://python.langchain.com/docs/get_started/introduction",
             duration: 100,
           },
