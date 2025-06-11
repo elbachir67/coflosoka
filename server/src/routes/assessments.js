@@ -4,6 +4,15 @@ import { Goal } from "../models/LearningGoal.js";
 import { LearnerProfile } from "../models/LearnerProfile.js";
 import { auth } from "../middleware/auth.js";
 import { logger } from "../utils/logger.js";
+import {
+  ASSESSMENT_QUESTIONS,
+  QUESTION_CONFIGS,
+} from "../data/assessmentQuestions.js";
+import {
+  calculateOverallScore,
+  analyzePerformanceByCategory,
+  generatePersonalizedRecommendations,
+} from "../utils/scoringSystem.js";
 
 const router = express.Router();
 
@@ -11,32 +20,59 @@ const router = express.Router();
 router.get("/questions", async (req, res) => {
   try {
     const { domain } = req.query;
-    let query = {};
+    const questionsPerCategory =
+      QUESTION_CONFIGS.assessment.questionsPerCategory;
 
-    if (domain) {
-      query.category = domain.toLowerCase();
-    }
+    let questions = [];
 
-    const assessments = await Assessment.find(query)
-      .populate("recommendedGoals")
-      .select("-createdAt -updatedAt -__v")
-      .limit(4);
+    if (domain && ASSESSMENT_QUESTIONS[domain]) {
+      // Sélectionner aléatoirement des questions pour le domaine spécifié
+      const domainQuestions = ASSESSMENT_QUESTIONS[domain];
+      const shuffled = domainQuestions.sort(() => 0.5 - Math.random());
+      const selected = shuffled.slice(0, questionsPerCategory);
 
-    const questions = assessments.flatMap(assessment =>
-      assessment.questions.slice(0, 1).map(q => ({
-        id: q._id.toString(),
+      questions = selected.map((q, index) => ({
+        id: `${domain}_${index}`,
         text: q.text,
-        category: assessment.category,
-        difficulty: assessment.difficulty,
-        options: q.options.map(opt => ({
-          id: opt._id.toString(),
+        category: domain,
+        difficulty: q.difficulty,
+        options: q.options.map((opt, optIndex) => ({
+          id: `${domain}_${index}_${optIndex}`,
           text: opt.text,
           isCorrect: opt.isCorrect,
         })),
         explanation: q.explanation,
-        recommendedGoals: assessment.recommendedGoals,
-      }))
-    );
+      }));
+    } else {
+      // Sélectionner des questions de toutes les catégories
+      Object.entries(ASSESSMENT_QUESTIONS).forEach(
+        ([category, categoryQuestions]) => {
+          const shuffled = categoryQuestions.sort(() => 0.5 - Math.random());
+          const selected = shuffled.slice(
+            0,
+            Math.min(2, categoryQuestions.length)
+          ); // 2 questions par catégorie
+
+          const categoryQs = selected.map((q, index) => ({
+            id: `${category}_${index}`,
+            text: q.text,
+            category: category,
+            difficulty: q.difficulty,
+            options: q.options.map((opt, optIndex) => ({
+              id: `${category}_${index}_${optIndex}`,
+              text: opt.text,
+              isCorrect: opt.isCorrect,
+            })),
+            explanation: q.explanation,
+          }));
+
+          questions.push(...categoryQs);
+        }
+      );
+    }
+
+    // Mélanger les questions finales
+    questions = questions.sort(() => 0.5 - Math.random());
 
     res.json(questions);
   } catch (error) {
@@ -45,10 +81,10 @@ router.get("/questions", async (req, res) => {
   }
 });
 
-// Submit assessment results
+// Submit assessment results with advanced scoring
 router.post("/submit", auth, async (req, res) => {
   try {
-    const { category, score, responses, recommendations } = req.body;
+    const { category, responses } = req.body;
     const userId = req.user.id;
 
     // Validate category
@@ -69,12 +105,42 @@ router.post("/submit", auth, async (req, res) => {
       });
     }
 
-    // Format recommendations
-    const formattedRecommendations = recommendations.map(rec => ({
-      category: rec.category,
-      score: rec.score,
-      recommendations: rec.recommendations,
-    }));
+    // Récupérer les questions pour calculer le score
+    const questions = [];
+    if (ASSESSMENT_QUESTIONS[category]) {
+      ASSESSMENT_QUESTIONS[category].forEach((q, index) => {
+        questions.push({
+          id: `${category}_${index}`,
+          text: q.text,
+          category: category,
+          difficulty: q.difficulty,
+          options: q.options,
+          explanation: q.explanation,
+        });
+      });
+    }
+
+    // Calculer le score avec le nouveau système
+    const score = calculateOverallScore(questions, responses);
+
+    // Analyser les performances par catégorie
+    const categoryStats = analyzePerformanceByCategory(questions, responses);
+
+    // Générer des recommandations personnalisées
+    const recommendations = generatePersonalizedRecommendations(categoryStats, {
+      mathLevel: "intermediate",
+      programmingLevel: "intermediate",
+      domain: category,
+    });
+
+    // Format recommendations for database
+    const formattedRecommendations = [
+      {
+        category: category,
+        score: score,
+        recommendations: recommendations.map(r => r.message),
+      },
+    ];
 
     // Find and update or create learner profile
     const learnerProfile = await LearnerProfile.findOneAndUpdate(
@@ -136,6 +202,11 @@ router.post("/submit", auth, async (req, res) => {
     res.json({
       success: true,
       profile: updatedProfile,
+      detailedResults: {
+        score,
+        categoryStats,
+        recommendations,
+      },
     });
   } catch (error) {
     logger.error("Error submitting assessment:", error);

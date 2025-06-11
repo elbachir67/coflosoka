@@ -17,105 +17,74 @@ interface CategoryScore {
 }
 
 interface ScoringWeights {
-  correctAnswer: number;
+  correctness: number;
   timeEfficiency: number;
-  difficultyLevel: number;
-  consistencyBonus: number;
+  difficulty: number;
 }
 
 type DifficultyLevel = "basic" | "intermediate" | "advanced";
-type CategoryKey = "math" | "ml" | "dl" | "computer_vision" | "nlp";
 
 const WEIGHTS: ScoringWeights = {
-  correctAnswer: 0.6,
-  timeEfficiency: 0.15,
-  difficultyLevel: 0.15,
-  consistencyBonus: 0.1,
+  correctness: 0.7, // 70% pour la justesse
+  timeEfficiency: 0.2, // 20% pour l'efficacité temporelle
+  difficulty: 0.1, // 10% pour la difficulté
 };
 
 const DIFFICULTY_MULTIPLIERS: Record<DifficultyLevel, number> = {
-  basic: 1,
-  intermediate: 1.5,
-  advanced: 2,
+  basic: 1.0,
+  intermediate: 1.3,
+  advanced: 1.6,
 };
 
 const TIME_THRESHOLDS: Record<DifficultyLevel, number> = {
-  basic: 60,
-  intermediate: 90,
-  advanced: 120,
+  basic: 45, // 45 secondes pour une question basique
+  intermediate: 60, // 60 secondes pour une question intermédiaire
+  advanced: 90, // 90 secondes pour une question avancée
 };
 
-const CATEGORY_REQUIREMENTS: Record<
-  CategoryKey,
-  Record<DifficultyLevel, string[]>
-> = {
-  math: {
-    basic: ["algèbre linéaire", "calcul différentiel"],
-    intermediate: ["probabilités", "statistiques", "optimisation"],
-    advanced: ["théorie de l'information", "analyse complexe"],
-  },
-  ml: {
-    basic: ["régression", "classification", "validation croisée"],
-    intermediate: [
-      "ensemble methods",
-      "feature engineering",
-      "hyperparameter tuning",
-    ],
-    advanced: ["online learning", "reinforcement learning"],
-  },
-  dl: {
-    basic: ["réseaux de neurones", "backpropagation", "fonctions d'activation"],
-    intermediate: ["CNN", "RNN", "transfer learning"],
-    advanced: ["architectures avancées", "optimisation multi-objectifs"],
-  },
-  computer_vision: {
-    basic: ["traitement d'image", "filtres", "convolution"],
-    intermediate: ["détection d'objets", "segmentation", "tracking"],
-    advanced: ["3D vision", "génération d'images"],
-  },
-  nlp: {
-    basic: ["tokenization", "word embeddings", "text preprocessing"],
-    intermediate: ["sequence models", "attention", "transformers"],
-    advanced: ["LLMs", "few-shot learning"],
-  },
-};
+/**
+ * Calcule le score d'une question individuelle
+ */
+function calculateQuestionScore(
+  question: Question,
+  response: UserResponse & { isCorrect: boolean }
+) {
+  const { isCorrect, timeSpent } = response;
+  const difficulty = (question.difficulty as DifficultyLevel) || "intermediate";
 
-type GoalKey =
-  | "machine_learning_engineer"
-  | "deep_learning_specialist"
-  | "computer_vision_engineer"
-  | "nlp_engineer";
-type PrereqCategory = "math" | "programming" | "concepts";
+  // Score de base (correct/incorrect)
+  const correctnessScore = isCorrect ? 1 : 0;
 
-interface Prerequisites {
-  math: string[];
-  programming: string[];
-  concepts: string[];
+  // Score d'efficacité temporelle
+  const timeThreshold = TIME_THRESHOLDS[difficulty];
+  const timeEfficiency = Math.max(
+    0,
+    Math.min(1, (timeThreshold - timeSpent) / timeThreshold + 0.5)
+  );
+
+  // Multiplicateur de difficulté
+  const difficultyMultiplier = DIFFICULTY_MULTIPLIERS[difficulty];
+
+  // Score final pondéré
+  const finalScore =
+    (correctnessScore * WEIGHTS.correctness +
+      timeEfficiency * WEIGHTS.timeEfficiency +
+      (isCorrect ? (difficultyMultiplier - 1) * WEIGHTS.difficulty : 0)) *
+    100;
+
+  return {
+    score: Math.max(0, Math.min(100, finalScore)),
+    correctnessScore,
+    timeEfficiency,
+    difficultyBonus: isCorrect
+      ? (difficultyMultiplier - 1) * WEIGHTS.difficulty * 100
+      : 0,
+  };
 }
 
-const GOAL_PREREQUISITES: Record<GoalKey, Prerequisites> = {
-  machine_learning_engineer: {
-    math: ["algèbre linéaire", "probabilités", "optimisation"],
-    programming: ["python", "scikit-learn", "pandas"],
-    concepts: ["ml_basics", "model_evaluation", "feature_engineering"],
-  },
-  deep_learning_specialist: {
-    math: ["calcul différentiel", "optimisation", "probabilités"],
-    programming: ["pytorch", "tensorflow", "python"],
-    concepts: ["neural_networks", "backpropagation", "architectures"],
-  },
-  computer_vision_engineer: {
-    math: ["algèbre linéaire", "convolution", "optimisation"],
-    programming: ["opencv", "pytorch", "python"],
-    concepts: ["image_processing", "cnn", "object_detection"],
-  },
-  nlp_engineer: {
-    math: ["probabilités", "statistiques", "algèbre linéaire"],
-    programming: ["python", "transformers", "spacy"],
-    concepts: ["linguistics", "embeddings", "attention"],
-  },
-};
-
+/**
+ * Calcule le score global avec le nouveau système
+ */
 export function calculateDetailedScore(
   questions: Question[],
   userResponses: UserResponse[]
@@ -156,72 +125,44 @@ export function calculateDetailedScore(
     });
 
     categoryScore.score += scoreDetails.score;
-    categoryScore.confidence += scoreDetails.confidence;
+    categoryScore.confidence += scoreDetails.correctnessScore;
     categoryScore.timeEfficiency += scoreDetails.timeEfficiency;
 
-    // Identifier les points forts et faibles
-    if (isCategoryKey(question.category)) {
-      const requirements =
-        CATEGORY_REQUIREMENTS[question.category]?.[
-          question.difficulty as DifficultyLevel
-        ];
-      if (requirements) {
-        if (scoreDetails.score > 0.7) {
-          categoryScore.strongPoints.push(...requirements);
-        } else if (scoreDetails.score < 0.4) {
-          categoryScore.weakPoints.push(...requirements);
-        }
-      }
+    // Identifier les points forts et faibles basés sur la performance
+    if (scoreDetails.score > 70) {
+      categoryScore.strongPoints.push(question.text.substring(0, 50) + "...");
+    } else if (scoreDetails.score < 40) {
+      categoryScore.weakPoints.push(question.text.substring(0, 50) + "...");
     }
   });
 
   // Normaliser les scores
-  return Array.from(categoryScores.values()).map(score => ({
-    ...score,
-    score: normalizeScore(score.score),
-    confidence: normalizeScore(score.confidence),
-    timeEfficiency: normalizeScore(score.timeEfficiency),
-    weakPoints: Array.from(new Set(score.weakPoints)),
-    strongPoints: Array.from(new Set(score.strongPoints)),
-  }));
+  return Array.from(categoryScores.values()).map(score => {
+    const questionCount = userResponses.filter(
+      r =>
+        questions.find(q => q.id === r.questionId)?.category === score.category
+    ).length;
+
+    return {
+      ...score,
+      score: questionCount > 0 ? Math.round(score.score / questionCount) : 0,
+      confidence:
+        questionCount > 0
+          ? Math.round((score.confidence / questionCount) * 100)
+          : 0,
+      timeEfficiency:
+        questionCount > 0
+          ? Math.round((score.timeEfficiency / questionCount) * 100)
+          : 0,
+      weakPoints: Array.from(new Set(score.weakPoints)),
+      strongPoints: Array.from(new Set(score.strongPoints)),
+    };
+  });
 }
 
-function isCategoryKey(category: string): category is CategoryKey {
-  return category in CATEGORY_REQUIREMENTS;
-}
-
-function calculateQuestionScore(
-  question: Question,
-  response: UserResponse & { isCorrect: boolean }
-) {
-  const { isCorrect, timeSpent } = response;
-  const difficultyMultiplier =
-    DIFFICULTY_MULTIPLIERS[question.difficulty as DifficultyLevel];
-  const timeThreshold = TIME_THRESHOLDS[question.difficulty as DifficultyLevel];
-
-  const baseScore = isCorrect ? 1 : 0;
-  const timeEfficiency = Math.max(0, 1 - timeSpent / timeThreshold);
-  const confidence = isCorrect
-    ? calculateConfidence(timeSpent, timeThreshold)
-    : 0;
-
-  const score =
-    baseScore * WEIGHTS.correctAnswer * difficultyMultiplier +
-    timeEfficiency * WEIGHTS.timeEfficiency +
-    confidence * WEIGHTS.consistencyBonus;
-
-  return { score, confidence, timeEfficiency };
-}
-
-function calculateConfidence(timeSpent: number, timeThreshold: number): number {
-  const normalizedTime = Math.min(timeSpent / timeThreshold, 1);
-  return 1 - normalizedTime;
-}
-
-function normalizeScore(score: number): number {
-  return Math.min(Math.max(score * 100, 0), 100);
-}
-
+/**
+ * Génère des recommandations basées sur les performances
+ */
 export function generateRecommendations(
   categoryScores: CategoryScore[],
   userProfile: {
@@ -250,10 +191,11 @@ export function generateRecommendations(
   });
 }
 
-function determineLevel(score: number): DifficultyLevel {
-  if (score >= 80) return "advanced";
+function determineLevel(score: number): string {
+  if (score >= 85) return "expert";
+  if (score >= 70) return "advanced";
   if (score >= 50) return "intermediate";
-  return "basic";
+  return "beginner";
 }
 
 function generateCategoryRecommendations(
@@ -273,43 +215,25 @@ function generateCategoryRecommendations(
   // Recommandations basées sur les points faibles
   if (weakPoints.length > 0) {
     recommendations.push(
-      `Renforcez vos connaissances en : ${weakPoints.join(", ")}`
+      `Concentrez-vous sur les concepts où vous avez eu des difficultés`
     );
   }
 
-  // Recommandations basées sur le profil utilisateur et le domaine choisi
-  const domainKey = userProfile.domain.toLowerCase() as GoalKey;
-  const prereqs = GOAL_PREREQUISITES[domainKey];
-  if (prereqs) {
-    const categoryKey = category.toLowerCase() as keyof Prerequisites;
-    const missingPrereqs = prereqs[categoryKey]?.filter(
-      prereq => !strongPoints.includes(prereq)
-    );
-
-    if (missingPrereqs?.length > 0) {
-      recommendations.push(
-        `Pour atteindre votre objectif en ${
-          userProfile.domain
-        }, concentrez-vous sur : ${missingPrereqs.join(", ")}`
-      );
-    }
-  }
-
-  // Recommandations spécifiques au niveau
-  if (level === "basic") {
+  // Recommandations basées sur le score
+  if (score < 50) {
     recommendations.push(
-      "Commencez par les concepts fondamentaux avant d'aborder des sujets plus avancés",
-      "Pratiquez régulièrement avec des exercices de base"
+      "Révisez les concepts fondamentaux avant de passer aux sujets avancés",
+      "Pratiquez avec des exercices de base pour renforcer vos connaissances"
     );
-  } else if (level === "intermediate") {
+  } else if (score < 70) {
     recommendations.push(
       "Approfondissez vos connaissances avec des projets pratiques",
-      "Explorez les interconnexions entre les différents concepts"
+      "Travaillez sur la rapidité de résolution des problèmes"
     );
   } else {
     recommendations.push(
-      "Concentrez-vous sur des cas d'usage avancés",
-      "Participez à des projets de recherche ou open source"
+      "Excellentes performances ! Vous pouvez aborder des sujets plus avancés",
+      "Partagez vos connaissances en aidant d'autres apprenants"
     );
   }
 
@@ -318,8 +242,16 @@ function generateCategoryRecommendations(
     case "math":
       if (score < 70) {
         recommendations.push(
-          "Renforcez vos bases mathématiques avec des exercices pratiques",
-          "Utilisez des ressources visuelles pour mieux comprendre les concepts"
+          "Utilisez des ressources visuelles pour mieux comprendre les concepts mathématiques",
+          "Pratiquez régulièrement avec des exercices variés"
+        );
+      }
+      break;
+    case "programming":
+      if (score < 70) {
+        recommendations.push(
+          "Implémentez les algorithmes de base pour mieux les comprendre",
+          "Participez à des défis de programmation pour améliorer vos compétences"
         );
       }
       break;
@@ -327,15 +259,7 @@ function generateCategoryRecommendations(
       if (score < 70) {
         recommendations.push(
           "Commencez par des datasets simples et bien documentés",
-          "Implémentez les algorithmes de base avant de passer aux frameworks"
-        );
-      }
-      break;
-    case "dl":
-      if (score < 70) {
-        recommendations.push(
-          "Maîtrisez d'abord les réseaux de neurones simples",
-          "Pratiquez avec des frameworks comme PyTorch ou TensorFlow"
+          "Maîtrisez les concepts théoriques avant de passer à l'implémentation"
         );
       }
       break;

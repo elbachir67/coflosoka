@@ -1,2050 +1,377 @@
 import mongoose from "mongoose";
-import dotenv from "dotenv";
-import { logger } from "../utils/logger.js";
+import bcrypt from "bcryptjs";
+import { User } from "../models/User.js";
 import { Goal } from "../models/LearningGoal.js";
 import { Assessment } from "../models/Assessment.js";
-import { User } from "../models/User.js";
-import { LearnerProfile } from "../models/LearnerProfile.js";
-import { Concept } from "../models/Concept.js";
 import { Quiz } from "../models/Quiz.js";
+import { LearnerProfile } from "../models/LearnerProfile.js";
 import { Pathway } from "../models/Pathway.js";
+import { Concept } from "../models/Concept.js";
+import { logger } from "../utils/logger.js";
+import dotenv from "dotenv";
+import path from "path";
+import { fileURLToPath } from "url";
 
-dotenv.config();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-const MONGODB_URI =
-  process.env.MONGODB_URI || "mongodb://localhost:27017/ucad_ia";
+dotenv.config({ path: path.resolve(__dirname, "../../.env") });
 
-// Users avec les rôles corrects
-const users = [
-  {
-    email: "student1@ucad.edu.sn",
-    password: "Student123!",
-    role: "user",
-    isActive: true,
-  },
-  {
-    email: "student2@ucad.edu.sn",
-    password: "Student123!",
-    role: "user",
-    isActive: true,
-  },
-  {
-    email: "student3@ucad.edu.sn",
-    password: "Student123!",
-    role: "user",
-    isActive: true,
-  },
-  {
-    email: "marie.fall@ucad.edu.sn",
-    password: "Marie123!",
-    role: "user",
-    isActive: true,
-  },
-  {
-    email: "ousmane.sow@ucad.edu.sn",
-    password: "Ousmane123!",
-    role: "user",
-    isActive: true,
-  },
-  {
-    email: "fatou.ba@ucad.edu.sn",
-    password: "Fatou123!",
-    role: "user",
-    isActive: true,
-  },
-  {
-    email: "admin@ucad.edu.sn",
-    password: "Admin123!",
-    role: "admin",
-    isActive: true,
-  },
-  {
-    email: "prof.diallo@ucad.edu.sn",
-    password: "Prof123!",
-    role: "admin",
-    isActive: true,
-  },
-  {
-    email: "prof.ndiaye@ucad.edu.sn",
-    password: "Prof123!",
-    role: "admin",
-    isActive: true,
-  },
-];
+const MONGODB_URI = process.env.MONGODB_URI;
 
-// Concepts sans prérequis (seront ajoutés après création)
-const concepts = [
-  // Mathématiques
-  {
-    name: "Algèbre Linéaire pour l'IA",
-    description:
-      "Vecteurs, matrices, transformations linéaires essentiels pour l'IA",
-    category: "math",
-    level: "basic",
-    prerequisites: [],
-  },
-  {
-    name: "Calcul Différentiel et Intégral",
-    description: "Dérivées, intégrales et optimisation pour le ML",
-    category: "math",
-    level: "intermediate",
-    prerequisites: [],
-  },
-  {
-    name: "Probabilités et Statistiques",
-    description: "Distributions, tests statistiques et inférence",
-    category: "math",
-    level: "intermediate",
-    prerequisites: [],
-  },
-  {
-    name: "Optimisation Mathématique",
-    description: "Gradient descent, convexité et méthodes d'optimisation",
-    category: "math",
-    level: "advanced",
-    prerequisites: [],
-  },
-
-  // Programmation
-  {
-    name: "Python Fondamentaux",
-    description:
-      "Syntaxe, structures de données et programmation orientée objet",
-    category: "programming",
-    level: "basic",
-    prerequisites: [],
-  },
-  {
-    name: "Python pour la Data Science",
-    description: "NumPy, Pandas, Matplotlib pour l'analyse de données",
-    category: "programming",
-    level: "intermediate",
-    prerequisites: [],
-  },
-  {
-    name: "SQL et Bases de Données",
-    description: "Requêtes SQL, modélisation et optimisation",
-    category: "programming",
-    level: "basic",
-    prerequisites: [],
-  },
-  {
-    name: "Git et Collaboration",
-    description: "Versioning, branches et workflows collaboratifs",
-    category: "programming",
-    level: "basic",
-    prerequisites: [],
-  },
-
-  // Machine Learning
-  {
-    name: "Introduction au Machine Learning",
-    description: "Concepts fondamentaux, types d'apprentissage et métriques",
-    category: "ml",
-    level: "basic",
-    prerequisites: [],
-  },
-  {
-    name: "Apprentissage Supervisé",
-    description: "Régression, classification et algorithmes classiques",
-    category: "ml",
-    level: "intermediate",
-    prerequisites: [],
-  },
-  {
-    name: "Apprentissage Non Supervisé",
-    description: "Clustering, réduction de dimension et détection d'anomalies",
-    category: "ml",
-    level: "intermediate",
-    prerequisites: [],
-  },
-  {
-    name: "Feature Engineering",
-    description: "Création, sélection et transformation de features",
-    category: "ml",
-    level: "intermediate",
-    prerequisites: [],
-  },
-
-  // Deep Learning
-  {
-    name: "Réseaux de Neurones",
-    description: "Perceptron, backpropagation et architectures de base",
-    category: "dl",
-    level: "intermediate",
-    prerequisites: [],
-  },
-  {
-    name: "CNN - Vision par Ordinateur",
-    description: "Convolutions, pooling et architectures CNN modernes",
-    category: "dl",
-    level: "advanced",
-    prerequisites: [],
-  },
-  {
-    name: "RNN et Séquences",
-    description: "LSTM, GRU et traitement de séquences",
-    category: "dl",
-    level: "advanced",
-    prerequisites: [],
-  },
-  {
-    name: "Transformers et Attention",
-    description: "Architecture transformer, BERT, GPT",
-    category: "dl",
-    level: "advanced",
-    prerequisites: [],
-  },
-];
-
-// Goals avec les bonnes catégories et niveaux
-const goals = [
-  {
-    title: "Ingénieur Machine Learning",
-    description:
-      "Parcours complet pour devenir ML Engineer, de la théorie à la pratique",
-    category: "ml",
-    level: "intermediate",
-    estimatedDuration: 12,
-    prerequisites: [
-      {
-        category: "math",
-        skills: [
-          { name: "Algèbre linéaire", level: "intermediate" },
-          { name: "Calcul différentiel", level: "basic" },
-          { name: "Probabilités", level: "intermediate" },
-        ],
-      },
-      {
-        category: "programming",
-        skills: [
-          { name: "Python", level: "intermediate" },
-          { name: "SQL", level: "basic" },
-          { name: "Git", level: "basic" },
-        ],
-      },
-    ],
-    modules: [
-      {
-        title: "Fondamentaux du ML",
-        description: "Introduction aux concepts et algorithmes de base",
-        duration: 20,
-        skills: [
-          { name: "Scikit-learn", level: "basic" },
-          { name: "Pandas", level: "intermediate" },
-        ],
-        resources: [
-          {
-            title: "Machine Learning par Andrew Ng",
-            type: "course",
-            url: "https://www.coursera.org/learn/machine-learning",
-            duration: 120,
-          },
-          {
-            title: "Hands-On Machine Learning",
-            type: "book",
-            url: "https://www.oreilly.com/library/view/hands-on-machine-learning/9781492032632/",
-            duration: 180,
-          },
-          {
-            title: "Scikit-learn Tutorial",
-            type: "article",
-            url: "https://scikit-learn.org/stable/tutorial/index.html",
-            duration: 60,
-          },
-          {
-            title: "ML Crash Course Google",
-            type: "course",
-            url: "https://developers.google.com/machine-learning/crash-course",
-            duration: 90,
-          },
-        ],
-        validationCriteria: [
-          "Comprendre la différence entre apprentissage supervisé et non supervisé",
-          "Implémenter une régression linéaire et logistique",
-          "Utiliser la validation croisée pour évaluer un modèle",
-          "Diagnostiquer overfitting et underfitting",
-        ],
-      },
-      {
-        title: "Python et Data Science",
-        description: "Maîtrise des outils Python pour le ML",
-        duration: 15,
-        skills: [
-          { name: "NumPy", level: "intermediate" },
-          { name: "Pandas", level: "advanced" },
-          { name: "Matplotlib", level: "intermediate" },
-        ],
-        resources: [
-          {
-            title: "Python Data Science Handbook",
-            type: "book",
-            url: "https://jakevdp.github.io/PythonDataScienceHandbook/",
-            duration: 150,
-          },
-          {
-            title: "Pandas Documentation",
-            type: "article",
-            url: "https://pandas.pydata.org/docs/",
-            duration: 60,
-          },
-          {
-            title: "Data Visualization with Python",
-            type: "article",
-            url: "https://www.kaggle.com/learn/data-visualization",
-            duration: 40,
-          },
-        ],
-        validationCriteria: [
-          "Manipuler efficacement des DataFrames Pandas",
-          "Créer des visualisations informatives",
-          "Nettoyer et préparer des données réelles",
-          "Optimiser le code avec NumPy",
-        ],
-      },
-      {
-        title: "Algorithmes ML Avancés",
-        description: "Ensemble methods, SVM, et techniques avancées",
-        duration: 25,
-        skills: [
-          { name: "Random Forest", level: "intermediate" },
-          { name: "XGBoost", level: "intermediate" },
-          { name: "Feature Engineering", level: "advanced" },
-        ],
-        resources: [
-          {
-            title: "The Elements of Statistical Learning",
-            type: "book",
-            url: "https://hastie.su.domains/ElemStatLearn/",
-            duration: 200,
-          },
-          {
-            title: "XGBoost Documentation",
-            type: "article",
-            url: "https://xgboost.readthedocs.io/",
-            duration: 80,
-          },
-          {
-            title: "Feature Engineering Book",
-            type: "book",
-            url: "https://www.oreilly.com/library/view/feature-engineering-for/9781491953235/",
-            duration: 120,
-          },
-        ],
-        validationCriteria: [
-          "Implémenter et optimiser Random Forest et Gradient Boosting",
-          "Comprendre les SVM et kernel methods",
-          "Maîtriser l'ingénierie des features",
-          "Gérer les données déséquilibrées",
-        ],
-      },
-      {
-        title: "MLOps et Production",
-        description: "Déploiement et maintenance de modèles ML",
-        duration: 20,
-        skills: [
-          { name: "Docker", level: "basic" },
-          { name: "API REST", level: "intermediate" },
-          { name: "Monitoring", level: "basic" },
-        ],
-        resources: [
-          {
-            title: "MLOps: Machine Learning Engineering",
-            type: "book",
-            url: "https://www.oreilly.com/library/view/machine-learning-engineering/9781492053187/",
-            duration: 150,
-          },
-          {
-            title: "Building ML Powered Applications",
-            type: "book",
-            url: "https://www.oreilly.com/library/view/building-machine-learning/9781492045106/",
-            duration: 140,
-          },
-          {
-            title: "FastAPI for ML",
-            type: "article",
-            url: "https://fastapi.tiangolo.com/tutorial/",
-            duration: 60,
-          },
-        ],
-        validationCriteria: [
-          "Créer une API pour servir un modèle ML",
-          "Containeriser une application ML avec Docker",
-          "Mettre en place un pipeline CI/CD",
-          "Monitorer les performances en production",
-        ],
-      },
-    ],
-    careerOpportunities: [
-      {
-        title: "Machine Learning Engineer",
-        description: "Développement et déploiement de modèles ML en production",
-        averageSalary: "45-75k€/an",
-        companies: ["Google", "Amazon", "Meta", "Microsoft", "Apple"],
-      },
-      {
-        title: "Data Scientist",
-        description: "Analyse de données et création de modèles prédictifs",
-        averageSalary: "40-70k€/an",
-        companies: ["Netflix", "Uber", "Airbnb", "Spotify", "LinkedIn"],
-      },
-      {
-        title: "ML Researcher",
-        description: "Recherche et développement de nouveaux algorithmes",
-        averageSalary: "50-85k€/an",
-        companies: ["DeepMind", "OpenAI", "FAIR", "Google Research"],
-      },
-    ],
-    certification: {
-      available: true,
-      name: "Certificat ML Engineer Professional",
-      provider: "UCAD AI Center",
-      url: "https://ucad.sn/certifications/ml-engineer",
-    },
-    requiredConcepts: [], // Sera rempli après création des concepts
-  },
-
-  {
-    title: "Spécialiste Deep Learning",
-    description:
-      "Expertise en réseaux de neurones profonds et architectures modernes",
-    category: "dl",
-    level: "advanced",
-    estimatedDuration: 16,
-    prerequisites: [
-      {
-        category: "math",
-        skills: [
-          { name: "Algèbre linéaire", level: "advanced" },
-          { name: "Calcul différentiel", level: "intermediate" },
-          { name: "Optimisation", level: "intermediate" },
-        ],
-      },
-      {
-        category: "programming",
-        skills: [
-          { name: "Python", level: "advanced" },
-          { name: "NumPy", level: "advanced" },
-        ],
-      },
-      {
-        category: "theory",
-        skills: [{ name: "Machine Learning", level: "intermediate" }],
-      },
-    ],
-    modules: [
-      {
-        title: "Fondamentaux des Réseaux de Neurones",
-        description: "Théorie et pratique des réseaux de neurones",
-        duration: 25,
-        skills: [
-          { name: "PyTorch", level: "intermediate" },
-          { name: "TensorFlow", level: "basic" },
-        ],
-        resources: [
-          {
-            title: "Deep Learning Specialization",
-            type: "course",
-            url: "https://www.coursera.org/specializations/deep-learning",
-            duration: 200,
-          },
-          {
-            title: "Deep Learning Book",
-            type: "book",
-            url: "https://www.deeplearningbook.org/",
-            duration: 250,
-          },
-          {
-            title: "PyTorch Tutorials",
-            type: "article",
-            url: "https://pytorch.org/tutorials/",
-            duration: 100,
-          },
-        ],
-        validationCriteria: [
-          "Implémenter un réseau de neurones from scratch",
-          "Comprendre et appliquer la backpropagation",
-          "Utiliser PyTorch pour créer des modèles",
-          "Debugger et visualiser les réseaux",
-        ],
-      },
-      {
-        title: "Vision par Ordinateur avec CNN",
-        description: "Applications des CNN pour l'analyse d'images",
-        duration: 30,
-        skills: [
-          { name: "CNN architectures", level: "advanced" },
-          { name: "Transfer Learning", level: "intermediate" },
-          { name: "Data Augmentation", level: "intermediate" },
-        ],
-        resources: [
-          {
-            title: "CS231n: CNN for Visual Recognition",
-            type: "course",
-            url: "http://cs231n.stanford.edu/",
-            duration: 180,
-          },
-          {
-            title: "Papers With Code - Vision",
-            type: "article",
-            url: "https://paperswithcode.com/area/computer-vision",
-            duration: 100,
-          },
-          {
-            title: "Practical Deep Learning for Coders",
-            type: "course",
-            url: "https://course.fast.ai/",
-            duration: 160,
-          },
-        ],
-        validationCriteria: [
-          "Implémenter ResNet, VGG, et autres architectures",
-          "Utiliser le transfer learning efficacement",
-          "Créer un système de détection d'objets",
-          "Optimiser les performances sur GPU",
-        ],
-      },
-      {
-        title: "NLP avec Transformers",
-        description: "Traitement du langage naturel moderne",
-        duration: 30,
-        skills: [
-          { name: "Transformers", level: "advanced" },
-          { name: "Hugging Face", level: "intermediate" },
-          { name: "BERT/GPT", level: "intermediate" },
-        ],
-        resources: [
-          {
-            title: "CS224n: NLP with Deep Learning",
-            type: "course",
-            url: "http://web.stanford.edu/class/cs224n/",
-            duration: 180,
-          },
-          {
-            title: "Hugging Face Course",
-            type: "course",
-            url: "https://huggingface.co/course",
-            duration: 120,
-          },
-          {
-            title: "Attention Is All You Need",
-            type: "article",
-            url: "https://arxiv.org/abs/1706.03762",
-            duration: 30,
-          },
-        ],
-        validationCriteria: [
-          "Comprendre l'architecture Transformer",
-          "Fine-tuner BERT pour une tâche spécifique",
-          "Créer un chatbot ou système de QA",
-          "Optimiser l'inférence de grands modèles",
-        ],
-      },
-      {
-        title: "Projets Avancés et Recherche",
-        description: "Applications cutting-edge du Deep Learning",
-        duration: 35,
-        skills: [
-          { name: "GANs", level: "intermediate" },
-          { name: "Reinforcement Learning", level: "basic" },
-          { name: "Research", level: "advanced" },
-        ],
-        resources: [
-          {
-            title: "GAN Specialization",
-            type: "course",
-            url: "https://www.coursera.org/specializations/generative-adversarial-networks-gans",
-            duration: 150,
-          },
-          {
-            title: "Spinning Up in Deep RL",
-            type: "article",
-            url: "https://spinningup.openai.com/",
-            duration: 180,
-          },
-          {
-            title: "Papers With Code",
-            type: "article",
-            url: "https://paperswithcode.com/",
-            duration: 200,
-          },
-        ],
-        validationCriteria: [
-          "Implémenter et entraîner un GAN",
-          "Créer un agent RL simple",
-          "Reproduire un papier de recherche",
-          "Contribuer à un projet open source",
-        ],
-      },
-    ],
-    careerOpportunities: [
-      {
-        title: "Deep Learning Engineer",
-        description: "Développement de systèmes DL complexes",
-        averageSalary: "55-90k€/an",
-        companies: ["DeepMind", "OpenAI", "NVIDIA", "Tesla", "Meta AI"],
-      },
-      {
-        title: "Computer Vision Engineer",
-        description: "Spécialiste en traitement d'images et vidéos",
-        averageSalary: "50-85k€/an",
-        companies: ["Apple", "Google", "Amazon", "Microsoft", "Adobe"],
-      },
-      {
-        title: "NLP Engineer",
-        description: "Expert en traitement du langage naturel",
-        averageSalary: "55-90k€/an",
-        companies: ["Google", "OpenAI", "Anthropic", "Cohere", "Hugging Face"],
-      },
-    ],
-    certification: {
-      available: true,
-      name: "Deep Learning Expert Certificate",
-      provider: "UCAD AI Center",
-      url: "https://ucad.sn/certifications/dl-expert",
-    },
-    requiredConcepts: [],
-  },
-
-  {
-    title: "Data Scientist",
-    description: "Analyse de données, statistiques et communication d'insights",
-    category: "data_science",
-    level: "intermediate",
-    estimatedDuration: 10,
-    prerequisites: [
-      {
-        category: "math",
-        skills: [
-          { name: "Statistiques", level: "advanced" },
-          { name: "Probabilités", level: "intermediate" },
-        ],
-      },
-      {
-        category: "programming",
-        skills: [
-          { name: "Python", level: "intermediate" },
-          { name: "SQL", level: "intermediate" },
-          { name: "R", level: "basic" },
-        ],
-      },
-    ],
-    modules: [
-      {
-        title: "Analyse Exploratoire de Données",
-        description: "EDA, visualisation et storytelling avec les données",
-        duration: 20,
-        skills: [
-          { name: "Pandas", level: "advanced" },
-          { name: "Visualization", level: "advanced" },
-          { name: "Statistical Tests", level: "intermediate" },
-        ],
-        resources: [
-          {
-            title: "Exploratory Data Analysis",
-            type: "course",
-            url: "https://www.coursera.org/learn/exploratory-data-analysis",
-            duration: 80,
-          },
-          {
-            title: "Storytelling with Data",
-            type: "book",
-            url: "https://www.storytellingwithdata.com/book",
-            duration: 100,
-          },
-          {
-            title: "Python Graph Gallery",
-            type: "article",
-            url: "https://www.python-graph-gallery.com/",
-            duration: 60,
-          },
-        ],
-        validationCriteria: [
-          "Réaliser une EDA complète sur un dataset complexe",
-          "Créer des visualisations impactantes",
-          "Identifier et traiter les outliers",
-          "Communiquer des insights clairement",
-        ],
-      },
-      {
-        title: "Statistiques Inférentielles",
-        description: "Tests d'hypothèses et modélisation statistique",
-        duration: 25,
-        skills: [
-          { name: "Hypothesis Testing", level: "advanced" },
-          { name: "Regression Analysis", level: "advanced" },
-          { name: "Time Series", level: "intermediate" },
-        ],
-        resources: [
-          {
-            title: "Statistical Thinking for Data Science",
-            type: "book",
-            url: "https://www.stat.berkeley.edu/~aldous/157/Books/",
-            duration: 150,
-          },
-          {
-            title: "Time Series Analysis",
-            type: "course",
-            url: "https://www.coursera.org/learn/practical-time-series-analysis",
-            duration: 120,
-          },
-          {
-            title: "A/B Testing Guide",
-            type: "article",
-            url: "https://www.optimizely.com/optimization-glossary/ab-testing/",
-            duration: 40,
-          },
-        ],
-        validationCriteria: [
-          "Choisir et appliquer le bon test statistique",
-          "Interpréter correctement les p-values",
-          "Construire des modèles de régression robustes",
-          "Analyser des séries temporelles",
-        ],
-      },
-      {
-        title: "Machine Learning pour Data Scientists",
-        description: "ML pratique orienté business",
-        duration: 20,
-        skills: [
-          { name: "Scikit-learn", level: "intermediate" },
-          { name: "Model Interpretation", level: "intermediate" },
-          { name: "Business Metrics", level: "advanced" },
-        ],
-        resources: [
-          {
-            title: "Applied Predictive Modeling",
-            type: "book",
-            url: "http://appliedpredictivemodeling.com/",
-            duration: 180,
-          },
-          {
-            title: "Interpretable ML",
-            type: "book",
-            url: "https://christophm.github.io/interpretable-ml-book/",
-            duration: 120,
-          },
-          {
-            title: "Business Data Science",
-            type: "book",
-            url: "https://www.oreilly.com/library/view/business-data-science/9781492072935/",
-            duration: 140,
-          },
-        ],
-        validationCriteria: [
-          "Traduire un problème business en problème ML",
-          "Choisir les bonnes métriques business",
-          "Expliquer les modèles aux non-techniques",
-          "Évaluer l'impact business des modèles",
-        ],
-      },
-    ],
-    careerOpportunities: [
-      {
-        title: "Data Scientist",
-        description: "Analyse et modélisation pour insights business",
-        averageSalary: "40-70k€/an",
-        companies: ["Airbnb", "Netflix", "Uber", "Spotify", "LinkedIn"],
-      },
-      {
-        title: "Business Intelligence Analyst",
-        description: "Transformation des données en décisions business",
-        averageSalary: "35-60k€/an",
-        companies: ["Amazon", "Microsoft", "Salesforce", "Oracle", "SAP"],
-      },
-      {
-        title: "Quantitative Analyst",
-        description: "Analyse quantitative pour finance et trading",
-        averageSalary: "50-90k€/an",
-        companies: ["JP Morgan", "Goldman Sachs", "Citadel", "Two Sigma"],
-      },
-    ],
-    certification: {
-      available: true,
-      name: "Data Science Professional Certificate",
-      provider: "UCAD AI Center",
-      url: "https://ucad.sn/certifications/data-science-pro",
-    },
-    requiredConcepts: [],
-  },
-
-  {
-    title: "MLOps Engineer",
-    description: "Industrialisation et opérationnalisation des modèles ML",
-    category: "mlops",
-    level: "advanced",
-    estimatedDuration: 14,
-    prerequisites: [
-      {
-        category: "programming",
-        skills: [
-          { name: "Python", level: "advanced" },
-          { name: "Docker", level: "intermediate" },
-          { name: "Cloud", level: "intermediate" },
-        ],
-      },
-      {
-        category: "tools",
-        skills: [
-          { name: "Git", level: "advanced" },
-          { name: "CI/CD", level: "intermediate" },
-          { name: "Linux", level: "intermediate" },
-        ],
-      },
-      {
-        category: "theory",
-        skills: [{ name: "Machine Learning", level: "intermediate" }],
-      },
-    ],
-    modules: [
-      {
-        title: "Infrastructure et DevOps pour ML",
-        description: "Containerisation, orchestration et cloud",
-        duration: 25,
-        skills: [
-          { name: "Docker", level: "advanced" },
-          { name: "Kubernetes", level: "intermediate" },
-          { name: "Cloud Platforms", level: "intermediate" },
-        ],
-        resources: [
-          {
-            title: "Docker Deep Dive",
-            type: "book",
-            url: "https://www.oreilly.com/library/view/docker-deep-dive/9781800565135/",
-            duration: 120,
-          },
-          {
-            title: "Kubernetes for ML",
-            type: "course",
-            url: "https://www.coursera.org/learn/machine-learning-engineering-for-production-mlops",
-            duration: 150,
-          },
-          {
-            title: "Cloud ML Platforms",
-            type: "article",
-            url: "https://cloud.google.com/ml-engine/docs",
-            duration: 80,
-          },
-        ],
-        validationCriteria: [
-          "Containeriser des applications ML",
-          "Déployer sur Kubernetes",
-          "Utiliser les services cloud ML",
-          "Optimiser les coûts infrastructure",
-        ],
-      },
-      {
-        title: "Pipelines et Automatisation",
-        description: "CI/CD, orchestration et monitoring",
-        duration: 30,
-        skills: [
-          { name: "MLflow", level: "intermediate" },
-          { name: "Airflow", level: "intermediate" },
-          { name: "Monitoring", level: "advanced" },
-        ],
-        resources: [
-          {
-            title: "Building ML Pipelines",
-            type: "book",
-            url: "https://www.oreilly.com/library/view/building-machine-learning/9781492053187/",
-            duration: 160,
-          },
-          {
-            title: "MLflow Guide",
-            type: "article",
-            url: "https://mlflow.org/docs/latest/tutorials-and-examples/index.html",
-            duration: 60,
-          },
-          {
-            title: "Monitoring ML Systems",
-            type: "article",
-            url: "https://christophergs.com/machine%20learning/2020/03/14/how-to-monitor-machine-learning-models/",
-            duration: 40,
-          },
-        ],
-        validationCriteria: [
-          "Créer des pipelines ML end-to-end",
-          "Implémenter CI/CD pour ML",
-          "Monitorer la dérive des modèles",
-          "Automatiser le retraining",
-        ],
-      },
-      {
-        title: "Gouvernance et Sécurité ML",
-        description: "Compliance, sécurité et éthique",
-        duration: 20,
-        skills: [
-          { name: "Model Governance", level: "intermediate" },
-          { name: "Security", level: "intermediate" },
-          { name: "Compliance", level: "basic" },
-        ],
-        resources: [
-          {
-            title: "Secure and Reliable ML",
-            type: "book",
-            url: "https://www.oreilly.com/library/view/introducing-mlops/9781492083283/",
-            duration: 140,
-          },
-          {
-            title: "ML Privacy and Security",
-            type: "course",
-            url: "https://www.coursera.org/learn/privacy-in-machine-learning",
-            duration: 100,
-          },
-          {
-            title: "Responsible AI Practices",
-            type: "article",
-            url: "https://ai.google/responsibilities/responsible-ai-practices/",
-            duration: 60,
-          },
-        ],
-        validationCriteria: [
-          "Implémenter la gouvernance des modèles",
-          "Sécuriser les pipelines ML",
-          "Assurer la conformité RGPD",
-          "Détecter et mitiger les biais",
-        ],
-      },
-    ],
-    careerOpportunities: [
-      {
-        title: "MLOps Engineer",
-        description: "Opérationnalisation des systèmes ML",
-        averageSalary: "50-85k€/an",
-        companies: ["Google", "AWS", "Microsoft", "Databricks", "Dataiku"],
-      },
-      {
-        title: "ML Platform Engineer",
-        description: "Construction de plateformes ML",
-        averageSalary: "55-90k€/an",
-        companies: ["Uber", "Netflix", "Airbnb", "Stripe", "Square"],
-      },
-      {
-        title: "ML Infrastructure Engineer",
-        description: "Infrastructure scalable pour ML",
-        averageSalary: "60-95k€/an",
-        companies: ["Meta", "Apple", "Amazon", "NVIDIA", "Tesla"],
-      },
-    ],
-    certification: {
-      available: true,
-      name: "MLOps Professional Certificate",
-      provider: "UCAD AI Center",
-      url: "https://ucad.sn/certifications/mlops-pro",
-    },
-    requiredConcepts: [],
-  },
-
-  {
-    title: "Computer Vision Expert",
-    description:
-      "Spécialisation en traitement d'images et vision par ordinateur",
-    category: "computer_vision",
-    level: "advanced",
-    estimatedDuration: 12,
-    prerequisites: [
-      {
-        category: "math",
-        skills: [
-          { name: "Algèbre linéaire", level: "advanced" },
-          { name: "Traitement du signal", level: "intermediate" },
-        ],
-      },
-      {
-        category: "programming",
-        skills: [
-          { name: "Python", level: "advanced" },
-          { name: "C++", level: "basic" },
-        ],
-      },
-      {
-        category: "theory",
-        skills: [{ name: "Deep Learning", level: "intermediate" }],
-      },
-    ],
-    modules: [
-      {
-        title: "Fondamentaux du Traitement d'Images",
-        description: "Théorie et pratique du traitement d'images numériques",
-        duration: 20,
-        skills: [
-          { name: "OpenCV", level: "intermediate" },
-          { name: "Image Processing", level: "advanced" },
-        ],
-        resources: [
-          {
-            title: "Digital Image Processing",
-            type: "book",
-            url: "https://www.imageprocessingplace.com/",
-            duration: 150,
-          },
-          {
-            title: "OpenCV Python Tutorials",
-            type: "article",
-            url: "https://docs.opencv.org/4.x/d6/d00/tutorial_py_root.html",
-            duration: 80,
-          },
-          {
-            title: "Computer Vision: Algorithms and Applications",
-            type: "book",
-            url: "https://szeliski.org/Book/",
-            duration: 200,
-          },
-        ],
-        validationCriteria: [
-          "Maîtriser les transformations d'images",
-          "Implémenter des filtres avancés",
-          "Détecter contours et features",
-          "Calibrer des caméras",
-        ],
-      },
-      {
-        title: "Deep Learning pour la Vision",
-        description: "CNNs avancés et architectures modernes",
-        duration: 30,
-        skills: [
-          { name: "Advanced CNNs", level: "advanced" },
-          { name: "Object Detection", level: "advanced" },
-          { name: "Segmentation", level: "intermediate" },
-        ],
-        resources: [
-          {
-            title: "Dive into Deep Learning - CV",
-            type: "book",
-            url: "https://d2l.ai/chapter_computer-vision/index.html",
-            duration: 120,
-          },
-          {
-            title: "YOLO Papers and Implementation",
-            type: "article",
-            url: "https://arxiv.org/abs/1506.02640",
-            duration: 60,
-          },
-          {
-            title: "Detectron2 Tutorial",
-            type: "article",
-            url: "https://detectron2.readthedocs.io/",
-            duration: 100,
-          },
-        ],
-        validationCriteria: [
-          "Implémenter YOLO, R-CNN, et autres détecteurs",
-          "Créer des modèles de segmentation",
-          "Optimiser pour temps réel",
-          "Fine-tuner sur datasets custom",
-        ],
-      },
-      {
-        title: "Applications Avancées",
-        description: "3D vision, tracking, et applications industrielles",
-        duration: 25,
-        skills: [
-          { name: "3D Vision", level: "intermediate" },
-          { name: "Video Analysis", level: "intermediate" },
-          { name: "Edge Deployment", level: "intermediate" },
-        ],
-        resources: [
-          {
-            title: "Multiple View Geometry",
-            type: "book",
-            url: "https://www.robots.ox.ac.uk/~vgg/hzbook/",
-            duration: 180,
-          },
-          {
-            title: "Deep Learning for Videos",
-            type: "course",
-            url: "https://www.coursera.org/learn/deep-learning-in-computer-vision",
-            duration: 140,
-          },
-          {
-            title: "TensorRT Optimization",
-            type: "article",
-            url: "https://developer.nvidia.com/tensorrt",
-            duration: 80,
-          },
-        ],
-        validationCriteria: [
-          "Implémenter SLAM ou structure from motion",
-          "Créer un système de tracking multi-objets",
-          "Déployer sur edge devices",
-          "Optimiser avec TensorRT/OpenVINO",
-        ],
-      },
-    ],
-    careerOpportunities: [
-      {
-        title: "Computer Vision Engineer",
-        description: "Développement de systèmes de vision",
-        averageSalary: "50-85k€/an",
-        companies: ["Tesla", "Apple", "Google", "Microsoft", "Amazon"],
-      },
-      {
-        title: "Robotics Vision Engineer",
-        description: "Vision pour systèmes robotiques",
-        averageSalary: "55-90k€/an",
-        companies: ["Boston Dynamics", "Waymo", "Cruise", "Aurora"],
-      },
-      {
-        title: "AR/VR Engineer",
-        description: "Réalité augmentée et virtuelle",
-        averageSalary: "60-95k€/an",
-        companies: ["Meta", "Apple", "Magic Leap", "Niantic"],
-      },
-    ],
-    certification: {
-      available: true,
-      name: "Computer Vision Specialist Certificate",
-      provider: "UCAD AI Center",
-      url: "https://ucad.sn/certifications/cv-specialist",
-    },
-    requiredConcepts: [],
-  },
-
-  {
-    title: "NLP Engineer",
-    description: "Expert en traitement automatique du langage naturel",
-    category: "nlp",
-    level: "advanced",
-    estimatedDuration: 14,
-    prerequisites: [
-      {
-        category: "math",
-        skills: [
-          { name: "Probabilités", level: "advanced" },
-          { name: "Algèbre linéaire", level: "intermediate" },
-        ],
-      },
-      {
-        category: "programming",
-        skills: [
-          { name: "Python", level: "advanced" },
-          { name: "Regex", level: "intermediate" },
-        ],
-      },
-      {
-        category: "theory",
-        skills: [
-          { name: "Linguistique computationnelle", level: "basic" },
-          { name: "Deep Learning", level: "intermediate" },
-        ],
-      },
-    ],
-    modules: [
-      {
-        title: "Fondamentaux du NLP",
-        description: "Bases du traitement du langage et techniques classiques",
-        duration: 20,
-        skills: [
-          { name: "NLTK/spaCy", level: "intermediate" },
-          { name: "Text Processing", level: "advanced" },
-          { name: "Classical NLP", level: "intermediate" },
-        ],
-        resources: [
-          {
-            title: "Speech and Language Processing",
-            type: "book",
-            url: "https://web.stanford.edu/~jurafsky/slp3/",
-            duration: 200,
-          },
-          {
-            title: "Natural Language Processing with Python",
-            type: "book",
-            url: "https://www.nltk.org/book/",
-            duration: 150,
-          },
-          {
-            title: "spaCy Course",
-            type: "course",
-            url: "https://course.spacy.io/",
-            duration: 80,
-          },
-        ],
-        validationCriteria: [
-          "Maîtriser tokenization et lemmatization",
-          "Implémenter POS tagging et NER",
-          "Créer des pipelines de preprocessing",
-          "Utiliser des méthodes statistiques classiques",
-        ],
-      },
-      {
-        title: "Deep Learning pour NLP",
-        description: "RNNs, Transformers et architectures modernes",
-        duration: 35,
-        skills: [
-          { name: "Transformers", level: "advanced" },
-          { name: "BERT/GPT", level: "advanced" },
-          { name: "Hugging Face", level: "advanced" },
-        ],
-        resources: [
-          {
-            title: "Transformers from Scratch",
-            type: "article",
-            url: "https://peterbloem.nl/blog/transformers",
-            duration: 60,
-          },
-          {
-            title: "BERT Paper Deep Dive",
-            type: "article",
-            url: "https://arxiv.org/abs/1810.04805",
-            duration: 40,
-          },
-          {
-            title: "Hugging Face NLP Course",
-            type: "course",
-            url: "https://huggingface.co/learn/nlp-course",
-            duration: 150,
-          },
-        ],
-        validationCriteria: [
-          "Comprendre attention et transformers",
-          "Fine-tuner BERT/GPT pour tâches custom",
-          "Implémenter from scratch un mini-transformer",
-          "Optimiser l'inférence de LLMs",
-        ],
-      },
-      {
-        title: "Applications NLP Avancées",
-        description: "Chatbots, traduction, et génération de texte",
-        duration: 30,
-        skills: [
-          { name: "Dialogue Systems", level: "intermediate" },
-          { name: "Machine Translation", level: "intermediate" },
-          { name: "Text Generation", level: "advanced" },
-        ],
-        resources: [
-          {
-            title: "Neural Machine Translation",
-            type: "course",
-            url: "https://github.com/tensorflow/nmt",
-            duration: 120,
-          },
-          {
-            title: "Building Chatbots with Python",
-            type: "book",
-            url: "https://www.oreilly.com/library/view/building-chatbots-with/9781484241721/",
-            duration: 140,
-          },
-          {
-            title: "LangChain Documentation",
-            type: "article",
-            url: "https://python.langchain.com/docs/get_started/introduction",
-            duration: 100,
-          },
-        ],
-        validationCriteria: [
-          "Créer un chatbot fonctionnel",
-          "Implémenter un système de QA",
-          "Construire un système de traduction",
-          "Développer avec LangChain",
-        ],
-      },
-    ],
-    careerOpportunities: [
-      {
-        title: "NLP Engineer",
-        description: "Développement de systèmes NLP",
-        averageSalary: "55-90k€/an",
-        companies: ["Google", "OpenAI", "Anthropic", "Cohere", "DeepL"],
-      },
-      {
-        title: "Conversational AI Engineer",
-        description: "Chatbots et assistants virtuels",
-        averageSalary: "50-85k€/an",
-        companies: ["Amazon", "Apple", "Microsoft", "Rasa", "Dialogflow"],
-      },
-      {
-        title: "Language Model Engineer",
-        description: "Développement et fine-tuning de LLMs",
-        averageSalary: "60-100k€/an",
-        companies: ["OpenAI", "Anthropic", "Google", "Meta", "Mistral"],
-      },
-    ],
-    certification: {
-      available: true,
-      name: "NLP Specialist Certificate",
-      provider: "UCAD AI Center",
-      url: "https://ucad.sn/certifications/nlp-specialist",
-    },
-    requiredConcepts: [],
-  },
-];
-
-// Quizzes pour chaque module
-const quizTemplates = {
-  ml_fundamentals: {
-    title: "Quiz Fondamentaux ML",
-    description: "Testez vos connaissances sur les bases du ML",
-    timeLimit: 1800,
-    passingScore: 70,
-    questions: [
-      {
-        text: "Quelle est la différence principale entre classification et régression ?",
-        options: [
-          {
-            text: "La classification prédit des catégories, la régression des valeurs continues",
-            isCorrect: true,
-          },
-          {
-            text: "La classification est plus rapide que la régression",
-            isCorrect: false,
-          },
-          { text: "La régression nécessite plus de données", isCorrect: false },
-          { text: "Il n'y a pas de différence", isCorrect: false },
-        ],
-        explanation:
-          "La classification prédit des classes discrètes tandis que la régression prédit des valeurs numériques continues.",
-      },
-      {
-        text: "Qu'est-ce que le surapprentissage (overfitting) ?",
-        options: [
-          {
-            text: "Le modèle mémorise les données d'entraînement au lieu de généraliser",
-            isCorrect: true,
-          },
-          { text: "Le modèle apprend trop vite", isCorrect: false },
-          { text: "Le modèle a trop de données", isCorrect: false },
-          { text: "Le modèle est trop simple", isCorrect: false },
-        ],
-        explanation:
-          "L'overfitting se produit quand le modèle s'adapte trop aux données d'entraînement et performe mal sur de nouvelles données.",
-      },
-      {
-        text: "Quelle métrique utiliser pour un dataset déséquilibré ?",
-        options: [
-          { text: "F1-Score ou AUC-ROC", isCorrect: true },
-          { text: "Accuracy uniquement", isCorrect: false },
-          { text: "MSE", isCorrect: false },
-          { text: "R-squared", isCorrect: false },
-        ],
-        explanation:
-          "F1-Score et AUC-ROC sont plus appropriés car ils prennent en compte le déséquilibre des classes.",
-      },
-      {
-        text: "Qu'est-ce que la validation croisée ?",
-        options: [
-          {
-            text: "Une technique pour évaluer la performance en divisant les données en k parties",
-            isCorrect: true,
-          },
-          { text: "Valider le modèle deux fois", isCorrect: false },
-          { text: "Croiser deux modèles différents", isCorrect: false },
-          { text: "Valider sur les données d'entraînement", isCorrect: false },
-        ],
-        explanation:
-          "La validation croisée divise les données en k parties pour une évaluation plus robuste du modèle.",
-      },
-      {
-        text: "Quel est le rôle de la régularisation ?",
-        options: [
-          {
-            text: "Prévenir le surapprentissage en pénalisant la complexité",
-            isCorrect: true,
-          },
-          { text: "Accélérer l'entraînement", isCorrect: false },
-          { text: "Augmenter la précision", isCorrect: false },
-          { text: "Réduire le nombre de features", isCorrect: false },
-        ],
-        explanation:
-          "La régularisation ajoute une pénalité pour limiter la complexité du modèle et éviter l'overfitting.",
-      },
-    ],
-  },
-
-  python_data_science: {
-    title: "Quiz Python pour Data Science",
-    description: "Évaluez vos compétences Python pour l'analyse de données",
-    timeLimit: 1500,
-    passingScore: 70,
-    questions: [
-      {
-        text: "Comment créer un DataFrame Pandas à partir d'un dictionnaire ?",
-        options: [
-          { text: "pd.DataFrame(dict)", isCorrect: true },
-          { text: "pd.create_dataframe(dict)", isCorrect: false },
-          { text: "pd.from_dict(dict)", isCorrect: false },
-          { text: "DataFrame.new(dict)", isCorrect: false },
-        ],
-        explanation:
-          "pd.DataFrame() peut directement créer un DataFrame à partir d'un dictionnaire.",
-      },
-      {
-        text: "Quelle méthode Pandas permet de grouper et agréger des données ?",
-        options: [
-          { text: "groupby()", isCorrect: true },
-          { text: "aggregate()", isCorrect: false },
-          { text: "group()", isCorrect: false },
-          { text: "cluster()", isCorrect: false },
-        ],
-        explanation:
-          "groupby() permet de grouper les données selon une ou plusieurs colonnes pour ensuite appliquer des agrégations.",
-      },
-      {
-        text: "Comment gérer les valeurs manquantes dans un DataFrame ?",
-        options: [
-          { text: "fillna(), dropna(), ou interpolate()", isCorrect: true },
-          { text: "remove_null()", isCorrect: false },
-          { text: "clean_data()", isCorrect: false },
-          { text: "fix_missing()", isCorrect: false },
-        ],
-        explanation:
-          "Pandas offre plusieurs méthodes pour gérer les valeurs manquantes selon le contexte.",
-      },
-      {
-        text: "Quelle est la différence entre loc et iloc ?",
-        options: [
-          {
-            text: "loc utilise les labels, iloc utilise les positions entières",
-            isCorrect: true,
-          },
-          { text: "loc est plus rapide qu'iloc", isCorrect: false },
-          { text: "iloc accepte plus de types de données", isCorrect: false },
-          { text: "Il n'y a pas de différence", isCorrect: false },
-        ],
-        explanation:
-          "loc accède aux données par labels/noms tandis qu'iloc utilise les indices de position.",
-      },
-    ],
-  },
-
-  deep_learning_basics: {
-    title: "Quiz Réseaux de Neurones",
-    description: "Testez vos connaissances en deep learning",
-    timeLimit: 2100,
-    passingScore: 75,
-    questions: [
-      {
-        text: "Quelle fonction d'activation évite le problème du gradient vanishing ?",
-        options: [
-          { text: "ReLU", isCorrect: true },
-          { text: "Sigmoid", isCorrect: false },
-          { text: "Tanh", isCorrect: false },
-          { text: "Linear", isCorrect: false },
-        ],
-        explanation:
-          "ReLU maintient le gradient pour les valeurs positives, évitant ainsi le vanishing gradient.",
-      },
-      {
-        text: "Qu'est-ce que le dropout ?",
-        options: [
-          {
-            text: "Une technique de régularisation qui désactive aléatoirement des neurones",
-            isCorrect: true,
-          },
-          { text: "Supprimer des couches du réseau", isCorrect: false },
-          { text: "Réduire le learning rate", isCorrect: false },
-          { text: "Arrêter l'entraînement tôt", isCorrect: false },
-        ],
-        explanation:
-          "Le dropout désactive aléatoirement des neurones pendant l'entraînement pour éviter l'overfitting.",
-      },
-      {
-        text: "Quel est le rôle du batch normalization ?",
-        options: [
-          {
-            text: "Normaliser les activations pour stabiliser l'entraînement",
-            isCorrect: true,
-          },
-          { text: "Normaliser les données d'entrée", isCorrect: false },
-          { text: "Réduire la taille des batchs", isCorrect: false },
-          { text: "Augmenter la vitesse de calcul", isCorrect: false },
-        ],
-        explanation:
-          "Batch normalization normalise les activations de chaque couche pour un entraînement plus stable et rapide.",
-      },
-      {
-        text: "Quelle architecture est spécialisée pour les séquences ?",
-        options: [
-          { text: "RNN/LSTM", isCorrect: true },
-          { text: "CNN", isCorrect: false },
-          { text: "Autoencoder", isCorrect: false },
-          { text: "GAN", isCorrect: false },
-        ],
-        explanation:
-          "Les RNN et LSTM sont conçus pour traiter des données séquentielles avec mémoire temporelle.",
-      },
-      {
-        text: "Comment fonctionne le mécanisme d'attention ?",
-        options: [
-          {
-            text: "Il pondère l'importance des différentes parties de l'entrée",
-            isCorrect: true,
-          },
-          { text: "Il augmente le learning rate", isCorrect: false },
-          { text: "Il réduit le nombre de paramètres", isCorrect: false },
-          { text: "Il accélère la convergence", isCorrect: false },
-        ],
-        explanation:
-          "L'attention calcule des poids pour déterminer quelles parties de l'entrée sont importantes pour la tâche.",
-      },
-    ],
-  },
-
-  computer_vision_quiz: {
-    title: "Quiz Vision par Ordinateur",
-    description: "Évaluez vos connaissances en computer vision",
-    timeLimit: 1800,
-    passingScore: 70,
-    questions: [
-      {
-        text: "Qu'est-ce qu'une convolution dans un CNN ?",
-        options: [
-          {
-            text: "Une opération qui applique un filtre pour extraire des features",
-            isCorrect: true,
-          },
-          { text: "Une fonction d'activation", isCorrect: false },
-          { text: "Une méthode de pooling", isCorrect: false },
-          { text: "Une technique d'augmentation", isCorrect: false },
-        ],
-        explanation:
-          "La convolution applique des filtres apprenables pour détecter des motifs dans l'image.",
-      },
-      {
-        text: "Quel est le rôle du pooling dans un CNN ?",
-        options: [
-          {
-            text: "Réduire la dimension spatiale et extraire les features dominantes",
-            isCorrect: true,
-          },
-          { text: "Augmenter la résolution", isCorrect: false },
-          { text: "Ajouter du bruit", isCorrect: false },
-          { text: "Normaliser les pixels", isCorrect: false },
-        ],
-        explanation:
-          "Le pooling réduit la taille des feature maps tout en conservant l'information importante.",
-      },
-      {
-        text: "Qu'est-ce que le transfer learning en CV ?",
-        options: [
-          {
-            text: "Utiliser un modèle pré-entraîné et l'adapter à une nouvelle tâche",
-            isCorrect: true,
-          },
-          { text: "Transférer des images entre datasets", isCorrect: false },
-          { text: "Copier l'architecture d'un modèle", isCorrect: false },
-          { text: "Partager des poids entre couches", isCorrect: false },
-        ],
-        explanation:
-          "Le transfer learning réutilise les features apprises sur un grand dataset pour une nouvelle tâche.",
-      },
-      {
-        text: "Quelle métrique est utilisée pour la détection d'objets ?",
-        options: [
-          { text: "mAP (mean Average Precision)", isCorrect: true },
-          { text: "Accuracy", isCorrect: false },
-          { text: "BLEU score", isCorrect: false },
-          { text: "Perplexity", isCorrect: false },
-        ],
-        explanation:
-          "mAP évalue la précision de détection en considérant la localisation et la classification.",
-      },
-    ],
-  },
-
-  nlp_fundamentals: {
-    title: "Quiz NLP Fondamentaux",
-    description: "Testez vos connaissances en traitement du langage",
-    timeLimit: 1800,
-    passingScore: 70,
-    questions: [
-      {
-        text: "Qu'est-ce que la tokenisation ?",
-        options: [
-          {
-            text: "Diviser le texte en unités plus petites (mots, sous-mots)",
-            isCorrect: true,
-          },
-          { text: "Traduire le texte", isCorrect: false },
-          { text: "Compresser le texte", isCorrect: false },
-          { text: "Analyser la grammaire", isCorrect: false },
-        ],
-        explanation:
-          "La tokenisation découpe le texte en tokens qui peuvent être des mots, sous-mots ou caractères.",
-      },
-      {
-        text: "Qu'est-ce qu'un embedding de mots ?",
-        options: [
-          {
-            text: "Une représentation vectorielle dense des mots",
-            isCorrect: true,
-          },
-          { text: "Un dictionnaire de synonymes", isCorrect: false },
-          { text: "Une liste de mots-clés", isCorrect: false },
-          { text: "Un compteur de fréquence", isCorrect: false },
-        ],
-        explanation:
-          "Les embeddings représentent les mots comme des vecteurs denses capturant leur sémantique.",
-      },
-      {
-        text: "Quel est l'avantage principal des Transformers sur les RNN ?",
-        options: [
-          {
-            text: "Traitement parallèle et capture de dépendances longues",
-            isCorrect: true,
-          },
-          { text: "Moins de paramètres", isCorrect: false },
-          { text: "Plus rapide à entraîner", isCorrect: false },
-          { text: "Meilleur pour les courtes séquences", isCorrect: false },
-        ],
-        explanation:
-          "Les Transformers peuvent traiter toute la séquence en parallèle grâce à l'attention.",
-      },
-      {
-        text: "Qu'est-ce que le fine-tuning d'un modèle de langage ?",
-        options: [
-          {
-            text: "Adapter un modèle pré-entraîné à une tâche spécifique",
-            isCorrect: true,
-          },
-          { text: "Réduire la taille du modèle", isCorrect: false },
-          { text: "Augmenter le vocabulaire", isCorrect: false },
-          { text: "Changer l'architecture", isCorrect: false },
-        ],
-        explanation:
-          "Le fine-tuning adapte un modèle pré-entraîné en continuant l'entraînement sur des données spécifiques.",
-      },
-    ],
-  },
-
-  mlops_infrastructure: {
-    title: "Quiz MLOps et Infrastructure",
-    description: "Évaluez vos connaissances en MLOps",
-    timeLimit: 1800,
-    passingScore: 70,
-    questions: [
-      {
-        text: "Qu'est-ce que le model drift ?",
-        options: [
-          {
-            text: "Dégradation des performances du modèle due aux changements dans les données",
-            isCorrect: true,
-          },
-          { text: "Un bug dans le code du modèle", isCorrect: false },
-          { text: "L'augmentation de la latence", isCorrect: false },
-          { text: "La corruption des poids", isCorrect: false },
-        ],
-        explanation:
-          "Le model drift se produit quand la distribution des données change par rapport à l'entraînement.",
-      },
-      {
-        text: "Quel est l'avantage principal de Docker pour le ML ?",
-        options: [
-          {
-            text: "Reproductibilité et isolation de l'environnement",
-            isCorrect: true,
-          },
-          { text: "Entraînement plus rapide", isCorrect: false },
-          { text: "Meilleure précision", isCorrect: false },
-          { text: "Réduction de la taille du modèle", isCorrect: false },
-        ],
-        explanation:
-          "Docker garantit que l'environnement d'exécution est identique en développement et production.",
-      },
-      {
-        text: "Qu'est-ce que MLflow ?",
-        options: [
-          {
-            text: "Une plateforme pour gérer le cycle de vie ML",
-            isCorrect: true,
-          },
-          { text: "Un framework de deep learning", isCorrect: false },
-          { text: "Un outil de visualisation", isCorrect: false },
-          { text: "Une base de données", isCorrect: false },
-        ],
-        explanation:
-          "MLflow aide à tracker les expériences, packager le code et déployer les modèles.",
-      },
-      {
-        text: "Pourquoi monitorer les modèles en production ?",
-        options: [
-          {
-            text: "Détecter la dégradation des performances et les anomalies",
-            isCorrect: true,
-          },
-          { text: "Augmenter la vitesse d'inférence", isCorrect: false },
-          { text: "Réduire les coûts", isCorrect: false },
-          { text: "Améliorer l'accuracy", isCorrect: false },
-        ],
-        explanation:
-          "Le monitoring permet de détecter rapidement les problèmes et maintenir la qualité du service.",
-      },
-    ],
-  },
-
-  data_analysis_viz: {
-    title: "Quiz Analyse et Visualisation",
-    description: "Testez vos compétences en analyse de données",
-    timeLimit: 1500,
-    passingScore: 70,
-    questions: [
-      {
-        text: "Quel type de graphique pour montrer une distribution ?",
-        options: [
-          { text: "Histogramme ou boxplot", isCorrect: true },
-          { text: "Pie chart", isCorrect: false },
-          { text: "Line plot", isCorrect: false },
-          { text: "Scatter plot", isCorrect: false },
-        ],
-        explanation:
-          "Histogrammes et boxplots sont idéaux pour visualiser la distribution des données.",
-      },
-      {
-        text: "Qu'est-ce que la corrélation de Pearson mesure ?",
-        options: [
-          {
-            text: "La relation linéaire entre deux variables",
-            isCorrect: true,
-          },
-          { text: "La causalité entre variables", isCorrect: false },
-          { text: "La différence de moyennes", isCorrect: false },
-          { text: "La variance totale", isCorrect: false },
-        ],
-        explanation:
-          "Le coefficient de Pearson mesure la force et direction de la relation linéaire (-1 à 1).",
-      },
-      {
-        text: "Comment détecter les outliers dans un dataset ?",
-        options: [
-          { text: "IQR, Z-score, ou méthodes de clustering", isCorrect: true },
-          { text: "Moyenne et médiane", isCorrect: false },
-          { text: "Régression linéaire", isCorrect: false },
-          { text: "Test t de Student", isCorrect: false },
-        ],
-        explanation:
-          "IQR et Z-score sont des méthodes statistiques classiques pour identifier les valeurs aberrantes.",
-      },
-      {
-        text: "Quel principe suivre pour une bonne visualisation ?",
-        options: [
-          {
-            text: "Clarté, simplicité et pertinence du message",
-            isCorrect: true,
-          },
-          { text: "Maximum de couleurs et effets", isCorrect: false },
-          { text: "Toujours utiliser 3D", isCorrect: false },
-          { text: "Inclure toutes les données", isCorrect: false },
-        ],
-        explanation:
-          "Une bonne visualisation communique clairement un message sans surcharge visuelle.",
-      },
-    ],
-  },
-};
-
-// Assessments pour évaluation initiale
-const assessments = [
-  {
-    title: "Évaluation Initiale - Mathématiques",
-    category: "math",
-    difficulty: "basic",
-    questions: [
-      {
-        text: "Qu'est-ce qu'un vecteur propre d'une matrice ?",
-        options: [
-          {
-            text: "Un vecteur qui ne change que d'échelle lors de la multiplication",
-            isCorrect: true,
-          },
-          { text: "Un vecteur de norme 1", isCorrect: false },
-          { text: "Un vecteur orthogonal", isCorrect: false },
-          { text: "La première colonne de la matrice", isCorrect: false },
-        ],
-        explanation:
-          "Av = λv, où v est le vecteur propre et λ la valeur propre.",
-      },
-      {
-        text: "Quelle est la dérivée de f(x) = x² ?",
-        options: [
-          { text: "2x", isCorrect: true },
-          { text: "x", isCorrect: false },
-          { text: "x²/2", isCorrect: false },
-          { text: "2", isCorrect: false },
-        ],
-        explanation: "La dérivée de x^n est n*x^(n-1), donc pour x², c'est 2x.",
-      },
-    ],
-    recommendedGoals: [], // Sera rempli après création
-  },
-
-  {
-    title: "Évaluation Initiale - Programmation",
-    category: "programming",
-    difficulty: "basic",
-    questions: [
-      {
-        text: "Quelle est la complexité temporelle d'une recherche dans une liste triée ?",
-        options: [
-          { text: "O(log n) avec recherche binaire", isCorrect: true },
-          { text: "O(n)", isCorrect: false },
-          { text: "O(n²)", isCorrect: false },
-          { text: "O(1)", isCorrect: false },
-        ],
-        explanation:
-          "La recherche binaire divise l'espace de recherche par 2 à chaque étape.",
-      },
-      {
-        text: "Qu'est-ce qu'une list comprehension en Python ?",
-        options: [
-          {
-            text: "Une syntaxe concise pour créer des listes",
-            isCorrect: true,
-          },
-          { text: "Une méthode pour compresser des listes", isCorrect: false },
-          { text: "Un type de boucle", isCorrect: false },
-          { text: "Une fonction built-in", isCorrect: false },
-        ],
-        explanation:
-          "[x**2 for x in range(10)] est un exemple de list comprehension.",
-      },
-    ],
-    recommendedGoals: [],
-  },
-
-  {
-    title: "Évaluation ML - Niveau Intermédiaire",
-    category: "ml",
-    difficulty: "intermediate",
-    questions: [
-      {
-        text: "Quelle technique permet de réduire la dimension tout en préservant la variance ?",
-        options: [
-          { text: "PCA (Principal Component Analysis)", isCorrect: true },
-          { text: "K-means clustering", isCorrect: false },
-          { text: "Random Forest", isCorrect: false },
-          { text: "Gradient Boosting", isCorrect: false },
-        ],
-        explanation:
-          "PCA projette les données sur les axes de variance maximale.",
-      },
-      {
-        text: "Comment gérer un problème de classification multi-classes déséquilibré ?",
-        options: [
-          {
-            text: "SMOTE, class weights, ou ensemble methods",
-            isCorrect: true,
-          },
-          { text: "Ignorer le déséquilibre", isCorrect: false },
-          { text: "Utiliser seulement accuracy", isCorrect: false },
-          { text: "Supprimer les classes minoritaires", isCorrect: false },
-        ],
-        explanation:
-          "Ces techniques compensent le déséquilibre sans perdre d'information.",
-      },
-      {
-        text: "Qu'est-ce que le gradient boosting ?",
-        options: [
-          {
-            text: "Un ensemble method qui entraîne des modèles séquentiellement",
-            isCorrect: true,
-          },
-          {
-            text: "Une technique d'optimisation du gradient",
-            isCorrect: false,
-          },
-          { text: "Un type de réseau de neurones", isCorrect: false },
-          { text: "Une méthode de feature selection", isCorrect: false },
-        ],
-        explanation:
-          "Chaque modèle corrige les erreurs du précédent dans le gradient boosting.",
-      },
-    ],
-    recommendedGoals: [],
-  },
-
-  {
-    title: "Évaluation Deep Learning",
-    category: "dl",
-    difficulty: "advanced",
-    questions: [
-      {
-        text: "Qu'est-ce que le gradient clipping ?",
-        options: [
-          {
-            text: "Limiter la norme des gradients pour éviter l'explosion",
-            isCorrect: true,
-          },
-          { text: "Supprimer les gradients négatifs", isCorrect: false },
-          { text: "Accélérer la backpropagation", isCorrect: false },
-          { text: "Réduire le nombre de paramètres", isCorrect: false },
-        ],
-        explanation:
-          "Le gradient clipping évite l'instabilité numérique lors de l'entraînement.",
-      },
-      {
-        text: "Comment fonctionne l'attention multi-têtes ?",
-        options: [
-          {
-            text: "Plusieurs mécanismes d'attention en parallèle avec différentes projections",
-            isCorrect: true,
-          },
-          { text: "Attention sur plusieurs couches", isCorrect: false },
-          { text: "Plusieurs modèles indépendants", isCorrect: false },
-          { text: "Attention bidirectionnelle", isCorrect: false },
-        ],
-        explanation:
-          "Multi-head attention permet de capturer différents types de relations.",
-      },
-      {
-        text: "Quel est l'avantage des connexions résiduelles ?",
-        options: [
-          {
-            text: "Faciliter le flux du gradient dans les réseaux profonds",
-            isCorrect: true,
-          },
-          { text: "Réduire le nombre de paramètres", isCorrect: false },
-          { text: "Accélérer l'inférence", isCorrect: false },
-          { text: "Améliorer la précision", isCorrect: false },
-        ],
-        explanation:
-          "Les skip connections permettent au gradient de bypasser des couches.",
-      },
-    ],
-    recommendedGoals: [],
-  },
-
-  {
-    title: "Évaluation Computer Vision",
-    category: "computer_vision",
-    difficulty: "intermediate",
-    questions: [
-      {
-        text: "Qu'est-ce que l'IoU (Intersection over Union) ?",
-        options: [
-          {
-            text: "Métrique pour évaluer la qualité de la détection d'objets",
-            isCorrect: true,
-          },
-          { text: "Une fonction de loss", isCorrect: false },
-          { text: "Un type de pooling", isCorrect: false },
-          { text: "Une architecture CNN", isCorrect: false },
-        ],
-        explanation:
-          "IoU mesure le chevauchement entre la prédiction et la vérité terrain.",
-      },
-      {
-        text: "Quelle est la différence entre détection et segmentation ?",
-        options: [
-          {
-            text: "La détection donne des bounding boxes, la segmentation des masques pixel par pixel",
-            isCorrect: true,
-          },
-          { text: "La segmentation est plus rapide", isCorrect: false },
-          { text: "La détection est plus précise", isCorrect: false },
-          { text: "Il n'y a pas de différence", isCorrect: false },
-        ],
-        explanation:
-          "La segmentation fournit une classification au niveau du pixel.",
-      },
-    ],
-    recommendedGoals: [],
-  },
-
-  {
-    title: "Évaluation NLP",
-    category: "nlp",
-    difficulty: "intermediate",
-    questions: [
-      {
-        text: "Qu'est-ce que le BLEU score ?",
-        options: [
-          {
-            text: "Une métrique pour évaluer la qualité de la traduction",
-            isCorrect: true,
-          },
-          { text: "Un algorithme de tokenisation", isCorrect: false },
-          { text: "Une architecture de modèle", isCorrect: false },
-          { text: "Une technique d'embedding", isCorrect: false },
-        ],
-        explanation:
-          "BLEU compare les n-grammes entre la traduction et les références.",
-      },
-      {
-        text: "Qu'est-ce que le masquage dans BERT ?",
-        options: [
-          {
-            text: "Cacher aléatoirement des tokens pour l'entraînement",
-            isCorrect: true,
-          },
-          { text: "Filtrer les mots non pertinents", isCorrect: false },
-          { text: "Réduire la taille du vocabulaire", isCorrect: false },
-          { text: "Anonymiser les données", isCorrect: false },
-        ],
-        explanation:
-          "Le masked language modeling est la tâche de pré-entraînement de BERT.",
-      },
-    ],
-    recommendedGoals: [],
-  },
-
-  {
-    title: "Évaluation MLOps",
-    category: "mlops",
-    difficulty: "intermediate",
-    questions: [
-      {
-        text: "Qu'est-ce que le A/B testing pour les modèles ML ?",
-        options: [
-          {
-            text: "Comparer deux versions de modèles en production",
-            isCorrect: true,
-          },
-          { text: "Tester deux datasets différents", isCorrect: false },
-          { text: "Entraîner deux modèles en parallèle", isCorrect: false },
-          { text: "Valider avec deux métriques", isCorrect: false },
-        ],
-        explanation:
-          "L'A/B testing permet de comparer les performances réelles de deux modèles.",
-      },
-      {
-        text: "Pourquoi versionner les données en ML ?",
-        options: [
-          {
-            text: "Assurer la reproductibilité et tracer les changements",
-            isCorrect: true,
-          },
-          { text: "Réduire l'espace de stockage", isCorrect: false },
-          { text: "Accélérer l'entraînement", isCorrect: false },
-          { text: "Améliorer la précision", isCorrect: false },
-        ],
-        explanation:
-          "Le versioning des données est crucial pour reproduire les résultats.",
-      },
-    ],
-    recommendedGoals: [],
-  },
-];
-
-async function populateDatabase() {
+async function connectDB() {
   try {
-    // Connexion à MongoDB
     await mongoose.connect(MONGODB_URI);
-    logger.info("Connected to MongoDB");
+    logger.info("Connected to MongoDB for data population");
+  } catch (error) {
+    logger.error("MongoDB connection error:", error);
+    process.exit(1);
+  }
+}
 
-    // Nettoyer la base de données
-    await Promise.all([
-      User.deleteMany({}),
-      Goal.deleteMany({}),
-      Assessment.deleteMany({}),
-      Concept.deleteMany({}),
-      Quiz.deleteMany({}),
-      LearnerProfile.deleteMany({}),
-      Pathway.deleteMany({}),
-    ]);
-    logger.info("Database cleaned");
+async function clearDatabase() {
+  try {
+    await User.deleteMany({});
+    await Goal.deleteMany({});
+    await Assessment.deleteMany({});
+    await Quiz.deleteMany({});
+    await LearnerProfile.deleteMany({});
+    await Pathway.deleteMany({});
+    await Concept.deleteMany({});
+    logger.info("Database cleared");
+  } catch (error) {
+    logger.error("Error clearing database:", error);
+  }
+}
 
-    // Créer les utilisateurs
-    const createdUsers = await User.create(users);
-    logger.info(`Created ${createdUsers.length} users`);
+async function createUsers() {
+  try {
+    const users = [
+      {
+        email: "student@ucad.edu.sn",
+        password: "Student123!",
+        role: "user",
+      },
+      {
+        email: "student1@ucad.edu.sn",
+        password: "Student123!",
+        role: "user",
+      },
+      {
+        email: "student2@ucad.edu.sn",
+        password: "Student123!",
+        role: "user",
+      },
+      {
+        email: "marie.fall@ucad.edu.sn",
+        password: "Marie123!",
+        role: "user",
+      },
+      {
+        email: "ousmane.sow@ucad.edu.sn",
+        password: "Ousmane123!",
+        role: "user",
+      },
+      {
+        email: "fatou.ba@ucad.edu.sn",
+        password: "Fatou123!",
+        role: "user",
+      },
+      {
+        email: "ibrahim.diop@ucad.edu.sn",
+        password: "Ibrahim123!",
+        role: "user",
+      },
+      {
+        email: "aissatou.ndiaye@ucad.edu.sn",
+        password: "Aissatou123!",
+        role: "user",
+      },
+      {
+        email: "mamadou.kane@ucad.edu.sn",
+        password: "Mamadou123!",
+        role: "user",
+      },
+      {
+        email: "admin@ucad.edu.sn",
+        password: "Admin123!",
+        role: "admin",
+      },
+      {
+        email: "prof.diallo@ucad.edu.sn",
+        password: "Prof123!",
+        role: "admin",
+      },
+      {
+        email: "prof.ndiaye@ucad.edu.sn",
+        password: "Prof123!",
+        role: "admin",
+      },
+    ];
 
-    // Créer les concepts
-    const createdConcepts = await Concept.create(concepts);
-    logger.info(`Created ${createdConcepts.length} concepts`);
+    for (const userData of users) {
+      const user = new User(userData);
+      await user.save();
+      logger.info(`User created: ${userData.email}`);
+    }
+  } catch (error) {
+    logger.error("Error creating users:", error);
+  }
+}
 
-    // Créer un mapping des concepts
-    const conceptMap = {};
-    createdConcepts.forEach(concept => {
-      conceptMap[concept.name] = concept._id;
-    });
+async function createConcepts() {
+  try {
+    const concepts = [
+      // Mathématiques
+      {
+        name: "Algèbre Linéaire pour l'IA",
+        description:
+          "Vecteurs, matrices, transformations linéaires, décomposition SVD, valeurs propres essentiels pour l'IA",
+        category: "math",
+        level: "basic",
+        prerequisites: [],
+      },
+      {
+        name: "Calcul Différentiel et Intégral",
+        description:
+          "Dérivées partielles, gradients, règle de la chaîne, optimisation continue pour le ML",
+        category: "math",
+        level: "intermediate",
+        prerequisites: [],
+      },
+      {
+        name: "Probabilités et Statistiques",
+        description:
+          "Distributions, théorème de Bayes, tests d'hypothèses, inférence statistique",
+        category: "math",
+        level: "intermediate",
+        prerequisites: [],
+      },
+      {
+        name: "Optimisation Mathématique",
+        description:
+          "Méthodes du gradient, optimisation convexe, lagrangiens, conditions KKT",
+        category: "math",
+        level: "advanced",
+        prerequisites: [],
+      },
+      {
+        name: "Théorie de l'Information",
+        description:
+          "Entropie de Shannon, information mutuelle, divergence KL, compression",
+        category: "math",
+        level: "advanced",
+        prerequisites: [],
+      },
+      {
+        name: "Statistiques Bayésiennes",
+        description:
+          "Inférence bayésienne, MCMC, priors conjugués, modèles hiérarchiques",
+        category: "math",
+        level: "advanced",
+        prerequisites: [],
+      },
+
+      // Programmation
+      {
+        name: "Python Fondamentaux",
+        description:
+          "Syntaxe Python, structures de données, POO, gestion d'exceptions, modules",
+        category: "programming",
+        level: "basic",
+        prerequisites: [],
+      },
+      {
+        name: "Python pour la Data Science",
+        description:
+          "NumPy, Pandas, Matplotlib, Seaborn, Jupyter notebooks, manipulation de données",
+        category: "programming",
+        level: "intermediate",
+        prerequisites: [],
+      },
+      {
+        name: "SQL et Bases de Données",
+        description:
+          "Requêtes SQL complexes, joins, optimisation, NoSQL (MongoDB), bases distribuées",
+        category: "programming",
+        level: "basic",
+        prerequisites: [],
+      },
+      {
+        name: "Git et Collaboration",
+        description:
+          "Versioning, branches, merge/rebase, workflows collaboratifs, GitHub/GitLab",
+        category: "programming",
+        level: "basic",
+        prerequisites: [],
+      },
+
+      // Machine Learning
+      {
+        name: "Introduction au Machine Learning",
+        description:
+          "Types d'apprentissage, workflow ML, métriques d'évaluation, validation croisée",
+        category: "ml",
+        level: "basic",
+        prerequisites: [],
+      },
+      {
+        name: "Apprentissage Supervisé",
+        description:
+          "Classification, régression, arbres de décision, SVM, évaluation de modèles",
+        category: "ml",
+        level: "intermediate",
+        prerequisites: [],
+      },
+      {
+        name: "Apprentissage Non Supervisé",
+        description:
+          "Clustering (K-means, hierarchique), réduction de dimension (PCA, t-SNE), détection d'anomalies",
+        category: "ml",
+        level: "intermediate",
+        prerequisites: [],
+      },
+      {
+        name: "Feature Engineering",
+        description:
+          "Sélection de features, transformation, création, gestion des données manquantes",
+        category: "ml",
+        level: "intermediate",
+        prerequisites: [],
+      },
+      {
+        name: "Ensemble Methods",
+        description:
+          "Random Forest, Gradient Boosting, XGBoost, LightGBM, stacking",
+        category: "ml",
+        level: "advanced",
+        prerequisites: [],
+      },
+
+      // Deep Learning
+      {
+        name: "Réseaux de Neurones",
+        description:
+          "Perceptron, backpropagation, fonctions d'activation, architectures feedforward",
+        category: "dl",
+        level: "intermediate",
+        prerequisites: [],
+      },
+      {
+        name: "CNN - Vision par Ordinateur",
+        description:
+          "Convolutions, pooling, architectures CNN (ResNet, VGG, EfficientNet)",
+        category: "dl",
+        level: "advanced",
+        prerequisites: [],
+      },
+      {
+        name: "RNN et Séquences",
+        description:
+          "LSTM, GRU, seq2seq, applications temporelles et séquentielles",
+        category: "dl",
+        level: "advanced",
+        prerequisites: [],
+      },
+      {
+        name: "Transformers et Attention",
+        description: "Mécanisme d'attention, BERT, GPT, Vision Transformers",
+        category: "dl",
+        level: "advanced",
+        prerequisites: [],
+      },
+
+      // Computer Vision
+      {
+        name: "Traitement d'Images Fondamental",
+        description:
+          "Filtrage, morphologie mathématique, transformations géométriques, histogrammes",
+        category: "computer_vision",
+        level: "basic",
+        prerequisites: [],
+      },
+      {
+        name: "Détection d'Objets",
+        description: "YOLO, R-CNN, SSD, métriques mAP, Non-Maximum Suppression",
+        category: "computer_vision",
+        level: "advanced",
+        prerequisites: [],
+      },
+      {
+        name: "Segmentation d'Images",
+        description:
+          "U-Net, Mask R-CNN, segmentation sémantique vs instance, métriques IoU",
+        category: "computer_vision",
+        level: "advanced",
+        prerequisites: [],
+      },
+
+      // NLP
+      {
+        name: "NLP Fondamental",
+        description:
+          "Tokenisation, stemming, lemmatisation, POS tagging, parsing syntaxique",
+        category: "nlp",
+        level: "basic",
+        prerequisites: [],
+      },
+      {
+        name: "Word Embeddings",
+        description:
+          "Word2Vec, GloVe, FastText, représentations vectorielles contextuelles",
+        category: "nlp",
+        level: "intermediate",
+        prerequisites: [],
+      },
+      {
+        name: "Analyse de Sentiment",
+        description:
+          "Classification de texte, polarité, analyse d'aspects, datasets annotés",
+        category: "nlp",
+        level: "intermediate",
+        prerequisites: [],
+      },
+      {
+        name: "Named Entity Recognition",
+        description:
+          "Extraction d'entités nommées, modèles CRF, BiLSTM-CRF, spaCy",
+        category: "nlp",
+        level: "intermediate",
+        prerequisites: [],
+      },
+
+      // MLOps
+      {
+        name: "Containerisation ML",
+        description:
+          "Docker pour ML, Kubernetes, orchestration d'applications ML",
+        category: "mlops",
+        level: "intermediate",
+        prerequisites: [],
+      },
+      {
+        name: "Pipelines ML",
+        description:
+          "MLflow, Kubeflow, DVC, orchestration de workflows ML, CI/CD",
+        category: "mlops",
+        level: "intermediate",
+        prerequisites: [],
+      },
+      {
+        name: "Monitoring de Modèles",
+        description:
+          "Drift detection, performance monitoring, alerting, observabilité",
+        category: "mlops",
+        level: "advanced",
+        prerequisites: [],
+      },
+    ];
+
+    for (const conceptData of concepts) {
+      const concept = new Concept(conceptData);
+      await concept.save();
+      logger.info(`Concept created: ${conceptData.name}`);
+    }
 
     // Définir les relations de prérequis
     const prerequisites = {
@@ -2054,6 +381,7 @@ async function populateDatabase() {
         "Calcul Différentiel et Intégral",
         "Algèbre Linéaire pour l'IA",
       ],
+      "Statistiques Bayésiennes": ["Probabilités et Statistiques"],
       "Python pour la Data Science": ["Python Fondamentaux"],
       "Introduction au Machine Learning": [
         "Python pour la Data Science",
@@ -2061,20 +389,34 @@ async function populateDatabase() {
       ],
       "Apprentissage Supervisé": ["Introduction au Machine Learning"],
       "Apprentissage Non Supervisé": ["Introduction au Machine Learning"],
-      "Feature Engineering": [
-        "Apprentissage Supervisé",
-        "Apprentissage Non Supervisé",
-      ],
+      "Feature Engineering": ["Apprentissage Supervisé"],
+      "Ensemble Methods": ["Apprentissage Supervisé", "Feature Engineering"],
       "Réseaux de Neurones": [
         "Apprentissage Supervisé",
         "Optimisation Mathématique",
       ],
-      "CNN - Vision par Ordinateur": ["Réseaux de Neurones"],
+      "CNN - Vision par Ordinateur": [
+        "Réseaux de Neurones",
+        "Traitement d'Images Fondamental",
+      ],
       "RNN et Séquences": ["Réseaux de Neurones"],
       "Transformers et Attention": ["RNN et Séquences"],
+      "Détection d'Objets": ["CNN - Vision par Ordinateur"],
+      "Segmentation d'Images": ["CNN - Vision par Ordinateur"],
+      "Word Embeddings": ["NLP Fondamental", "Algèbre Linéaire pour l'IA"],
+      "Analyse de Sentiment": ["Word Embeddings"],
+      "Named Entity Recognition": ["Word Embeddings"],
+      "Pipelines ML": ["Containerisation ML"],
+      "Monitoring de Modèles": ["Pipelines ML"],
     };
 
     // Mettre à jour les prérequis
+    const allConcepts = await Concept.find();
+    const conceptMap = {};
+    allConcepts.forEach(concept => {
+      conceptMap[concept.name] = concept._id;
+    });
+
     for (const [conceptName, prereqNames] of Object.entries(prerequisites)) {
       const prereqIds = prereqNames
         .map(name => conceptMap[name])
@@ -2085,254 +427,2037 @@ async function populateDatabase() {
         });
       }
     }
-    logger.info("Updated concept prerequisites");
+  } catch (error) {
+    logger.error("Error creating concepts:", error);
+  }
+}
 
-    // Ajouter les concepts requis aux goals
-    const goalConceptMapping = {
-      "Ingénieur Machine Learning": [
-        "Python Fondamentaux",
-        "Python pour la Data Science",
-        "Algèbre Linéaire pour l'IA",
-        "Probabilités et Statistiques",
-        "Introduction au Machine Learning",
-        "Apprentissage Supervisé",
-        "Feature Engineering",
+async function createAssessments() {
+  try {
+    const assessments = [
+      {
+        title: "Évaluation Mathématiques - Niveau Débutant",
+        category: "math",
+        difficulty: "basic",
+        questions: [
+          {
+            text: "Quelle est la dérivée de f(x) = x² + 3x + 2 ?",
+            options: [
+              { text: "2x + 3", isCorrect: true },
+              { text: "x² + 3", isCorrect: false },
+              { text: "2x + 2", isCorrect: false },
+              { text: "x + 3", isCorrect: false },
+            ],
+            explanation:
+              "La dérivée de x² est 2x, la dérivée de 3x est 3, et la dérivée d'une constante est 0.",
+          },
+          {
+            text: "Quelle est la probabilité d'obtenir un 6 en lançant un dé équilibré ?",
+            options: [
+              { text: "1/6", isCorrect: true },
+              { text: "1/3", isCorrect: false },
+              { text: "1/2", isCorrect: false },
+              { text: "1/4", isCorrect: false },
+            ],
+            explanation: "Un dé a 6 faces équiprobables, donc P(6) = 1/6.",
+          },
+          {
+            text: "Qu'est-ce qu'un vecteur dans R³ ?",
+            options: [
+              {
+                text: "Un triplet de nombres réels (x, y, z)",
+                isCorrect: true,
+              },
+              { text: "Une fonction de trois variables", isCorrect: false },
+              { text: "Une matrice 3x3", isCorrect: false },
+              { text: "Un point dans l'espace", isCorrect: false },
+            ],
+            explanation:
+              "Un vecteur dans R³ est représenté par trois coordonnées réelles.",
+          },
+        ],
+        recommendedGoals: [],
+      },
+      {
+        title: "Évaluation Mathématiques - Niveau Intermédiaire",
+        category: "math",
+        difficulty: "intermediate",
+        questions: [
+          {
+            text: "Qu'est-ce qu'un vecteur propre d'une matrice A ?",
+            options: [
+              {
+                text: "Un vecteur v tel que Av = λv pour un scalaire λ",
+                isCorrect: true,
+              },
+              { text: "Un vecteur de norme 1", isCorrect: false },
+              { text: "Un vecteur orthogonal", isCorrect: false },
+              { text: "La première colonne de la matrice", isCorrect: false },
+            ],
+            explanation:
+              "Un vecteur propre ne change que d'échelle lors de la multiplication matricielle : Av = λv.",
+          },
+          {
+            text: "Que représente la variance d'une variable aléatoire ?",
+            options: [
+              {
+                text: "E[(X - μ)²] - la dispersion autour de la moyenne",
+                isCorrect: true,
+              },
+              { text: "La valeur moyenne", isCorrect: false },
+              { text: "La médiane", isCorrect: false },
+              { text: "L'écart-type au carré", isCorrect: false },
+            ],
+            explanation:
+              "La variance mesure la dispersion des valeurs autour de la moyenne : Var(X) = E[(X - μ)²].",
+          },
+        ],
+        recommendedGoals: [],
+      },
+      {
+        title: "Évaluation Programmation - Niveau Débutant",
+        category: "programming",
+        difficulty: "basic",
+        questions: [
+          {
+            text: "Quelle est la différence entre une liste et un tuple en Python ?",
+            options: [
+              {
+                text: "Les listes sont mutables, les tuples sont immutables",
+                isCorrect: true,
+              },
+              { text: "Les listes sont plus rapides", isCorrect: false },
+              {
+                text: "Les tuples peuvent contenir plus d'éléments",
+                isCorrect: false,
+              },
+              { text: "Il n'y a pas de différence", isCorrect: false },
+            ],
+            explanation:
+              "Les listes peuvent être modifiées après création, contrairement aux tuples.",
+          },
+          {
+            text: "Que fait cette compréhension de liste : [x**2 for x in range(5) if x % 2 == 0] ?",
+            options: [
+              {
+                text: "Retourne [0, 4, 16] - les carrés des nombres pairs",
+                isCorrect: true,
+              },
+              { text: "Retourne [0, 1, 4, 9, 16]", isCorrect: false },
+              { text: "Retourne [2, 4]", isCorrect: false },
+              { text: "Produit une erreur", isCorrect: false },
+            ],
+            explanation:
+              "Elle filtre les nombres pairs (0, 2, 4) dans range(5) et calcule leur carré.",
+          },
+        ],
+        recommendedGoals: [],
+      },
+      {
+        title: "Évaluation Machine Learning - Fondamentaux",
+        category: "ml",
+        difficulty: "basic",
+        questions: [
+          {
+            text: "Quelle est la différence principale entre apprentissage supervisé et non supervisé ?",
+            options: [
+              {
+                text: "Le supervisé utilise des labels, le non supervisé découvre des structures",
+                isCorrect: true,
+              },
+              { text: "Le supervisé est plus rapide", isCorrect: false },
+              {
+                text: "Le non supervisé nécessite plus de données",
+                isCorrect: false,
+              },
+              { text: "Il n'y a pas de différence", isCorrect: false },
+            ],
+            explanation:
+              "L'apprentissage supervisé apprend à partir d'exemples étiquetés, tandis que le non supervisé trouve des patterns dans des données non étiquetées.",
+          },
+          {
+            text: "Qu'est-ce que l'overfitting ?",
+            options: [
+              {
+                text: "Le modèle mémorise les données d'entraînement au lieu de généraliser",
+                isCorrect: true,
+              },
+              { text: "Le modèle apprend trop lentement", isCorrect: false },
+              { text: "Le modèle a trop de données", isCorrect: false },
+              { text: "Le modèle est trop simple", isCorrect: false },
+            ],
+            explanation:
+              "L'overfitting se produit quand le modèle s'adapte trop aux données d'entraînement et performe mal sur de nouvelles données.",
+          },
+        ],
+        recommendedGoals: [],
+      },
+      {
+        title: "Évaluation Deep Learning",
+        category: "dl",
+        difficulty: "intermediate",
+        questions: [
+          {
+            text: "Pourquoi la fonction d'activation ReLU est-elle populaire ?",
+            options: [
+              {
+                text: "Elle évite le vanishing gradient et est simple à calculer",
+                isCorrect: true,
+              },
+              { text: "Elle est toujours dérivable", isCorrect: false },
+              {
+                text: "Elle produit des sorties entre 0 et 1",
+                isCorrect: false,
+              },
+              { text: "Elle est symétrique", isCorrect: false },
+            ],
+            explanation:
+              "ReLU(x) = max(0,x) maintient le gradient pour x > 0, évitant l'atténuation du gradient.",
+          },
+          {
+            text: "Qu'est-ce que la backpropagation ?",
+            options: [
+              {
+                text: "L'algorithme pour calculer les gradients en remontant le réseau",
+                isCorrect: true,
+              },
+              { text: "Une technique de régularisation", isCorrect: false },
+              { text: "Une méthode d'initialisation", isCorrect: false },
+              { text: "Un type d'optimiseur", isCorrect: false },
+            ],
+            explanation:
+              "La backpropagation calcule les gradients en propageant l'erreur de la sortie vers l'entrée.",
+          },
+        ],
+        recommendedGoals: [],
+      },
+      {
+        title: "Évaluation Computer Vision",
+        category: "computer_vision",
+        difficulty: "intermediate",
+        questions: [
+          {
+            text: "Qu'est-ce qu'une convolution en traitement d'images ?",
+            options: [
+              {
+                text: "Une opération qui applique un filtre pour extraire des caractéristiques",
+                isCorrect: true,
+              },
+              { text: "Une transformation géométrique", isCorrect: false },
+              { text: "Une technique de compression", isCorrect: false },
+              { text: "Un algorithme de segmentation", isCorrect: false },
+            ],
+            explanation:
+              "La convolution fait glisser un noyau sur l'image pour détecter des motifs locaux.",
+          },
+          {
+            text: "Qu'est-ce que l'IoU (Intersection over Union) ?",
+            options: [
+              {
+                text: "Métrique pour évaluer la qualité de la détection d'objets",
+                isCorrect: true,
+              },
+              { text: "Une fonction de loss", isCorrect: false },
+              { text: "Un type de pooling", isCorrect: false },
+              { text: "Une architecture CNN", isCorrect: false },
+            ],
+            explanation:
+              "IoU mesure le chevauchement entre la boîte prédite et la vérité terrain.",
+          },
+        ],
+        recommendedGoals: [],
+      },
+      {
+        title: "Évaluation NLP",
+        category: "nlp",
+        difficulty: "intermediate",
+        questions: [
+          {
+            text: "Qu'est-ce que la tokenisation en NLP ?",
+            options: [
+              {
+                text: "Diviser le texte en unités plus petites (mots, sous-mots)",
+                isCorrect: true,
+              },
+              { text: "Traduire le texte", isCorrect: false },
+              { text: "Compresser le texte", isCorrect: false },
+              { text: "Analyser la grammaire", isCorrect: false },
+            ],
+            explanation:
+              "La tokenisation décompose le texte en tokens manipulables par les algorithmes.",
+          },
+          {
+            text: "Qu'est-ce qu'un word embedding ?",
+            options: [
+              {
+                text: "Une représentation vectorielle dense des mots",
+                isCorrect: true,
+              },
+              { text: "Un dictionnaire de synonymes", isCorrect: false },
+              { text: "Une liste de mots-clés", isCorrect: false },
+              { text: "Un compteur de fréquence", isCorrect: false },
+            ],
+            explanation:
+              "Les embeddings projettent les mots dans un espace vectoriel dense.",
+          },
+        ],
+        recommendedGoals: [],
+      },
+      {
+        title: "Évaluation MLOps",
+        category: "mlops",
+        difficulty: "intermediate",
+        questions: [
+          {
+            text: "Qu'est-ce que le model drift ?",
+            options: [
+              {
+                text: "Dégradation des performances due aux changements dans les données",
+                isCorrect: true,
+              },
+              { text: "Un bug dans le code du modèle", isCorrect: false },
+              { text: "L'augmentation de la latence", isCorrect: false },
+              { text: "La corruption des poids", isCorrect: false },
+            ],
+            explanation:
+              "Le drift survient quand la distribution des données change par rapport à l'entraînement.",
+          },
+          {
+            text: "Pourquoi utiliser Docker pour les applications ML ?",
+            options: [
+              {
+                text: "Reproductibilité et isolation de l'environnement",
+                isCorrect: true,
+              },
+              { text: "Entraînement plus rapide", isCorrect: false },
+              { text: "Meilleure précision", isCorrect: false },
+              { text: "Réduction de la taille du modèle", isCorrect: false },
+            ],
+            explanation:
+              "Docker garantit que l'environnement est identique partout.",
+          },
+        ],
+        recommendedGoals: [],
+      },
+    ];
+
+    for (const assessmentData of assessments) {
+      const assessment = new Assessment(assessmentData);
+      await assessment.save();
+      logger.info(`Assessment created: ${assessmentData.title}`);
+    }
+  } catch (error) {
+    logger.error("Error creating assessments:", error);
+  }
+}
+
+async function createGoals() {
+  try {
+    const goals = [
+      {
+        title: "Ingénieur Machine Learning",
+        description:
+          "Formation complète pour devenir ML Engineer avec expertise production",
+        category: "ml",
+        level: "intermediate",
+        estimatedDuration: 12,
+        prerequisites: [
+          {
+            category: "math",
+            skills: [
+              { name: "Algèbre linéaire", level: "intermediate" },
+              { name: "Probabilités", level: "intermediate" },
+              { name: "Calcul différentiel", level: "basic" },
+            ],
+          },
+          {
+            category: "programming",
+            skills: [
+              { name: "Python", level: "intermediate" },
+              { name: "SQL", level: "basic" },
+              { name: "Git", level: "basic" },
+            ],
+          },
+        ],
+        modules: [
+          {
+            title: "Fondamentaux du Machine Learning",
+            description: "Concepts théoriques et pratiques de base",
+            duration: 20,
+            skills: [
+              { name: "Scikit-learn", level: "intermediate" },
+              { name: "Validation croisée", level: "intermediate" },
+              { name: "Métriques ML", level: "intermediate" },
+            ],
+            resources: [
+              {
+                title: "Machine Learning Course - Andrew Ng (Coursera)",
+                type: "course",
+                url: "https://www.coursera.org/learn/machine-learning",
+                duration: 120,
+              },
+              {
+                title: "Hands-On Machine Learning - Aurélien Géron",
+                type: "book",
+                url: "https://www.oreilly.com/library/view/hands-on-machine-learning/9781492032632/",
+                duration: 180,
+              },
+              {
+                title: "Scikit-learn User Guide",
+                type: "article",
+                url: "https://scikit-learn.org/stable/user_guide.html",
+                duration: 60,
+              },
+              {
+                title: "Machine Learning Mastery",
+                type: "article",
+                url: "https://machinelearningmastery.com/start-here/",
+                duration: 40,
+              },
+              {
+                title: "Projet: Prédiction Prix Immobilier",
+                type: "use_case",
+                url: "https://www.kaggle.com/c/house-prices-advanced-regression-techniques",
+                duration: 50,
+              },
+            ],
+            validationCriteria: [
+              "Comprendre les différences entre apprentissage supervisé et non supervisé",
+              "Implémenter une pipeline ML complète avec validation croisée",
+              "Diagnostiquer et corriger l'overfitting/underfitting",
+              "Atteindre un score satisfaisant sur le projet Kaggle",
+            ],
+          },
+          {
+            title: "Python et Écosystème Data Science",
+            description: "Maîtrise des outils Python pour la data science",
+            duration: 15,
+            skills: [
+              { name: "NumPy", level: "advanced" },
+              { name: "Pandas", level: "advanced" },
+              { name: "Matplotlib/Seaborn", level: "intermediate" },
+            ],
+            resources: [
+              {
+                title: "Python Data Science Handbook",
+                type: "book",
+                url: "https://jakevdp.github.io/PythonDataScienceHandbook/",
+                duration: 150,
+              },
+              {
+                title: "Pandas Official Documentation",
+                type: "article",
+                url: "https://pandas.pydata.org/docs/user_guide/index.html",
+                duration: 80,
+              },
+              {
+                title: "NumPy Fundamentals",
+                type: "course",
+                url: "https://numpy.org/learn/",
+                duration: 60,
+              },
+              {
+                title: "Data Visualization with Python",
+                type: "article",
+                url: "https://realpython.com/python-data-visualization/",
+                duration: 40,
+              },
+            ],
+            validationCriteria: [
+              "Manipuler efficacement des DataFrames complexes",
+              "Créer des visualisations informatives",
+              "Optimiser les performances avec NumPy",
+              "Nettoyer et préparer des données réelles",
+            ],
+          },
+          {
+            title: "Algorithmes ML Avancés",
+            description: "Méthodes d'ensemble et techniques avancées",
+            duration: 25,
+            skills: [
+              { name: "Random Forest", level: "advanced" },
+              { name: "XGBoost/LightGBM", level: "advanced" },
+              { name: "Feature Engineering", level: "advanced" },
+            ],
+            resources: [
+              {
+                title: "The Elements of Statistical Learning",
+                type: "book",
+                url: "https://hastie.su.domains/ElemStatLearn/",
+                duration: 200,
+              },
+              {
+                title: "XGBoost Documentation",
+                type: "article",
+                url: "https://xgboost.readthedocs.io/en/stable/",
+                duration: 80,
+              },
+              {
+                title: "Feature Engineering for Machine Learning",
+                type: "book",
+                url: "https://www.oreilly.com/library/view/feature-engineering-for/9781491953235/",
+                duration: 120,
+              },
+              {
+                title: "Ensemble Methods in Data Mining",
+                type: "article",
+                url: "https://link.springer.com/book/10.1007/978-3-031-01899-2",
+                duration: 60,
+              },
+            ],
+            validationCriteria: [
+              "Implémenter et optimiser des modèles d'ensemble",
+              "Maîtriser le feature engineering automatisé",
+              "Gérer les données déséquilibrées efficacement",
+              "Obtenir des performances compétitives sur des datasets réels",
+            ],
+          },
+          {
+            title: "MLOps et Production",
+            description: "Déploiement et maintenance de modèles ML",
+            duration: 20,
+            skills: [
+              { name: "Docker", level: "intermediate" },
+              { name: "FastAPI", level: "intermediate" },
+              { name: "MLflow", level: "intermediate" },
+            ],
+            resources: [
+              {
+                title: "Building ML Powered Applications",
+                type: "book",
+                url: "https://www.oreilly.com/library/view/building-machine-learning/9781492045106/",
+                duration: 140,
+              },
+              {
+                title: "MLOps Specialization - DeepLearning.AI",
+                type: "course",
+                url: "https://www.coursera.org/specializations/machine-learning-engineering-for-production-mlops",
+                duration: 120,
+              },
+              {
+                title: "FastAPI Documentation",
+                type: "article",
+                url: "https://fastapi.tiangolo.com/tutorial/",
+                duration: 60,
+              },
+              {
+                title: "MLflow Tracking",
+                type: "article",
+                url: "https://mlflow.org/docs/latest/tracking.html",
+                duration: 40,
+              },
+            ],
+            validationCriteria: [
+              "Créer une API ML robuste",
+              "Containeriser et déployer sur cloud",
+              "Implémenter monitoring de modèles",
+              "Mettre en place un pipeline CI/CD",
+            ],
+          },
+        ],
+        careerOpportunities: [
+          {
+            title: "Machine Learning Engineer",
+            description:
+              "Développement et déploiement de modèles ML en production",
+            averageSalary: "45-75k€/an (Sénégal), 75-125k€/an (International)",
+            companies: [
+              "Google",
+              "Amazon",
+              "Meta",
+              "Expensya",
+              "Orange Digital Center",
+            ],
+          },
+          {
+            title: "Data Scientist",
+            description: "Analyse de données et modélisation prédictive",
+            averageSalary: "40-70k€/an (Sénégal), 70-110k€/an (International)",
+            companies: ["Netflix", "Uber", "Airbnb", "Sonatel", "BCEAO"],
+          },
+        ],
+        certification: {
+          available: true,
+          name: "Certificat ML Engineer Professional UCAD",
+          provider: "UCAD AI Center",
+          url: "https://ucad.sn/certifications/ml-engineer",
+        },
+        requiredConcepts: [],
+      },
+
+      {
+        title: "Spécialiste Deep Learning",
+        description:
+          "Expertise en réseaux de neurones profonds et architectures modernes",
+        category: "dl",
+        level: "advanced",
+        estimatedDuration: 16,
+        prerequisites: [
+          {
+            category: "math",
+            skills: [
+              { name: "Algèbre linéaire", level: "advanced" },
+              { name: "Calcul différentiel", level: "intermediate" },
+              { name: "Optimisation", level: "intermediate" },
+            ],
+          },
+          {
+            category: "programming",
+            skills: [
+              { name: "Python", level: "advanced" },
+              { name: "NumPy", level: "advanced" },
+            ],
+          },
+          {
+            category: "theory",
+            skills: [{ name: "Machine Learning", level: "intermediate" }],
+          },
+        ],
+        modules: [
+          {
+            title: "Fondamentaux des Réseaux de Neurones",
+            description: "Théorie et implémentation from scratch",
+            duration: 25,
+            skills: [
+              { name: "PyTorch", level: "advanced" },
+              { name: "Backpropagation", level: "advanced" },
+              { name: "Optimisation DL", level: "intermediate" },
+            ],
+            resources: [
+              {
+                title: "Deep Learning - Ian Goodfellow",
+                type: "book",
+                url: "https://www.deeplearningbook.org/",
+                duration: 250,
+              },
+              {
+                title: "CS231n: CNN for Visual Recognition",
+                type: "course",
+                url: "http://cs231n.stanford.edu/",
+                duration: 200,
+              },
+              {
+                title: "PyTorch Official Tutorials",
+                type: "article",
+                url: "https://pytorch.org/tutorials/",
+                duration: 100,
+              },
+              {
+                title: "Neural Networks and Deep Learning",
+                type: "course",
+                url: "https://www.coursera.org/learn/neural-networks-deep-learning",
+                duration: 120,
+              },
+            ],
+            validationCriteria: [
+              "Implémenter un réseau de neurones from scratch",
+              "Maîtriser PyTorch pour architectures complexes",
+              "Comprendre théoriquement la backpropagation",
+              "Optimiser l'entraînement de modèles profonds",
+            ],
+          },
+          {
+            title: "Vision par Ordinateur avec CNN",
+            description: "Applications CNN pour l'analyse d'images",
+            duration: 30,
+            skills: [
+              { name: "CNN architectures", level: "advanced" },
+              { name: "Transfer Learning", level: "intermediate" },
+              { name: "Data Augmentation", level: "intermediate" },
+            ],
+            resources: [
+              {
+                title: "Computer Vision: Models, Learning, and Inference",
+                type: "book",
+                url: "http://www.computervisionmodels.com/",
+                duration: 180,
+              },
+              {
+                title: "Practical Deep Learning for Coders",
+                type: "course",
+                url: "https://course.fast.ai/",
+                duration: 160,
+              },
+              {
+                title: "OpenCV Python Tutorial",
+                type: "article",
+                url: "https://docs.opencv.org/4.x/d6/d00/tutorial_py_root.html",
+                duration: 80,
+              },
+            ],
+            validationCriteria: [
+              "Implémenter ResNet, VGG, EfficientNet",
+              "Utiliser le transfer learning efficacement",
+              "Créer un système de classification d'images",
+              "Optimiser les performances sur GPU",
+            ],
+          },
+          {
+            title: "NLP avec Transformers",
+            description: "Traitement du langage naturel moderne",
+            duration: 30,
+            skills: [
+              { name: "Transformers", level: "advanced" },
+              { name: "Hugging Face", level: "intermediate" },
+              { name: "BERT/GPT", level: "intermediate" },
+            ],
+            resources: [
+              {
+                title: "CS224n: Natural Language Processing with Deep Learning",
+                type: "course",
+                url: "http://web.stanford.edu/class/cs224n/",
+                duration: 180,
+              },
+              {
+                title: "Hugging Face NLP Course",
+                type: "course",
+                url: "https://huggingface.co/learn/nlp-course",
+                duration: 120,
+              },
+              {
+                title: "Attention Is All You Need - Paper",
+                type: "article",
+                url: "https://arxiv.org/abs/1706.03762",
+                duration: 30,
+              },
+              {
+                title: "The Illustrated Transformer",
+                type: "article",
+                url: "https://jalammar.github.io/illustrated-transformer/",
+                duration: 40,
+              },
+            ],
+            validationCriteria: [
+              "Comprendre l'architecture Transformer",
+              "Fine-tuner BERT pour une tâche spécifique",
+              "Implémenter un système de QA",
+              "Optimiser l'inférence de grands modèles",
+            ],
+          },
+        ],
+        careerOpportunities: [
+          {
+            title: "Deep Learning Engineer",
+            description: "Développement de systèmes DL complexes",
+            averageSalary: "55-90k€/an (Sénégal), 90-160k€/an (International)",
+            companies: [
+              "DeepMind",
+              "OpenAI",
+              "NVIDIA",
+              "Tesla",
+              "Hugging Face",
+            ],
+          },
+        ],
+        certification: {
+          available: true,
+          name: "Deep Learning Expert Certificate",
+          provider: "UCAD AI Center",
+          url: "https://ucad.sn/certifications/dl-expert",
+        },
+        requiredConcepts: [],
+      },
+
+      {
+        title: "Data Scientist",
+        description:
+          "Analyse de données, statistiques et communication d'insights",
+        category: "data_science",
+        level: "intermediate",
+        estimatedDuration: 10,
+        prerequisites: [
+          {
+            category: "math",
+            skills: [
+              { name: "Statistiques", level: "advanced" },
+              { name: "Probabilités", level: "intermediate" },
+            ],
+          },
+          {
+            category: "programming",
+            skills: [
+              { name: "Python", level: "intermediate" },
+              { name: "SQL", level: "intermediate" },
+              { name: "R", level: "basic" },
+            ],
+          },
+        ],
+        modules: [
+          {
+            title: "Analyse Exploratoire de Données",
+            description: "EDA, visualisation et storytelling",
+            duration: 20,
+            skills: [
+              { name: "Pandas", level: "advanced" },
+              { name: "Visualization", level: "advanced" },
+              { name: "Statistical Tests", level: "intermediate" },
+            ],
+            resources: [
+              {
+                title: "Python for Data Analysis - Wes McKinney",
+                type: "book",
+                url: "https://wesmckinney.com/book/",
+                duration: 150,
+              },
+              {
+                title: "Storytelling with Data",
+                type: "book",
+                url: "https://www.storytellingwithdata.com/",
+                duration: 100,
+              },
+              {
+                title: "Seaborn Tutorial",
+                type: "article",
+                url: "https://seaborn.pydata.org/tutorial.html",
+                duration: 60,
+              },
+            ],
+            validationCriteria: [
+              "Réaliser une EDA complète",
+              "Créer des visualisations impactantes",
+              "Identifier patterns et anomalies",
+              "Communiquer des insights clairement",
+            ],
+          },
+        ],
+        careerOpportunities: [
+          {
+            title: "Data Scientist",
+            description: "Analyse et modélisation pour insights business",
+            averageSalary: "40-70k€/an (Sénégal), 70-110k€/an (International)",
+            companies: ["Airbnb", "Netflix", "Uber", "BCEAO", "Sonatel"],
+          },
+        ],
+        certification: {
+          available: true,
+          name: "Data Science Professional Certificate",
+          provider: "UCAD AI Center",
+          url: "https://ucad.sn/certifications/data-science-pro",
+        },
+        requiredConcepts: [],
+      },
+
+      {
+        title: "Expert Computer Vision",
+        description:
+          "Spécialisation en vision par ordinateur et analyse d'images",
+        category: "computer_vision",
+        level: "advanced",
+        estimatedDuration: 14,
+        prerequisites: [
+          {
+            category: "math",
+            skills: [
+              { name: "Algèbre linéaire", level: "advanced" },
+              { name: "Traitement du signal", level: "intermediate" },
+            ],
+          },
+          {
+            category: "programming",
+            skills: [
+              { name: "Python", level: "advanced" },
+              { name: "C++", level: "basic" },
+            ],
+          },
+          {
+            category: "theory",
+            skills: [{ name: "Deep Learning", level: "intermediate" }],
+          },
+        ],
+        modules: [
+          {
+            title: "Traitement d'Images et Vision Classique",
+            description: "Fondements et algorithmes classiques",
+            duration: 20,
+            skills: [
+              { name: "OpenCV", level: "advanced" },
+              { name: "Image Processing", level: "advanced" },
+            ],
+            resources: [
+              {
+                title:
+                  "Computer Vision: Algorithms and Applications - Szeliski",
+                type: "book",
+                url: "https://szeliski.org/Book/",
+                duration: 200,
+              },
+              {
+                title: "OpenCV Python Tutorials",
+                type: "article",
+                url: "https://docs.opencv.org/4.x/d6/d00/tutorial_py_root.html",
+                duration: 80,
+              },
+            ],
+            validationCriteria: [
+              "Maîtriser les transformations d'images",
+              "Implémenter des détecteurs de features",
+              "Réaliser calibration de caméra",
+            ],
+          },
+        ],
+        careerOpportunities: [
+          {
+            title: "Computer Vision Engineer",
+            description: "Applications industrielles de la vision",
+            averageSalary: "50-85k€/an",
+            companies: ["Tesla", "Apple", "Google", "Microsoft"],
+          },
+        ],
+        certification: {
+          available: true,
+          name: "Computer Vision Specialist",
+          provider: "UCAD AI Center",
+          url: "https://ucad.sn/certifications/cv-specialist",
+        },
+        requiredConcepts: [],
+      },
+
+      {
+        title: "Ingénieur NLP",
+        description: "Expert en traitement automatique du langage naturel",
+        category: "nlp",
+        level: "advanced",
+        estimatedDuration: 14,
+        prerequisites: [
+          {
+            category: "math",
+            skills: [
+              { name: "Probabilités", level: "advanced" },
+              { name: "Algèbre linéaire", level: "intermediate" },
+            ],
+          },
+          {
+            category: "programming",
+            skills: [
+              { name: "Python", level: "advanced" },
+              { name: "Regex", level: "intermediate" },
+            ],
+          },
+          {
+            category: "theory",
+            skills: [{ name: "Deep Learning", level: "intermediate" }],
+          },
+        ],
+        modules: [
+          {
+            title: "Fondamentaux du NLP",
+            description: "Bases du traitement du langage",
+            duration: 20,
+            skills: [
+              { name: "NLTK/spaCy", level: "intermediate" },
+              { name: "Text Processing", level: "advanced" },
+            ],
+            resources: [
+              {
+                title: "Speech and Language Processing - Jurafsky",
+                type: "book",
+                url: "https://web.stanford.edu/~jurafsky/slp3/",
+                duration: 200,
+              },
+              {
+                title: "spaCy Course",
+                type: "course",
+                url: "https://course.spacy.io/",
+                duration: 80,
+              },
+            ],
+            validationCriteria: [
+              "Maîtriser tokenization et preprocessing",
+              "Implémenter POS tagging et NER",
+              "Créer des pipelines de traitement",
+            ],
+          },
+        ],
+        careerOpportunities: [
+          {
+            title: "NLP Engineer",
+            description: "Développement de systèmes NLP",
+            averageSalary: "55-90k€/an",
+            companies: ["Google", "OpenAI", "Anthropic", "Hugging Face"],
+          },
+        ],
+        certification: {
+          available: true,
+          name: "NLP Specialist Certificate",
+          provider: "UCAD AI Center",
+          url: "https://ucad.sn/certifications/nlp-specialist",
+        },
+        requiredConcepts: [],
+      },
+
+      {
+        title: "MLOps Engineer",
+        description: "Industrialisation et opérationnalisation des modèles ML",
+        category: "mlops",
+        level: "advanced",
+        estimatedDuration: 14,
+        prerequisites: [
+          {
+            category: "programming",
+            skills: [
+              { name: "Python", level: "advanced" },
+              { name: "Docker", level: "intermediate" },
+              { name: "Cloud", level: "intermediate" },
+            ],
+          },
+          {
+            category: "tools",
+            skills: [
+              { name: "Git", level: "advanced" },
+              { name: "CI/CD", level: "intermediate" },
+            ],
+          },
+          {
+            category: "theory",
+            skills: [{ name: "Machine Learning", level: "intermediate" }],
+          },
+        ],
+        modules: [
+          {
+            title: "Infrastructure et DevOps pour ML",
+            description: "Containerisation et orchestration",
+            duration: 25,
+            skills: [
+              { name: "Docker", level: "advanced" },
+              { name: "Kubernetes", level: "intermediate" },
+              { name: "Cloud Platforms", level: "intermediate" },
+            ],
+            resources: [
+              {
+                title: "Docker Deep Dive",
+                type: "book",
+                url: "https://www.oreilly.com/library/view/docker-deep-dive/9781800565135/",
+                duration: 120,
+              },
+              {
+                title: "Kubernetes Documentation",
+                type: "article",
+                url: "https://kubernetes.io/docs/tutorials/",
+                duration: 100,
+              },
+            ],
+            validationCriteria: [
+              "Containeriser des applications ML",
+              "Déployer sur Kubernetes",
+              "Utiliser les services cloud ML",
+            ],
+          },
+        ],
+        careerOpportunities: [
+          {
+            title: "MLOps Engineer",
+            description: "Opérationnalisation des systèmes ML",
+            averageSalary: "50-85k€/an",
+            companies: ["Google", "AWS", "Microsoft", "Databricks"],
+          },
+        ],
+        certification: {
+          available: true,
+          name: "MLOps Professional Certificate",
+          provider: "UCAD AI Center",
+          url: "https://ucad.sn/certifications/mlops-pro",
+        },
+        requiredConcepts: [],
+      },
+    ];
+
+    for (const goalData of goals) {
+      const goal = new Goal(goalData);
+      await goal.save();
+      logger.info(`Goal created: ${goalData.title}`);
+    }
+  } catch (error) {
+    logger.error("Error creating goals:", error);
+  }
+}
+
+async function createQuizzes() {
+  try {
+    const goals = await Goal.find();
+
+    // Quiz techniques spécialisés par module et ressources
+    const technicalQuizTemplates = {
+      "Fondamentaux du Machine Learning": [
+        {
+          text: "Après avoir étudié le cours d'Andrew Ng, expliquez pourquoi on utilise la fonction de coût J(θ) = (1/2m) Σ(hθ(x) - y)² en régression linéaire ?",
+          options: [
+            {
+              text: "Pour mesurer l'écart quadratique moyen entre prédictions et valeurs réelles",
+              isCorrect: true,
+            },
+            {
+              text: "Pour calculer la dérivée de la fonction d'hypothèse",
+              isCorrect: false,
+            },
+            { text: "Pour normaliser les données d'entrée", isCorrect: false },
+            { text: "Pour initialiser les paramètres θ", isCorrect: false },
+          ],
+          explanation:
+            "La fonction de coût quadratique pénalise les erreurs de prédiction de manière proportionnelle au carré de l'erreur, facilitant l'optimisation par gradient descent.",
+        },
+        {
+          text: "Dans scikit-learn, quelle différence entre train_test_split() et StratifiedShuffleSplit() ?",
+          options: [
+            {
+              text: "StratifiedShuffleSplit préserve la proportion des classes dans les splits",
+              isCorrect: true,
+            },
+            { text: "train_test_split est plus rapide", isCorrect: false },
+            {
+              text: "StratifiedShuffleSplit ne mélange pas les données",
+              isCorrect: false,
+            },
+            { text: "Il n'y a pas de différence", isCorrect: false },
+          ],
+          explanation:
+            "StratifiedShuffleSplit garantit que chaque split conserve la même proportion de classes que le dataset original, crucial pour les datasets déséquilibrés.",
+        },
+        {
+          text: "En implémentant la validation croisée k-fold, pourquoi éviter k=n (leave-one-out) sur de gros datasets ?",
+          options: [
+            {
+              text: "Coût computationnel trop élevé et variance élevée de l'estimation",
+              isCorrect: true,
+            },
+            { text: "Résultats moins précis", isCorrect: false },
+            { text: "Impossible à implémenter", isCorrect: false },
+            { text: "Pas de parallélisation possible", isCorrect: false },
+          ],
+          explanation:
+            "LOOCV nécessite n entraînements du modèle et produit une estimation avec haute variance. k=5 ou k=10 offrent un bon compromis biais-variance.",
+        },
+        {
+          text: "Selon le livre 'Hands-On Machine Learning', comment détecter l'overfitting dans un pipeline ML ?",
+          options: [
+            {
+              text: "Écart important entre score train et validation + courbes d'apprentissage",
+              isCorrect: true,
+            },
+            {
+              text: "Score de validation supérieur au score train",
+              isCorrect: false,
+            },
+            { text: "Temps d'entraînement trop long", isCorrect: false },
+            { text: "Nombreux paramètres dans le modèle", isCorrect: false },
+          ],
+          explanation:
+            "L'overfitting se manifeste par un grand écart train/validation et des courbes d'apprentissage qui divergent avec plus de données.",
+        },
+        {
+          text: "Dans le projet Kaggle House Prices, quelle technique pour gérer les features catégorielles à haute cardinalité ?",
+          options: [
+            {
+              text: "Target encoding ou embedding, pas one-hot encoding",
+              isCorrect: true,
+            },
+            { text: "One-hot encoding systématique", isCorrect: false },
+            { text: "Label encoding simple", isCorrect: false },
+            { text: "Supprimer ces features", isCorrect: false },
+          ],
+          explanation:
+            "Pour des catégories nombreuses (>10-15), target encoding ou embeddings évitent l'explosion dimensionnelle du one-hot encoding.",
+        },
       ],
-      "Spécialiste Deep Learning": [
-        "Algèbre Linéaire pour l'IA",
-        "Calcul Différentiel et Intégral",
-        "Optimisation Mathématique",
-        "Python pour la Data Science",
-        "Introduction au Machine Learning",
-        "Réseaux de Neurones",
-        "CNN - Vision par Ordinateur",
-        "RNN et Séquences",
-        "Transformers et Attention",
+
+      "Python et Écosystème Data Science": [
+        {
+          text: "Selon le Python Data Science Handbook, quelle différence entre .copy() et .copy(deep=True) sur un DataFrame ?",
+          options: [
+            {
+              text: ".copy() copie la structure mais partage les données, deep=True copie tout",
+              isCorrect: true,
+            },
+            { text: "Aucune différence pratique", isCorrect: false },
+            { text: ".copy() est plus rapide", isCorrect: false },
+            {
+              text: "deep=True ne fonctionne qu'avec les objets",
+              isCorrect: false,
+            },
+          ],
+          explanation:
+            "copy() crée une shallow copy (nouvelles métadonnées mais même données en mémoire), deep=True copie aussi les données.",
+        },
+        {
+          text: "Pour optimiser les performances pandas sur de gros datasets, quelle stratégie recommande la documentation officielle ?",
+          options: [
+            {
+              text: "Spécifier les dtypes, utiliser chunksize, et vectoriser les opérations",
+              isCorrect: true,
+            },
+            { text: "Augmenter seulement la RAM", isCorrect: false },
+            { text: "Utiliser plus de boucles for", isCorrect: false },
+            { text: "Convertir en listes Python", isCorrect: false },
+          ],
+          explanation:
+            "dtype optimization évite l'inférence, chunksize permet le traitement par blocs, la vectorisation évite les boucles Python lentes.",
+        },
+        {
+          text: "Dans NumPy, pourquoi np.dot(A, B) est-il différent de A * B pour les matrices ?",
+          options: [
+            {
+              text: "np.dot fait la multiplication matricielle, * fait l'element-wise",
+              isCorrect: true,
+            },
+            { text: "np.dot est plus lent", isCorrect: false },
+            { text: "* ne fonctionne qu'avec les scalaires", isCorrect: false },
+            { text: "Il n'y a pas de différence", isCorrect: false },
+          ],
+          explanation:
+            "np.dot(A,B) calcule le produit matriciel Σ(A[i,k] * B[k,j]), tandis que A*B multiplie élément par élément.",
+        },
+        {
+          text: "En suivant le tutorial de visualisation de données, quel est l'avantage de seaborn sur matplotlib ?",
+          options: [
+            {
+              text: "API plus simple, thèmes intégrés, et fonctions statistiques directes",
+              isCorrect: true,
+            },
+            { text: "Plus rapide pour le rendu", isCorrect: false },
+            { text: "Supporte plus de formats", isCorrect: false },
+            { text: "Meilleure résolution", isCorrect: false },
+          ],
+          explanation:
+            "Seaborn simplifie la création de visualisations statistiques avec des fonctions comme regplot(), boxplot() et des thèmes esthétiques.",
+        },
       ],
-      "Data Scientist": [
-        "Probabilités et Statistiques",
-        "Python Fondamentaux",
-        "Python pour la Data Science",
-        "SQL et Bases de Données",
-        "Introduction au Machine Learning",
+
+      "Fondamentaux des Réseaux de Neurones": [
+        {
+          text: "Selon le livre 'Deep Learning' de Goodfellow, pourquoi la fonction sigmoid cause-t-elle le vanishing gradient ?",
+          options: [
+            {
+              text: "Sa dérivée max est 0.25, atténuant les gradients dans les couches profondes",
+              isCorrect: true,
+            },
+            { text: "Elle produit des sorties négatives", isCorrect: false },
+            { text: "Elle est non-dérivable en 0", isCorrect: false },
+            { text: "Elle converge trop lentement", isCorrect: false },
+          ],
+          explanation:
+            "sigmoid'(x) = sigmoid(x)(1-sigmoid(x)) atteint son maximum de 0.25 en x=0, causant une atténuation exponentielle des gradients.",
+        },
+        {
+          text: "Dans PyTorch, quelle différence entre loss.backward() et loss.backward(retain_graph=True) ?",
+          options: [
+            {
+              text: "retain_graph=True garde le graphe pour des backward() multiples",
+              isCorrect: true,
+            },
+            {
+              text: "retain_graph=True calcule plus de dérivées",
+              isCorrect: false,
+            },
+            { text: "Pas de différence pratique", isCorrect: false },
+            { text: "retain_graph=True est plus rapide", isCorrect: false },
+          ],
+          explanation:
+            "Par défaut, PyTorch libère le graphe de calcul après backward(). retain_graph=True le préserve pour des appels supplémentaires.",
+        },
+        {
+          text: "En implémentant la backpropagation from scratch, comment calculer ∂L/∂W pour une couche fully connected ?",
+          options: [
+            {
+              text: "∂L/∂W = ∂L/∂z * ∂z/∂W = δ * x^T (produit externe)",
+              isCorrect: true,
+            },
+            { text: "∂L/∂W = δ * W", isCorrect: false },
+            { text: "∂L/∂W = x * δ", isCorrect: false },
+            { text: "∂L/∂W = σ'(z) * δ", isCorrect: false },
+          ],
+          explanation:
+            "Pour z = Wx + b, ∂z/∂W = x. Donc ∂L/∂W = δ ⊗ x où δ est l'erreur rétropropagée et ⊗ le produit externe.",
+        },
+        {
+          text: "Selon le cours CS231n, pourquoi initialiser les poids avec Xavier/Glorot initialization ?",
+          options: [
+            {
+              text: "Maintient la variance des activations constante à travers les couches",
+              isCorrect: true,
+            },
+            { text: "Accélère la convergence seulement", isCorrect: false },
+            { text: "Évite l'overfitting", isCorrect: false },
+            { text: "Réduit le coût computationnel", isCorrect: false },
+          ],
+          explanation:
+            "Xavier init utilise Var(W) = 1/n_in pour que Var(output) ≈ Var(input), évitant l'explosion/vanishing des activations.",
+        },
       ],
-      "MLOps Engineer": [
-        "Python Fondamentaux",
-        "Git et Collaboration",
-        "Introduction au Machine Learning",
-        "SQL et Bases de Données",
+
+      "Traitement d'Images et Vision Classique": [
+        {
+          text: "En utilisant OpenCV, pourquoi cv2.GaussianBlur() avant cv2.Canny() pour la détection de contours ?",
+          options: [
+            {
+              text: "Réduire le bruit qui cause des faux contours",
+              isCorrect: true,
+            },
+            { text: "Augmenter la résolution", isCorrect: false },
+            { text: "Accélérer l'algorithme Canny", isCorrect: false },
+            { text: "Améliorer le contraste", isCorrect: false },
+          ],
+          explanation:
+            "Le bruit cause des gradients locaux parasites. Le lissage gaussien supprime ces variations haute fréquence avant la détection de contours.",
+        },
+        {
+          text: "Selon le livre de Szeliski, comment fonctionne la calibration de caméra avec l'algorithme de Zhang ?",
+          options: [
+            {
+              text: "Utilise un pattern plan 2D vu sous différents angles pour estimer la matrice intrinsèque",
+              isCorrect: true,
+            },
+            {
+              text: "Nécessite un objet 3D de dimensions connues",
+              isCorrect: false,
+            },
+            { text: "Fonctionne avec une seule image", isCorrect: false },
+            { text: "Calibre seulement la distorsion", isCorrect: false },
+          ],
+          explanation:
+            "Zhang's method exploite les contraintes géométriques d'un pattern 2D (échiquier) observé sous multiples poses pour récupérer K et les extrinsèques.",
+        },
+        {
+          text: "Dans cv2.findHomography(), quelle différence entre RANSAC et LEAST_SQUARES ?",
+          options: [
+            {
+              text: "RANSAC est robuste aux outliers, LEAST_SQUARES assume tous les points corrects",
+              isCorrect: true,
+            },
+            { text: "LEAST_SQUARES est plus précis", isCorrect: false },
+            { text: "RANSAC est plus rapide", isCorrect: false },
+            { text: "Pas de différence pratique", isCorrect: false },
+          ],
+          explanation:
+            "RANSAC échantillonne itérativement des sous-ensembles pour trouver le modèle avec le plus d'inliers, résistant aux mauvaises correspondances.",
+        },
       ],
-      "Computer Vision Expert": [
-        "Algèbre Linéaire pour l'IA",
-        "Python pour la Data Science",
-        "Réseaux de Neurones",
-        "CNN - Vision par Ordinateur",
+
+      "Fondamentaux du NLP": [
+        {
+          text: "Selon le livre de Jurafsky, pourquoi utiliser BPE (Byte Pair Encoding) plutôt qu'une tokenisation par mots ?",
+          options: [
+            {
+              text: "Gère les mots rares et hors vocabulaire en décomposant en sous-mots fréquents",
+              isCorrect: true,
+            },
+            { text: "Plus rapide à calculer", isCorrect: false },
+            { text: "Produit moins de tokens", isCorrect: false },
+            {
+              text: "Meilleur pour les langues européennes uniquement",
+              isCorrect: false,
+            },
+          ],
+          explanation:
+            "BPE décompose les mots rares en sous-séquences fréquentes, résolvant le problème OOV tout en gardant un vocabulaire fixe.",
+        },
+        {
+          text: "En utilisant spaCy, quelle différence entre doc.ents et doc.noun_chunks ?",
+          options: [
+            {
+              text: "ents contient les entités nommées, noun_chunks les syntagmes nominaux",
+              isCorrect: true,
+            },
+            { text: "noun_chunks est plus précis", isCorrect: false },
+            { text: "ents fonctionne seulement en anglais", isCorrect: false },
+            { text: "Il n'y a pas de différence", isCorrect: false },
+          ],
+          explanation:
+            "ents identifie des entités comme 'Apple Inc.' (ORG), 'Paris' (GPE), tandis que noun_chunks extrait des groupes nominaux comme 'the big red car'.",
+        },
+        {
+          text: "Pourquoi TF-IDF pénalise-t-il les mots fréquents avec le terme IDF = log(N/df) ?",
+          options: [
+            {
+              text: "Les mots très fréquents apportent moins d'information discriminante",
+              isCorrect: true,
+            },
+            { text: "Pour réduire la taille du vocabulaire", isCorrect: false },
+            { text: "Pour accélérer le calcul", isCorrect: false },
+            {
+              text: "Pour normaliser les longueurs de documents",
+              isCorrect: false,
+            },
+          ],
+          explanation:
+            "Un mot présent dans tous les documents (df=N) a IDF=0, car il n'aide pas à distinguer les documents. Les mots rares ont plus de poids.",
+        },
       ],
-      "NLP Engineer": [
-        "Probabilités et Statistiques",
-        "Python pour la Data Science",
-        "Réseaux de Neurones",
-        "RNN et Séquences",
-        "Transformers et Attention",
+
+      "Infrastructure et DevOps pour ML": [
+        {
+          text: "Dans un Dockerfile pour ML, pourquoi COPY requirements.txt avant COPY . ?",
+          options: [
+            {
+              text: "Optimiser le cache Docker : les dépendances changent moins souvent que le code",
+              isCorrect: true,
+            },
+            {
+              text: "Sécurité : éviter d'exposer le code source",
+              isCorrect: false,
+            },
+            {
+              text: "Performance : requirements.txt est plus petit",
+              isCorrect: false,
+            },
+            { text: "Obligation syntaxique Docker", isCorrect: false },
+          ],
+          explanation:
+            "Docker cache les layers. En copiant requirements.txt d'abord, pip install ne se réexécute que si les dépendances changent, pas à chaque modification de code.",
+        },
+        {
+          text: "Selon la documentation Kubernetes, comment configurer les ressources pour un pod ML ?",
+          options: [
+            {
+              text: "Spécifier requests (garantie) et limits (maximum) pour CPU/memory/GPU",
+              isCorrect: true,
+            },
+            { text: "Utiliser seulement limits", isCorrect: false },
+            {
+              text: "Laisser Kubernetes décider automatiquement",
+              isCorrect: false,
+            },
+            {
+              text: "Configurer seulement au niveau du namespace",
+              isCorrect: false,
+            },
+          ],
+          explanation:
+            "requests garantit les ressources au pod, limits empêche qu'il consomme trop. Essential pour les workloads ML gourmands en ressources.",
+        },
+        {
+          text: "En MLOps, pourquoi monitorer la dérive des features et pas seulement l'accuracy ?",
+          options: [
+            {
+              text: "La dérive des features précède souvent la dégradation de performance",
+              isCorrect: true,
+            },
+            { text: "L'accuracy est toujours stable", isCorrect: false },
+            { text: "Plus facile à calculer", isCorrect: false },
+            { text: "Requis par la réglementation", isCorrect: false },
+          ],
+          explanation:
+            "Les changements dans la distribution des features (data drift) causent souvent une baisse d'accuracy plus tard. La détection précoce permet une action proactive.",
+        },
+      ],
+
+      "Analyse Exploratoire de Données": [
+        {
+          text: "Selon le livre 'Python for Data Analysis', comment identifier des outliers multivariés dans un DataFrame ?",
+          options: [
+            {
+              text: "Isolation Forest, distance de Mahalanobis, ou PCA + distance euclidienne",
+              isCorrect: true,
+            },
+            { text: "Seulement boxplot sur chaque variable", isCorrect: false },
+            { text: "Correlation matrix uniquement", isCorrect: false },
+            { text: "Z-score sur chaque colonne", isCorrect: false },
+          ],
+          explanation:
+            "Les outliers multivariés ne sont pas détectables variable par variable. Il faut des méthodes comme Isolation Forest ou la distance de Mahalanobis qui considèrent les corrélations.",
+        },
+        {
+          text: "En suivant 'Storytelling with Data', quel graphique pour montrer l'évolution de 5 métriques dans le temps ?",
+          options: [
+            {
+              text: "Line chart avec axes secondaires ou small multiples, pas de pie chart",
+              isCorrect: true,
+            },
+            { text: "Pie chart animé", isCorrect: false },
+            { text: "Bar chart empilé", isCorrect: false },
+            { text: "Scatter plot 3D", isCorrect: false },
+          ],
+          explanation:
+            "Les line charts montrent clairement les tendances temporelles. Small multiples permettent de comparer facilement plusieurs métriques sans surcharge visuelle.",
+        },
+        {
+          text: "Avec seaborn.heatmap() pour une matrice de corrélation, pourquoi utiliser annot=True et fmt='.2f' ?",
+          options: [
+            {
+              text: "Afficher les valeurs numériques avec 2 décimales pour la lisibilité",
+              isCorrect: true,
+            },
+            { text: "Améliorer les performances", isCorrect: false },
+            { text: "Changer les couleurs", isCorrect: false },
+            { text: "Réduire la taille du graphique", isCorrect: false },
+          ],
+          explanation:
+            "annot=True affiche les valeurs de corrélation sur chaque cellule, fmt='.2f' limite à 2 décimales pour éviter l'encombrement visuel.",
+        },
       ],
     };
 
-    // Ajouter les IDs de concepts aux goals
-    goals.forEach(goal => {
-      const conceptNames = goalConceptMapping[goal.title] || [];
-      goal.requiredConcepts = conceptNames
-        .map(name => conceptMap[name])
-        .filter(id => id);
-    });
+    for (const goal of goals) {
+      for (let i = 0; i < goal.modules.length; i++) {
+        const module = goal.modules[i];
+        const moduleTitle = module.title;
 
-    // Créer les goals
-    const createdGoals = await Goal.create(goals);
-    logger.info(`Created ${createdGoals.length} goals`);
+        // Utiliser les questions techniques spécifiques au module
+        const questions = technicalQuizTemplates[moduleTitle] || [
+          // Fallback avec questions techniques génériques adaptées aux ressources
+          {
+            text: `Selon les ressources étudiées dans "${moduleTitle}", quel est le concept technique le plus critique à maîtriser ?`,
+            options: [
+              {
+                text: "La compréhension des fondements mathématiques et leur implémentation pratique",
+                isCorrect: true,
+              },
+              {
+                text: "La mémorisation des API sans comprendre",
+                isCorrect: false,
+              },
+              { text: "L'utilisation d'outils sans théorie", isCorrect: false },
+              {
+                text: "L'application de recettes sans adaptation",
+                isCorrect: false,
+              },
+            ],
+            explanation: `Pour maîtriser ${moduleTitle}, il est essentiel de comprendre les principes sous-jacents pour pouvoir adapter les techniques aux problèmes spécifiques.`,
+          },
+          {
+            text: `En pratiquant les ressources de "${moduleTitle}", comment débugger efficacement quand les résultats ne sont pas conformes aux attentes ?`,
+            options: [
+              {
+                text: "Analyser étape par étape : données, preprocessing, modèle, métriques",
+                isCorrect: true,
+              },
+              { text: "Changer d'algorithme immédiatement", isCorrect: false },
+              { text: "Augmenter les données sans analyse", isCorrect: false },
+              { text: "Copier une solution existante", isCorrect: false },
+            ],
+            explanation:
+              "Un debugging systématique permet d'identifier la source du problème : qualité des données, bugs de preprocessing, architecture inappropriée, ou métriques mal choisies.",
+          },
+          {
+            text: `Après avoir complété les ressources de "${moduleTitle}", comment valider votre maîtrise technique ?`,
+            options: [
+              {
+                text: "Implémenter un projet from scratch et expliquer chaque choix technique",
+                isCorrect: true,
+              },
+              { text: "Passer un quiz à choix multiples", isCorrect: false },
+              { text: "Lire plus de documentation", isCorrect: false },
+              { text: "Suivre d'autres cours similaires", isCorrect: false },
+            ],
+            explanation:
+              "La capacité à implémenter une solution complète et justifier les choix techniques démontre une maîtrise approfondie au-delà de la mémorisation.",
+          },
+          {
+            text: `Dans "${moduleTitle}", comment adapter les techniques apprises à un nouveau domaine d'application ?`,
+            options: [
+              {
+                text: "Analyser les spécificités du domaine et adapter preprocessing/architecture en conséquence",
+                isCorrect: true,
+              },
+              {
+                text: "Appliquer exactement les mêmes hyperparamètres",
+                isCorrect: false,
+              },
+              {
+                text: "Utiliser les modèles pré-entraînés sans modification",
+                isCorrect: false,
+              },
+              {
+                text: "Ignorer les particularités du domaine",
+                isCorrect: false,
+              },
+            ],
+            explanation:
+              "Chaque domaine a ses spécificités (types de données, contraintes, métriques). L'adaptation réfléchie des techniques est cruciale pour le succès.",
+          },
+          {
+            text: `Comment intégrer les connaissances de "${moduleTitle}" dans un workflow de production ?`,
+            options: [
+              {
+                text: "Pipeline robuste avec tests, monitoring, et documentation technique détaillée",
+                isCorrect: true,
+              },
+              { text: "Script unique sans documentation", isCorrect: false },
+              {
+                text: "Modèle figé sans possibilité d'évolution",
+                isCorrect: false,
+              },
+              {
+                text: "Solution locale sans considération d'échelle",
+                isCorrect: false,
+              },
+            ],
+            explanation:
+              "La production nécessite robustesse, reproductibilité, et maintenabilité. Tests automatisés, monitoring, et documentation sont essentiels.",
+          },
+        ];
 
-    // Créer les quiz pour chaque module
-    const quizzesWithModuleIds = [];
-    const quizTemplateKeys = Object.keys(quizTemplates);
-    let templateIndex = 0;
-
-    for (const goal of createdGoals) {
-      for (const module of goal.modules) {
-        // Sélectionner un template de quiz approprié
-        const template =
-          quizTemplates[
-            quizTemplateKeys[templateIndex % quizTemplateKeys.length]
-          ];
-        templateIndex++;
-
-        const quiz = {
-          ...template,
+        const quiz = new Quiz({
           moduleId: module._id.toString(),
-          title: `Quiz - ${module.title}`,
-          description: `Évaluation des connaissances pour ${module.title}`,
-        };
-        quizzesWithModuleIds.push(quiz);
+          title: `Quiz Technique - ${moduleTitle}`,
+          description: `Évaluation technique approfondie basée sur les ressources spécifiques de ${moduleTitle}`,
+          timeLimit: 2400, // 40 minutes pour des questions plus complexes
+          passingScore: 80, // Score plus élevé pour des questions techniques
+          questions: questions,
+        });
+
+        await quiz.save();
+        logger.info(`Technical quiz created for module: ${moduleTitle}`);
       }
     }
+  } catch (error) {
+    logger.error("Error creating technical quizzes:", error);
+  }
+}
 
-    const createdQuizzes = await Quiz.create(quizzesWithModuleIds);
-    logger.info(`Created ${createdQuizzes.length} quizzes`);
+async function createLearnerProfiles() {
+  try {
+    const users = await User.find({ role: "user" });
+    const goals = await Goal.find();
 
-    // Ajouter les goals recommandés aux assessments
-    const assessmentGoalMapping = {
-      "Évaluation Initiale - Mathématiques": [
-        "Data Scientist",
-        "Spécialiste Deep Learning",
-      ],
-      "Évaluation Initiale - Programmation": [
-        "Ingénieur Machine Learning",
-        "MLOps Engineer",
-      ],
-      "Évaluation ML - Niveau Intermédiaire": [
-        "Ingénieur Machine Learning",
-        "Spécialiste Deep Learning",
-      ],
-      "Évaluation Deep Learning": [
-        "Spécialiste Deep Learning",
-        "Computer Vision Expert",
-        "NLP Engineer",
-      ],
-      "Évaluation Computer Vision": [
-        "Computer Vision Expert",
-        "Spécialiste Deep Learning",
-      ],
-      "Évaluation NLP": ["NLP Engineer", "Spécialiste Deep Learning"],
-      "Évaluation MLOps": ["MLOps Engineer", "Ingénieur Machine Learning"],
-    };
-
-    // Créer un mapping des goals
-    const goalMap = {};
-    createdGoals.forEach(goal => {
-      goalMap[goal.title] = goal._id;
-    });
-
-    // Ajouter les IDs de goals aux assessments
-    assessments.forEach(assessment => {
-      const goalTitles = assessmentGoalMapping[assessment.title] || [];
-      assessment.recommendedGoals = goalTitles
-        .map(title => goalMap[title])
-        .filter(id => id);
-    });
-
-    // Créer les assessments
-    const createdAssessments = await Assessment.create(assessments);
-    logger.info(`Created ${createdAssessments.length} assessments`);
-
-    // Créer des profils d'apprenants variés
-    const learningStyles = ["visual", "auditory", "reading", "kinesthetic"];
-    const mathLevels = ["beginner", "intermediate", "advanced", "expert"];
-    const programmingLevels = [
-      "beginner",
-      "intermediate",
-      "advanced",
-      "expert",
-    ];
-    const preferredDomains = ["ml", "dl", "computer_vision", "nlp", "mlops"];
-
-    const learnerProfiles = [];
-    const userList = createdUsers.filter(user => user.role === "user");
-
-    for (let i = 0; i < userList.length; i++) {
-      const user = userList[i];
-      const profile = {
-        userId: user._id,
-        learningStyle: learningStyles[i % learningStyles.length],
-        preferences: {
-          mathLevel: mathLevels[i % mathLevels.length],
-          programmingLevel:
-            programmingLevels[(i + 1) % programmingLevels.length],
-          preferredDomain: preferredDomains[i % preferredDomains.length],
-        },
-        assessments: [],
-        goal:
-          i < createdGoals.length ? createdGoals[i]._id : createdGoals[0]._id,
-      };
-      learnerProfiles.push(profile);
+    if (users.length === 0) {
+      logger.warn("No users found, skipping learner profiles creation");
+      return;
     }
 
-    const createdProfiles = await LearnerProfile.create(learnerProfiles);
-    logger.info(`Created ${createdProfiles.length} learner profiles`);
+    if (goals.length === 0) {
+      logger.warn("No goals found, skipping learner profiles creation");
+      return;
+    }
 
-    // Créer quelques pathways actifs pour certains utilisateurs
-    const pathways = [];
-    for (let i = 0; i < Math.min(3, userList.length); i++) {
-      const pathway = {
-        userId: userList[i]._id,
-        goalId: createdGoals[i % createdGoals.length]._id,
+    const learnerProfiles = [
+      // Profil 1: Étudiant débutant
+      {
+        userId: users[0]._id,
+        learningStyle: "visual",
+        preferences: {
+          mathLevel: "beginner",
+          programmingLevel: "beginner",
+          preferredDomain: "ml",
+        },
+        assessments: [
+          {
+            category: "math",
+            score: 45,
+            responses: [
+              {
+                questionId: "math_basic_1",
+                selectedOption: "2x + 3",
+                timeSpent: 45,
+                category: "math",
+                difficulty: "basic",
+              },
+              {
+                questionId: "math_basic_2",
+                selectedOption: "1/3", // Réponse incorrecte
+                timeSpent: 60,
+                category: "math",
+                difficulty: "basic",
+              },
+            ],
+            recommendations: [
+              {
+                category: "math",
+                score: 45,
+                recommendations: [
+                  "Réviser les concepts de probabilités de base",
+                  "Pratiquer le calcul différentiel avec Khan Academy",
+                  "Suivre un cours de mise à niveau en mathématiques",
+                ],
+              },
+            ],
+            completedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
+          },
+        ],
+        goal: goals[0]._id, // Machine Learning Engineer
+      },
+
+      // Profil 2: Ingénieur expérimenté
+      {
+        userId: users.length > 1 ? users[1]._id : users[0]._id,
+        learningStyle: "reading",
+        preferences: {
+          mathLevel: "intermediate",
+          programmingLevel: "advanced",
+          preferredDomain: "dl",
+        },
+        assessments: [
+          {
+            category: "programming",
+            score: 85,
+            responses: [
+              {
+                questionId: "prog_adv_1",
+                selectedOption:
+                  "Les listes sont mutables, les tuples sont immutables",
+                timeSpent: 20,
+                category: "programming",
+                difficulty: "basic",
+              },
+            ],
+            recommendations: [
+              {
+                category: "programming",
+                score: 85,
+                recommendations: [
+                  "Explorer les aspects avancés de l'architecture logicielle",
+                  "Se concentrer sur l'optimisation de code pour ML",
+                  "Approfondir les techniques de déploiement",
+                ],
+              },
+            ],
+            completedAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
+          },
+        ],
+        goal: goals.length > 1 ? goals[1]._id : goals[0]._id, // Deep Learning Specialist
+      },
+
+      // Profil 3: Data Analyst
+      {
+        userId: users.length > 2 ? users[2]._id : users[0]._id,
+        learningStyle: "kinesthetic",
+        preferences: {
+          mathLevel: "advanced",
+          programmingLevel: "intermediate",
+          preferredDomain: "ml",
+        },
+        assessments: [
+          {
+            category: "math",
+            score: 80,
+            responses: [
+              {
+                questionId: "math_int_1",
+                selectedOption:
+                  "E[(X - μ)²] - la dispersion autour de la moyenne",
+                timeSpent: 35,
+                category: "math",
+                difficulty: "intermediate",
+              },
+            ],
+            recommendations: [
+              {
+                category: "math",
+                score: 80,
+                recommendations: [
+                  "Approfondir les statistiques bayésiennes",
+                  "Explorer l'analyse multivariée",
+                  "Pratiquer avec des datasets réels complexes",
+                ],
+              },
+            ],
+            completedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+          },
+        ],
+        goal: goals.length > 2 ? goals[2]._id : goals[0]._id, // Data Scientist
+      },
+    ];
+
+    // Créer seulement les profils pour lesquels nous avons des utilisateurs
+    const profilesToCreate = learnerProfiles.slice(
+      0,
+      Math.min(users.length, learnerProfiles.length)
+    );
+
+    for (const profileData of profilesToCreate) {
+      const profile = new LearnerProfile(profileData);
+      await profile.save();
+      logger.info(`Learner profile created for user: ${profileData.userId}`);
+    }
+  } catch (error) {
+    logger.error("Error creating learner profiles:", error);
+  }
+}
+
+async function createPathways() {
+  try {
+    const users = await User.find({ role: "user" });
+    const goals = await Goal.find();
+
+    if (users.length === 0) {
+      logger.warn("No users found, skipping pathways creation");
+      return;
+    }
+
+    if (goals.length === 0) {
+      logger.warn("No goals found, skipping pathways creation");
+      return;
+    }
+
+    const pathways = [
+      // Pathway 1: Débutant ML - Progress early stage
+      {
+        userId: users[0]._id,
+        goalId: goals[0]._id, // ML Engineer
         status: "active",
-        progress: Math.floor(Math.random() * 30) + 10,
-        currentModule: 0,
-        moduleProgress: createdGoals[i % createdGoals.length].modules.map(
-          (module, index) => ({
-            moduleIndex: index,
+        progress: 25,
+        currentModule: 1,
+        moduleProgress: [
+          {
+            moduleIndex: 0,
+            completed: true,
+            locked: false,
+            resources: [
+              {
+                resourceId: "ml_course_andrew_ng",
+                completed: true,
+                completedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+              },
+              {
+                resourceId: "hands_on_ml_book",
+                completed: true,
+                completedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+              },
+              {
+                resourceId: "sklearn_guide",
+                completed: false,
+                completedAt: null,
+              },
+            ],
+            quiz: {
+              completed: true,
+              score: 75,
+              completedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+            },
+          },
+          {
+            moduleIndex: 1,
             completed: false,
-            locked: index > 0,
-            resources: module.resources.map((resource, rIndex) => ({
-              resourceId: resource._id.toString(),
-              completed: index === 0 && rIndex === 0,
-              completedAt: index === 0 && rIndex === 0 ? new Date() : null,
-            })),
+            locked: false,
+            resources: [
+              {
+                resourceId: "python_data_handbook",
+                completed: false,
+                completedAt: null,
+              },
+            ],
             quiz: {
               completed: false,
               score: 0,
               completedAt: null,
             },
-          })
-        ),
-        startedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // Il y a 7 jours
-        lastAccessedAt: new Date(),
+          },
+          {
+            moduleIndex: 2,
+            completed: false,
+            locked: true,
+            resources: [],
+            quiz: {
+              completed: false,
+              score: 0,
+              completedAt: null,
+            },
+          },
+        ],
+        startedAt: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000),
+        lastAccessedAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
         estimatedCompletionDate: new Date(
           Date.now() + 90 * 24 * 60 * 60 * 1000
-        ), // Dans 90 jours
+        ),
         adaptiveRecommendations: [
           {
-            type: "resource",
-            description: "Réviser les concepts de base en algèbre linéaire",
+            type: "practice",
+            description:
+              "Compléter le projet Kaggle House Prices pour consolider les acquis",
             priority: "high",
             status: "pending",
           },
           {
-            type: "practice",
-            description: "Compléter 5 exercices sur les régressions",
+            type: "review",
+            description: "Réviser les concepts de validation croisée",
             priority: "medium",
             status: "pending",
           },
         ],
-        nextGoals: i < createdGoals.length - 1 ? [createdGoals[i + 1]._id] : [],
-      };
-      pathways.push(pathway);
+        nextGoals: goals.length > 1 ? [goals[1]._id] : [], // Vers Deep Learning
+      },
+
+      // Pathway 2: Ingénieur expérimenté - Deep Learning avancé
+      {
+        userId: users.length > 1 ? users[1]._id : users[0]._id,
+        goalId: goals.length > 1 ? goals[1]._id : goals[0]._id, // Deep Learning
+        status: "active",
+        progress: 60,
+        currentModule: 2,
+        moduleProgress: [
+          {
+            moduleIndex: 0,
+            completed: true,
+            locked: false,
+            resources: [
+              {
+                resourceId: "deep_learning_book",
+                completed: true,
+                completedAt: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000),
+              },
+              {
+                resourceId: "cs231n_course",
+                completed: true,
+                completedAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000),
+              },
+            ],
+            quiz: {
+              completed: true,
+              score: 88,
+              completedAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000),
+            },
+          },
+          {
+            moduleIndex: 1,
+            completed: true,
+            locked: false,
+            resources: [
+              {
+                resourceId: "cv_models_book",
+                completed: true,
+                completedAt: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000),
+              },
+            ],
+            quiz: {
+              completed: true,
+              score: 82,
+              completedAt: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000),
+            },
+          },
+          {
+            moduleIndex: 2,
+            completed: false,
+            locked: false,
+            resources: [
+              {
+                resourceId: "cs224n_course",
+                completed: false,
+                completedAt: null,
+              },
+            ],
+            quiz: {
+              completed: false,
+              score: 0,
+              completedAt: null,
+            },
+          },
+        ],
+        startedAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+        lastAccessedAt: new Date(Date.now() - 4 * 60 * 60 * 1000),
+        estimatedCompletionDate: new Date(
+          Date.now() + 45 * 24 * 60 * 60 * 1000
+        ),
+        adaptiveRecommendations: [
+          {
+            type: "practice",
+            description: "Implémenter un transformer from scratch",
+            priority: "high",
+            status: "pending",
+          },
+          {
+            type: "resource",
+            description: "Lire les papers récents sur les Vision Transformers",
+            priority: "medium",
+            status: "pending",
+          },
+        ],
+        nextGoals: goals.length > 3 ? [goals[3]._id, goals[4]._id] : [], // CV ou NLP specialization
+      },
+
+      // Pathway 3: Data Scientist - Focus analyse
+      {
+        userId: users.length > 2 ? users[2]._id : users[0]._id,
+        goalId: goals.length > 2 ? goals[2]._id : goals[0]._id, // Data Scientist
+        status: "active",
+        progress: 40,
+        currentModule: 0,
+        moduleProgress: [
+          {
+            moduleIndex: 0,
+            completed: false,
+            locked: false,
+            resources: [
+              {
+                resourceId: "python_data_analysis",
+                completed: true,
+                completedAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
+              },
+              {
+                resourceId: "storytelling_data",
+                completed: false,
+                completedAt: null,
+              },
+            ],
+            quiz: {
+              completed: false,
+              score: 0,
+              completedAt: null,
+            },
+          },
+        ],
+        startedAt: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000),
+        lastAccessedAt: new Date(Date.now() - 1 * 60 * 60 * 1000),
+        estimatedCompletionDate: new Date(
+          Date.now() + 60 * 24 * 60 * 60 * 1000
+        ),
+        adaptiveRecommendations: [
+          {
+            type: "practice",
+            description: "Analyser un dataset complexe avec visualisations",
+            priority: "high",
+            status: "pending",
+          },
+        ],
+        nextGoals: [goals[0]._id], // Vers ML Engineer
+      },
+    ];
+
+    // Créer seulement les pathways pour lesquels nous avons des utilisateurs
+    const pathwaysToCreate = pathways.slice(
+      0,
+      Math.min(users.length, pathways.length)
+    );
+
+    for (const pathwayData of pathwaysToCreate) {
+      const pathway = new Pathway(pathwayData);
+      await pathway.save();
+      logger.info(`Pathway created for user: ${pathwayData.userId}`);
     }
-
-    if (pathways.length > 0) {
-      const createdPathways = await Pathway.create(pathways);
-      logger.info(`Created ${createdPathways.length} pathways`);
-    }
-
-    // Afficher le résumé
-    logger.info("\n=== 📊 Résumé de la base de données ===");
-    logger.info(`👥 Utilisateurs: ${createdUsers.length}`);
-    logger.info(`🧠 Concepts: ${createdConcepts.length}`);
-    logger.info(`🎯 Parcours d'apprentissage: ${createdGoals.length}`);
-    logger.info(`📝 Quiz: ${createdQuizzes.length}`);
-    logger.info(`📊 Évaluations: ${createdAssessments.length}`);
-    logger.info(`👤 Profils d'apprenants: ${createdProfiles.length}`);
-    logger.info(`🛤️  Pathways actifs: ${pathways.length}`);
-
-    logger.info("\n✅ Database population completed successfully!");
   } catch (error) {
-    logger.error("Error populating database:", error);
-    throw error;
+    logger.error("Error creating pathways:", error);
+  }
+}
+
+async function populateDatabase() {
+  try {
+    await connectDB();
+    await clearDatabase();
+
+    logger.info("Starting enhanced database population...");
+
+    await createUsers();
+    await createConcepts();
+    await createAssessments();
+    await createGoals();
+    await createQuizzes();
+    await createLearnerProfiles();
+    await createPathways();
+
+    // Statistiques finales
+    const stats = {
+      users: await User.countDocuments(),
+      concepts: await Concept.countDocuments(),
+      goals: await Goal.countDocuments(),
+      assessments: await Assessment.countDocuments(),
+      quizzes: await Quiz.countDocuments(),
+      profiles: await LearnerProfile.countDocuments(),
+      pathways: await Pathway.countDocuments(),
+    };
+
+    logger.info("\n=== 📊 DATABASE POPULATION COMPLETED ===");
+    logger.info(`👥 Users: ${stats.users}`);
+    logger.info(`🧠 Concepts: ${stats.concepts}`);
+    logger.info(`🎯 Learning Goals: ${stats.goals}`);
+    logger.info(`📊 Assessments: ${stats.assessments}`);
+    logger.info(`📝 Quizzes: ${stats.quizzes}`);
+    logger.info(`👤 Learner Profiles: ${stats.profiles}`);
+    logger.info(`🛤️  Learning Pathways: ${stats.pathways}`);
+    logger.info("\n✅ UCAD IA Learning Platform ready!");
+  } catch (error) {
+    logger.error("Error during database population:", error);
   } finally {
     await mongoose.disconnect();
     logger.info("Disconnected from MongoDB");
   }
 }
 
-// Lancer le script
-populateDatabase().catch(error => {
-  logger.error("Fatal error during database population:", error);
-  process.exit(1);
-});
+// Exécuter le script
+populateDatabase();
