@@ -17,6 +17,7 @@ import { userRoutes } from "./routes/users.js";
 import learnerProfileRoutes from "./routes/learnerProfiles.js";
 import { pathwayRoutes } from "./routes/pathways.js";
 import { quizRoutes } from "./routes/quiz.js";
+import { aiRoutes } from "./routes/ai.js";
 
 import { config } from "./config/env.js";
 
@@ -75,7 +76,8 @@ app.use("/api/assessments", assessmentRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/profiles", learnerProfileRoutes);
 app.use("/api/pathways", pathwayRoutes);
-app.use("/api", quizRoutes); // Ajout des routes de quiz
+app.use("/api", quizRoutes);
+app.use("/api/ai", aiRoutes); // Nouvelles routes IA
 
 // Error handling
 app.use(errorHandler);
