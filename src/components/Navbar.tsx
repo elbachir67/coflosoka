@@ -19,6 +19,8 @@ import {
   Target,
   Award,
   Zap,
+  Share2,
+  ExternalLink,
 } from "lucide-react";
 
 function Navbar() {
@@ -90,6 +92,15 @@ function Navbar() {
                   <div className="flex items-center space-x-1">
                     <Users className="w-4 h-4" />
                     <span>Collaboration</span>
+                  </div>
+                </Link>
+                <Link
+                  to="/external-apis"
+                  className={`nav-link ${isActive("/external-apis")}`}
+                >
+                  <div className="flex items-center space-x-1">
+                    <ExternalLink className="w-4 h-4" />
+                    <span>APIs</span>
                   </div>
                 </Link>
               </>
@@ -246,6 +257,14 @@ function Navbar() {
                 >
                   <Users className="w-4 h-4 mr-2" />
                   Collaboration
+                </Link>
+                <Link
+                  to="/external-apis"
+                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white flex items-center"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <ExternalLink className="w-4 h-4 mr-2" />
+                  APIs Externes
                 </Link>
 
                 {/* Admin mobile menu */}

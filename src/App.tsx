@@ -19,6 +19,7 @@ import ConceptAssessmentResultsPage from "./pages/ConceptAssessmentResultsPage";
 import AnalyticsPage from "./pages/AnalyticsPage";
 import AchievementsPage from "./pages/AchievementsPage";
 import CollaborationPage from "./pages/CollaborationPage";
+import ExternalApisPage from "./pages/ExternalApisPage";
 import LevelUpModal from "./components/LevelUpModal";
 import XPNotification from "./components/XPNotification";
 import AchievementUnlocked from "./components/AchievementUnlocked";
@@ -160,6 +161,15 @@ function App() {
           element={
             <PrivateRoute>
               <CollaborationPage />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/external-apis"
+          element={
+            <PrivateRoute>
+              <ExternalApisPage />
             </PrivateRoute>
           }
         />

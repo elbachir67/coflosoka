@@ -20,6 +20,7 @@ import { quizRoutes } from "./routes/quiz.js";
 import { aiRoutes } from "./routes/ai.js";
 import { gamificationRoutes } from "./routes/gamification.js";
 import { collaborationRoutes } from "./routes/collaboration.js";
+import externalApisRoutes from "./routes/externalApis.js";
 
 import { config } from "./config/env.js";
 
@@ -85,6 +86,7 @@ app.use("/api", quizRoutes);
 app.use("/api/ai", aiRoutes);
 app.use("/api/gamification", gamificationRoutes);
 app.use("/api", collaborationRoutes);
+app.use("/api/external", externalApisRoutes);
 
 // Error handling
 app.use(errorHandler);
