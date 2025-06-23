@@ -13,6 +13,9 @@ import {
   Code,
   Database,
   Bot,
+  Settings,
+  Users,
+  Target,
 } from "lucide-react";
 
 function Navbar() {
@@ -77,14 +80,46 @@ function Navbar() {
               </Link>
             )}
 
+            {/* Admin Menu */}
             {isAdmin && (
-              <Link
-                to="/add-goal"
-                className="flex items-center px-4 py-2 rounded-md bg-purple-600 text-white hover:bg-purple-700 transition-colors duration-200"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Nouvel Objectif
-              </Link>
+              <div className="relative group">
+                <button className="flex items-center px-4 py-2 rounded-md bg-purple-600 text-white hover:bg-purple-700 transition-colors duration-200">
+                  <Settings className="w-4 h-4 mr-2" />
+                  Admin
+                </button>
+                <div className="absolute right-0 mt-2 w-48 bg-gray-900 rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+                  <div className="py-1">
+                    <Link
+                      to="/admin/dashboard"
+                      className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-white"
+                    >
+                      <LayoutDashboard className="w-4 h-4 inline mr-2" />
+                      Tableau de bord
+                    </Link>
+                    <Link
+                      to="/admin/goals"
+                      className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-white"
+                    >
+                      <Target className="w-4 h-4 inline mr-2" />
+                      Gérer Objectifs
+                    </Link>
+                    <Link
+                      to="/admin/users"
+                      className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-white"
+                    >
+                      <Users className="w-4 h-4 inline mr-2" />
+                      Gérer Utilisateurs
+                    </Link>
+                    <Link
+                      to="/admin/goals/new"
+                      className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-white"
+                    >
+                      <Plus className="w-4 h-4 inline mr-2" />
+                      Nouvel Objectif
+                    </Link>
+                  </div>
+                </div>
+              </div>
             )}
 
             {isAuthenticated ? (
@@ -157,6 +192,41 @@ function Navbar() {
                 >
                   Objectifs
                 </Link>
+
+                {/* Admin mobile menu */}
+                {isAdmin && (
+                  <>
+                    <div className="border-t border-gray-700 mt-2 pt-2">
+                      <p className="px-3 py-1 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                        Administration
+                      </p>
+                      <Link
+                        to="/admin/dashboard"
+                        className="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        <LayoutDashboard className="w-4 h-4 inline mr-2" />
+                        Tableau de bord Admin
+                      </Link>
+                      <Link
+                        to="/admin/goals"
+                        className="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        <Target className="w-4 h-4 inline mr-2" />
+                        Gérer Objectifs
+                      </Link>
+                      <Link
+                        to="/admin/users"
+                        className="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        <Users className="w-4 h-4 inline mr-2" />
+                        Gérer Utilisateurs
+                      </Link>
+                    </div>
+                  </>
+                )}
               </>
             ) : (
               <Link

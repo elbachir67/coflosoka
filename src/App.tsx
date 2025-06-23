@@ -17,6 +17,13 @@ import ConceptAssessmentPage from "./pages/ConceptAssessmentPage";
 import ConceptAssessmentResultsPage from "./pages/ConceptAssessmentResultsPage";
 import AnalyticsPage from "./pages/AnalyticsPage";
 
+// Admin pages
+import AdminDashboardPage from "./pages/AdminDashboardPage";
+import AdminGoalsPage from "./pages/AdminGoalsPage";
+import AdminUsersPage from "./pages/AdminUsersPage";
+import CreateGoalPage from "./pages/CreateGoalPage";
+import EditGoalPage from "./pages/EditGoalPage";
+
 function PrivateRoute({
   children,
   adminOnly = false,
@@ -115,7 +122,7 @@ function App() {
           }
         />
 
-        {/* New routes for P2 features */}
+        {/* Concept assessment routes */}
         <Route
           path="/concepts/:conceptId/assessment"
           element={
@@ -139,6 +146,52 @@ function App() {
           element={
             <PrivateRoute>
               <AnalyticsPage />
+            </PrivateRoute>
+          }
+        />
+
+        {/* Admin routes */}
+        <Route
+          path="/admin/dashboard"
+          element={
+            <PrivateRoute adminOnly={true}>
+              <AdminDashboardPage />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/admin/goals"
+          element={
+            <PrivateRoute adminOnly={true}>
+              <AdminGoalsPage />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/admin/goals/new"
+          element={
+            <PrivateRoute adminOnly={true}>
+              <CreateGoalPage />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/admin/goals/:goalId/edit"
+          element={
+            <PrivateRoute adminOnly={true}>
+              <EditGoalPage />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/admin/users"
+          element={
+            <PrivateRoute adminOnly={true}>
+              <AdminUsersPage />
             </PrivateRoute>
           }
         />
