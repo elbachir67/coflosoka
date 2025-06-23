@@ -18,7 +18,7 @@ import { toast } from "react-hot-toast";
 import AchievementCard from "../components/AchievementCard";
 import ExperienceBar from "../components/ExperienceBar";
 import AchievementUnlocked from "../components/AchievementUnlocked";
-import Leaderboard from "../components/Leaderboard";
+import Leaderboard from "../components/LeaderBoard";
 
 interface Achievement {
   _id: string;
