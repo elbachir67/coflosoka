@@ -1,6 +1,7 @@
 import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { useAuth } from "./contexts/AuthContext";
+import { useGamification } from "./contexts/GamificationContext";
 import Navbar from "./components/Navbar";
 import HomePage from "./pages/HomePage";
 import GoalsExplorerPage from "./pages/GoalsExplorerPage";
@@ -17,7 +18,7 @@ import ConceptAssessmentPage from "./pages/ConceptAssessmentPage";
 import ConceptAssessmentResultsPage from "./pages/ConceptAssessmentResultsPage";
 import AnalyticsPage from "./pages/AnalyticsPage";
 import AchievementsPage from "./pages/AchievementsPage";
-import { useGamification } from "./contexts/GamificationContext";
+import CollaborationPage from "./pages/CollaborationPage";
 import LevelUpModal from "./components/LevelUpModal";
 import XPNotification from "./components/XPNotification";
 import AchievementUnlocked from "./components/AchievementUnlocked";
@@ -145,6 +146,24 @@ function App() {
           }
         />
 
+        <Route
+          path="/achievements"
+          element={
+            <PrivateRoute>
+              <AchievementsPage />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/collaboration"
+          element={
+            <PrivateRoute>
+              <CollaborationPage />
+            </PrivateRoute>
+          }
+        />
+
         {/* Concept assessment routes */}
         <Route
           path="/concepts/:conceptId/assessment"
@@ -169,15 +188,6 @@ function App() {
           element={
             <PrivateRoute>
               <AnalyticsPage />
-            </PrivateRoute>
-          }
-        />
-
-        <Route
-          path="/achievements"
-          element={
-            <PrivateRoute>
-              <AchievementsPage />
             </PrivateRoute>
           }
         />

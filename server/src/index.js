@@ -19,6 +19,7 @@ import { pathwayRoutes } from "./routes/pathways.js";
 import { quizRoutes } from "./routes/quiz.js";
 import { aiRoutes } from "./routes/ai.js";
 import { gamificationRoutes } from "./routes/gamification.js";
+import { collaborationRoutes } from "./routes/collaboration.js";
 
 import { config } from "./config/env.js";
 
@@ -60,6 +61,9 @@ app.use(
 app.use(express.json());
 app.use(morgan("dev"));
 
+// Servir les fichiers statiques du dossier uploads
+app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
+
 // Health check route
 app.get("/health", (req, res) => {
   res.json({
@@ -80,6 +84,7 @@ app.use("/api/pathways", pathwayRoutes);
 app.use("/api", quizRoutes);
 app.use("/api/ai", aiRoutes);
 app.use("/api/gamification", gamificationRoutes);
+app.use("/api", collaborationRoutes);
 
 // Error handling
 app.use(errorHandler);

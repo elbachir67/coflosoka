@@ -83,6 +83,15 @@ function Navbar() {
                     <span>Achievements</span>
                   </div>
                 </Link>
+                <Link
+                  to="/collaboration"
+                  className={`nav-link ${isActive("/collaboration")}`}
+                >
+                  <div className="flex items-center space-x-1">
+                    <Users className="w-4 h-4" />
+                    <span>Collaboration</span>
+                  </div>
+                </Link>
               </>
             ) : (
               <Link
@@ -229,6 +238,14 @@ function Navbar() {
                 >
                   <Award className="w-4 h-4 mr-2" />
                   Achievements
+                </Link>
+                <Link
+                  to="/collaboration"
+                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white flex items-center"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <Users className="w-4 h-4 mr-2" />
+                  Collaboration
                 </Link>
 
                 {/* Admin mobile menu */}
