@@ -16,6 +16,11 @@ import QuizResultsPage from "./pages/QuizResultsPage";
 import ConceptAssessmentPage from "./pages/ConceptAssessmentPage";
 import ConceptAssessmentResultsPage from "./pages/ConceptAssessmentResultsPage";
 import AnalyticsPage from "./pages/AnalyticsPage";
+import AchievementsPage from "./pages/AchievementsPage";
+import { useGamification } from "./contexts/GamificationContext";
+import LevelUpModal from "./components/LevelUpModal";
+import XPNotification from "./components/XPNotification";
+import AchievementUnlocked from "./components/AchievementUnlocked";
 
 // Admin pages
 import AdminDashboardPage from "./pages/AdminDashboardPage";
@@ -58,6 +63,24 @@ function PrivateRoute({
 }
 
 function App() {
+  const {
+    showLevelUp,
+    setShowLevelUp,
+    profile,
+    showXPNotification,
+    setShowXPNotification,
+    lastXPGain,
+    newAchievement,
+    setNewAchievement,
+    markAchievementAsViewed,
+  } = useGamification();
+
+  const handleCloseAchievement = async () => {
+    if (newAchievement) {
+      await markAchievementAsViewed(newAchievement.achievementId._id);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#0A0A0F]">
       <Navbar />
@@ -150,6 +173,15 @@ function App() {
           }
         />
 
+        <Route
+          path="/achievements"
+          element={
+            <PrivateRoute>
+              <AchievementsPage />
+            </PrivateRoute>
+          }
+        />
+
         {/* Admin routes */}
         <Route
           path="/admin/dashboard"
@@ -196,6 +228,32 @@ function App() {
           }
         />
       </Routes>
+
+      {/* Level Up Modal */}
+      {showLevelUp && profile && (
+        <LevelUpModal
+          level={profile.level}
+          rank={profile.rank}
+          onClose={() => setShowLevelUp(false)}
+        />
+      )}
+
+      {/* XP Notification */}
+      {showXPNotification && lastXPGain && (
+        <XPNotification
+          xp={lastXPGain.xpGained}
+          reason={lastXPGain.reason}
+          onClose={() => setShowXPNotification(false)}
+        />
+      )}
+
+      {/* Achievement Unlocked */}
+      {newAchievement && (
+        <AchievementUnlocked
+          achievement={newAchievement.achievementId}
+          onClose={handleCloseAchievement}
+        />
+      )}
     </div>
   );
 }

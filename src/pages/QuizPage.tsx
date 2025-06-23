@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import { useGamification } from "../contexts/GamificationContext";
 import { api } from "../config/api";
 import { Question } from "../types";
 import {
@@ -23,6 +24,7 @@ function QuizPage() {
   const { pathwayId, moduleId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { rewardAction } = useGamification();
   const [loading, setLoading] = useState(true);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -197,6 +199,9 @@ function QuizPage() {
       }
 
       const data = await response.json();
+
+      // Récompenser l'utilisateur avec de l'XP
+      await rewardAction("complete_quiz", { score });
 
       // Vérifier si le score est suffisant
       if (score < (quiz.passingScore || 70)) {

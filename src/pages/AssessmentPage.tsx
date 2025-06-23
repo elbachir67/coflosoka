@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import { useGamification } from "../contexts/GamificationContext";
 import { api } from "../config/api";
 import { Question, Message, UserProfile } from "../types";
 import { toast } from "react-hot-toast";
@@ -15,6 +16,7 @@ function AssessmentPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, isAuthenticated, checkAssessmentStatus } = useAuth();
+  const { rewardAction } = useGamification();
   const [currentStep, setCurrentStep] = useState<
     "intro" | "math" | "programming" | "domain" | "quiz" | "results"
   >("intro");
@@ -237,6 +239,9 @@ function AssessmentPage() {
         if (!profileResponse.ok) {
           throw new Error("Erreur lors de la mise à jour du profil");
         }
+
+        // Récompenser l'utilisateur pour avoir complété l'évaluation
+        await rewardAction("assessment_completion", { score });
 
         // Mettre à jour le statut de l'évaluation
         await checkAssessmentStatus();

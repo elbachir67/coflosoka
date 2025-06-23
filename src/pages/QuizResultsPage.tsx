@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { useGamification } from "../contexts/GamificationContext";
 import { QuizResult } from "../types";
 import {
   Trophy,
@@ -15,7 +16,15 @@ function QuizResultsPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const { pathwayId } = useParams();
+  const { rewardAction } = useGamification();
   const result = location.state?.result as QuizResult;
+
+  useEffect(() => {
+    // Récompenser l'utilisateur pour avoir complété un quiz avec un bon score
+    if (result && result.score >= 80) {
+      rewardAction("high_score_quiz", { score: result.score });
+    }
+  }, [result, rewardAction]);
 
   if (!result) {
     navigate(`/pathways/${pathwayId}`);

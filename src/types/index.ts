@@ -193,3 +193,44 @@ export interface LearnerDashboard {
     dueDate: Date;
   }[];
 }
+
+// Gamification Types
+export interface Achievement {
+  _id: string;
+  title: string;
+  description: string;
+  category: string;
+  icon: string;
+  points: number;
+  rarity: string;
+  badgeUrl?: string;
+}
+
+export interface UserAchievement {
+  _id: string;
+  userId: string;
+  achievementId: Achievement;
+  unlockedAt: Date;
+  progress: number;
+  isCompleted: boolean;
+  isViewed: boolean;
+}
+
+export interface GamificationProfile {
+  level: number;
+  currentXP: number;
+  requiredXP: number;
+  totalXP: number;
+  rank: string;
+  streakDays: number;
+  achievements: UserAchievement[];
+  inProgressAchievements: UserAchievement[];
+  newAchievements: UserAchievement[];
+}
+
+export interface XPGain {
+  xpGained: number;
+  reason: string;
+  leveledUp: boolean;
+  newLevel?: number;
+}

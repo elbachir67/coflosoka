@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import { useGamification } from "../contexts/GamificationContext";
 import { api } from "../config/api";
 import { Pathway, ResourceType, PathwayResource } from "../types";
 import {
@@ -49,6 +50,7 @@ function PathwayPage() {
   const { pathwayId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { rewardAction } = useGamification();
   const [pathway, setPathway] = useState<Pathway | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -132,7 +134,25 @@ function PathwayPage() {
 
       const updatedPathway = await response.json();
       setPathway(updatedPathway);
+
+      // Récompenser l'utilisateur avec de l'XP
+      await rewardAction("complete_resource");
+
       toast.success("Progression mise à jour");
+
+      // Vérifier si le module est complété
+      const moduleCompleted =
+        updatedPathway.moduleProgress[moduleIndex].completed;
+      if (moduleCompleted) {
+        // Récompenser l'utilisateur pour avoir complété un module
+        await rewardAction("complete_module");
+      }
+
+      // Vérifier si le parcours est complété
+      if (updatedPathway.status === "completed") {
+        // Récompenser l'utilisateur pour avoir complété un parcours
+        await rewardAction("complete_pathway");
+      }
     } catch (error) {
       console.error("Error:", error);
       toast.error("Erreur lors de la mise à jour de la progression");
@@ -164,6 +184,12 @@ function PathwayPage() {
 
       const updatedPathway = await response.json();
       setPathway(updatedPathway);
+
+      // Si l'action est "complete", récompenser l'utilisateur
+      if (action === "complete") {
+        await rewardAction("complete_recommendation");
+      }
+
       toast.success("Recommandation mise à jour");
     } catch (error) {
       console.error("Error:", error);

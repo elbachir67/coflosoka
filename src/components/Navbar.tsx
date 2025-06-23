@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import { useGamification } from "../contexts/GamificationContext";
 import {
   BookOpen,
   LogOut,
@@ -16,12 +17,15 @@ import {
   Settings,
   Users,
   Target,
+  Award,
+  Zap,
 } from "lucide-react";
 
 function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
   const { isAdmin, signOut, user, isAuthenticated } = useAuth();
+  const { profile } = useGamification();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const isActive = (path: string) => {
@@ -69,6 +73,15 @@ function Navbar() {
                 </Link>
                 <Link to="/goals" className={`nav-link ${isActive("/goals")}`}>
                   Objectifs
+                </Link>
+                <Link
+                  to="/achievements"
+                  className={`nav-link ${isActive("/achievements")}`}
+                >
+                  <div className="flex items-center space-x-1">
+                    <Award className="w-4 h-4" />
+                    <span>Achievements</span>
+                  </div>
                 </Link>
               </>
             ) : (
@@ -124,6 +137,23 @@ function Navbar() {
 
             {isAuthenticated ? (
               <div className="flex items-center space-x-4">
+                {profile && (
+                  <div className="flex items-center space-x-2 bg-gray-800/50 px-3 py-1 rounded-lg">
+                    <div className="flex items-center">
+                      <Zap className="w-4 h-4 text-yellow-400 mr-1" />
+                      <span className="text-yellow-400 font-medium">
+                        {profile.totalXP} XP
+                      </span>
+                    </div>
+                    <div className="text-gray-400">|</div>
+                    <div className="flex items-center">
+                      <Award className="w-4 h-4 text-purple-400 mr-1" />
+                      <span className="text-purple-400 font-medium">
+                        Niv. {profile.level}
+                      </span>
+                    </div>
+                  </div>
+                )}
                 <div className="flex items-center space-x-2 text-gray-300">
                   <User className="w-4 h-4" />
                   <span>{user?.email}</span>
@@ -192,6 +222,14 @@ function Navbar() {
                 >
                   Objectifs
                 </Link>
+                <Link
+                  to="/achievements"
+                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white flex items-center"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <Award className="w-4 h-4 mr-2" />
+                  Achievements
+                </Link>
 
                 {/* Admin mobile menu */}
                 {isAdmin && (
@@ -240,6 +278,22 @@ function Navbar() {
 
             {isAuthenticated ? (
               <div className="pt-4 pb-3 border-t border-gray-700">
+                {profile && (
+                  <div className="flex items-center justify-between px-3 py-2 bg-gray-800/50 rounded-lg mb-3">
+                    <div className="flex items-center">
+                      <Zap className="w-4 h-4 text-yellow-400 mr-1" />
+                      <span className="text-yellow-400 font-medium">
+                        {profile.totalXP} XP
+                      </span>
+                    </div>
+                    <div className="flex items-center">
+                      <Award className="w-4 h-4 text-purple-400 mr-1" />
+                      <span className="text-purple-400 font-medium">
+                        Niv. {profile.level}
+                      </span>
+                    </div>
+                  </div>
+                )}
                 <div className="flex items-center px-3">
                   <div className="flex-shrink-0">
                     <div className="h-10 w-10 rounded-full bg-gray-700 flex items-center justify-center">

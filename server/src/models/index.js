@@ -9,6 +9,9 @@ import { Quiz } from "./Quiz.js";
 import { QuizAttempt } from "./QuizAttempt.js";
 import { Assessment } from "./Assessment.js";
 import { User } from "./User.js";
+import { Achievement } from "./Achievement.js";
+import { UserAchievement } from "./UserAchievement.js";
+import { UserLevel } from "./UserLevel.js";
 
 // Export all models
 export {
@@ -22,4 +25,7 @@ export {
   LearningData,
   Quiz,
   QuizAttempt,
+  Achievement,
+  UserAchievement,
+  UserLevel,
 };
