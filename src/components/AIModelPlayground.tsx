@@ -27,14 +27,14 @@ const AIModelPlayground: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!prompt.trim()) return;
-    
+
     try {
       setLoading(true);
       setError(null);
       setResponse(null);
-      
+
       const response = await fetch(`${api.API_URL}/api/external/openai`, {
         method: "POST",
         headers: {
@@ -47,19 +47,21 @@ const AIModelPlayground: React.FC = () => {
           maxTokens,
         }),
       });
-      
+
       if (!response.ok) {
         throw new Error("Erreur lors de la génération de texte");
       }
-      
+
       const data = await response.json();
       setResponse(data.choices[0].message.content);
-      
+
       // Récompenser l'utilisateur pour l'utilisation de l'API
       await rewardAction("use_ai_model");
     } catch (error) {
       console.error("Error generating text:", error);
-      setError("Impossible de générer une réponse. Veuillez réessayer plus tard.");
+      setError(
+        "Impossible de générer une réponse. Veuillez réessayer plus tard."
+      );
       toast.error("Erreur lors de la génération de texte");
     } finally {
       setLoading(false);
@@ -87,32 +89,38 @@ const AIModelPlayground: React.FC = () => {
         <Brain className="w-5 h-5 text-purple-400 mr-2" />
         IA Générative
       </h2>
-      
+
       <form onSubmit={handleSubmit} className="mb-6">
         <div className="mb-4">
-          <label htmlFor="prompt" className="block text-sm font-medium text-gray-300 mb-2">
+          <label
+            htmlFor="prompt"
+            className="block text-sm font-medium text-gray-300 mb-2"
+          >
             Votre prompt
           </label>
           <textarea
             id="prompt"
             value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
+            onChange={e => setPrompt(e.target.value)}
             placeholder="Entrez votre prompt ici..."
             rows={4}
             className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500"
             required
           />
         </div>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           <div>
-            <label htmlFor="model" className="block text-sm font-medium text-gray-300 mb-2">
+            <label
+              htmlFor="model"
+              className="block text-sm font-medium text-gray-300 mb-2"
+            >
               Modèle
             </label>
             <select
               id="model"
               value={model}
-              onChange={(e) => setModel(e.target.value)}
+              onChange={e => setModel(e.target.value)}
               className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500"
             >
               <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
@@ -120,23 +128,26 @@ const AIModelPlayground: React.FC = () => {
               <option value="gpt-4-turbo">GPT-4 Turbo</option>
             </select>
           </div>
-          
+
           <div>
-            <label htmlFor="maxTokens" className="block text-sm font-medium text-gray-300 mb-2">
+            <label
+              htmlFor="maxTokens"
+              className="block text-sm font-medium text-gray-300 mb-2"
+            >
               Longueur maximale (tokens)
             </label>
             <input
               type="number"
               id="maxTokens"
               value={maxTokens}
-              onChange={(e) => setMaxTokens(parseInt(e.target.value))}
+              onChange={e => setMaxTokens(parseInt(e.target.value))}
               min={50}
               max={2000}
               className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500"
             />
           </div>
         </div>
-        
+
         <div className="flex space-x-3">
           <button
             type="submit"
@@ -155,7 +166,7 @@ const AIModelPlayground: React.FC = () => {
               </>
             )}
           </button>
-          
+
           <button
             type="button"
             onClick={handleClear}
@@ -166,14 +177,14 @@ const AIModelPlayground: React.FC = () => {
           </button>
         </div>
       </form>
-      
+
       {error && (
         <div className="p-4 rounded-lg bg-red-500/20 border border-red-500/30 mb-6 flex items-start">
           <AlertCircle className="w-5 h-5 text-red-400 mr-3 mt-0.5 flex-shrink-0" />
           <p className="text-red-300">{error}</p>
         </div>
       )}
-      
+
       {response && (
         <div className="p-4 rounded-lg bg-gray-800/50 border border-gray-700 mb-6">
           <div className="flex justify-between items-center mb-2">
@@ -190,4 +201,33 @@ const AIModelPlayground: React.FC = () => {
               )}
             </button>
           </div>
-          <div className="whites
+          <div className="whitespace-pre-line text-gray-300">{response}</div>
+        </div>
+      )}
+
+      <div className="p-4 rounded-lg bg-gray-800/50">
+        <h3 className="text-lg font-semibold text-gray-200 mb-2">
+          À propos de cette API
+        </h3>
+        <p className="text-gray-400 mb-4">
+          Ce playground utilise l'API OpenAI pour générer du texte à partir de
+          vos prompts. Vous pouvez l'utiliser pour explorer les capacités des
+          modèles de langage avancés.
+        </p>
+        <div className="flex items-center">
+          <a
+            href="https://platform.openai.com/docs/api-reference"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-400 hover:text-blue-300 flex items-center"
+          >
+            Documentation OpenAI
+            <ExternalLink className="w-4 h-4 ml-1" />
+          </a>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default AIModelPlayground;
