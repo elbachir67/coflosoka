@@ -52,13 +52,9 @@ function PrivateRoute({
     return <Navigate to="/" />;
   }
 
+  // Modification: Suggérer l'évaluation au lieu de la forcer
   if (requireAssessment && !hasCompletedAssessment) {
-    return (
-      <Navigate
-        to="/assessment"
-        state={{ returnPath: window.location.pathname }}
-      />
-    );
+    return <Navigate to="/dashboard" />;
   }
 
   return <>{children}</>;
@@ -96,7 +92,7 @@ function App() {
         <Route
           path="/goals"
           element={
-            <PrivateRoute requireAssessment={true}>
+            <PrivateRoute>
               <GoalsExplorerPage />
             </PrivateRoute>
           }
@@ -105,7 +101,7 @@ function App() {
         <Route
           path="/goals/:goalId"
           element={
-            <PrivateRoute requireAssessment={true}>
+            <PrivateRoute>
               <GoalDetailPage />
             </PrivateRoute>
           }

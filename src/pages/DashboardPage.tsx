@@ -18,13 +18,15 @@ import {
   ArrowRight,
   Brain,
   Lightbulb,
+  HelpCircle,
 } from "lucide-react";
+import { toast } from "react-hot-toast";
 import AIInsights from "../components/AIInsights";
 import PerformancePrediction from "../components/PerformancePrediction";
 
 function DashboardPage() {
   const navigate = useNavigate();
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, hasCompletedAssessment } = useAuth();
   const [dashboard, setDashboard] = useState<LearnerDashboard | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<
@@ -81,17 +83,74 @@ function DashboardPage() {
     );
   }
 
+  // Afficher une bannière d'évaluation si l'utilisateur n'a pas encore fait l'évaluation
+  const renderAssessmentBanner = () => {
+    if (!hasCompletedAssessment) {
+      return (
+        <div className="glass-card rounded-xl p-6 mb-8 bg-gradient-to-br from-purple-500/20 via-blue-500/10 to-purple-500/20">
+          <div className="flex flex-col md:flex-row items-center justify-between">
+            <div className="mb-6 md:mb-0 md:mr-6">
+              <h2 className="text-xl font-bold text-gray-100 mb-2 flex items-center">
+                <HelpCircle className="w-5 h-5 text-purple-400 mr-2" />
+                Complétez votre évaluation
+              </h2>
+              <p className="text-gray-300">
+                Pour obtenir des recommandations personnalisées et un parcours
+                adapté à votre profil, prenez quelques minutes pour compléter
+                l'évaluation initiale.
+              </p>
+            </div>
+            <button
+              onClick={() => navigate("/assessment")}
+              className="px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 transition-colors flex items-center"
+            >
+              Commencer l'évaluation
+              <ArrowRight className="w-4 h-4 ml-2" />
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return null;
+  };
+
   if (!dashboard) {
     return (
-      <div className="min-h-screen bg-[#0A0A0F] flex items-center justify-center">
-        <div className="text-center text-gray-400">
-          <p>Aucune donnée disponible</p>
-          <button
-            onClick={() => navigate("/goals")}
-            className="mt-4 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
-          >
-            Explorer les objectifs
-          </button>
+      <div className="min-h-screen bg-[#0A0A0F] py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-gray-100">
+              Tableau de bord
+            </h1>
+            <p className="text-gray-400 mt-2">
+              Bienvenue sur votre espace personnel
+            </p>
+          </div>
+
+          {renderAssessmentBanner()}
+
+          <div className="text-center py-12 glass-card rounded-xl p-8">
+            <Brain className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+            <p className="text-gray-400 mb-6">
+              Vous n'avez pas encore de parcours d'apprentissage actif.
+            </p>
+            <div className="flex flex-col sm:flex-row justify-center gap-4">
+              {!hasCompletedAssessment && (
+                <button
+                  onClick={() => navigate("/assessment")}
+                  className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                >
+                  Faire l'évaluation
+                </button>
+              )}
+              <button
+                onClick={() => navigate("/goals")}
+                className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Explorer les objectifs
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -107,6 +166,8 @@ function DashboardPage() {
             Suivez votre progression et gérez vos parcours d'apprentissage
           </p>
         </div>
+
+        {renderAssessmentBanner()}
 
         {/* Navigation Tabs */}
         <div className="flex border-b border-gray-800 mb-8">

@@ -30,14 +30,6 @@ function AssessmentPage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // Vérifier si l'utilisateur doit être connecté
-    const returnPath = location.state?.returnPath;
-    if (returnPath && !isAuthenticated) {
-      localStorage.setItem("redirectAfterLogin", returnPath);
-      navigate("/login", { replace: true });
-      return;
-    }
-
     // Ajouter le message initial
     const initialMessage =
       location.state?.message ||
@@ -51,7 +43,7 @@ function AssessmentPage() {
         options: ["Commencer l'évaluation"],
       },
     ]);
-  }, [isAuthenticated, navigate, location.state]);
+  }, [location.state]);
 
   const addBotMessage = (content: string, options?: string[]) => {
     setMessages(prev => [
@@ -149,7 +141,10 @@ function AssessmentPage() {
           Object.entries(domainMap).find(([key]) => input.includes(key))?.[1] ||
           "ml";
 
-        setUserProfile(prev => ({ ...prev, domain: selectedDomain }));
+        setUserProfile(prev => ({
+          ...prev,
+          domain: selectedDomain as UserProfile["domain"],
+        }));
         await loadQuestions(selectedDomain);
         break;
 
