@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Users,
   MessageSquare,
@@ -17,6 +17,22 @@ const CollaborationHub: React.FC = () => {
     "groups" | "forum" | "resources" | "review"
   >("groups");
 
+  // Utiliser useEffect pour persister l'onglet actif dans le localStorage
+  useEffect(() => {
+    const savedTab = localStorage.getItem("collaborationActiveTab");
+    if (savedTab) {
+      setActiveTab(savedTab as "groups" | "forum" | "resources" | "review");
+    }
+  }, []);
+
+  // Sauvegarder l'onglet actif quand il change
+  const handleTabChange = (
+    tab: "groups" | "forum" | "resources" | "review"
+  ) => {
+    setActiveTab(tab);
+    localStorage.setItem("collaborationActiveTab", tab);
+  };
+
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold text-gray-100 mb-6 flex items-center">
@@ -27,7 +43,7 @@ const CollaborationHub: React.FC = () => {
       {/* Navigation Tabs */}
       <div className="flex border-b border-gray-800 mb-6 overflow-x-auto">
         <button
-          onClick={() => setActiveTab("groups")}
+          onClick={() => handleTabChange("groups")}
           className={`px-4 py-2 font-medium text-sm whitespace-nowrap ${
             activeTab === "groups"
               ? "text-purple-400 border-b-2 border-purple-400"
@@ -40,7 +56,7 @@ const CollaborationHub: React.FC = () => {
           </div>
         </button>
         <button
-          onClick={() => setActiveTab("forum")}
+          onClick={() => handleTabChange("forum")}
           className={`px-4 py-2 font-medium text-sm whitespace-nowrap ${
             activeTab === "forum"
               ? "text-purple-400 border-b-2 border-purple-400"
@@ -53,7 +69,7 @@ const CollaborationHub: React.FC = () => {
           </div>
         </button>
         <button
-          onClick={() => setActiveTab("resources")}
+          onClick={() => handleTabChange("resources")}
           className={`px-4 py-2 font-medium text-sm whitespace-nowrap ${
             activeTab === "resources"
               ? "text-purple-400 border-b-2 border-purple-400"
@@ -66,7 +82,7 @@ const CollaborationHub: React.FC = () => {
           </div>
         </button>
         <button
-          onClick={() => setActiveTab("review")}
+          onClick={() => handleTabChange("review")}
           className={`px-4 py-2 font-medium text-sm whitespace-nowrap ${
             activeTab === "review"
               ? "text-purple-400 border-b-2 border-purple-400"
@@ -81,10 +97,12 @@ const CollaborationHub: React.FC = () => {
       </div>
 
       {/* Content */}
-      {activeTab === "groups" && <StudyGroup />}
-      {activeTab === "forum" && <DiscussionForum />}
-      {activeTab === "resources" && <ResourceSharing />}
-      {activeTab === "review" && <PeerReview />}
+      <div className="min-h-[400px]">
+        {activeTab === "groups" && <StudyGroup />}
+        {activeTab === "forum" && <DiscussionForum />}
+        {activeTab === "resources" && <ResourceSharing />}
+        {activeTab === "review" && <PeerReview />}
+      </div>
 
       {/* Conseils de collaboration */}
       <div className="glass-card rounded-xl p-6 mt-8">

@@ -1,3 +1,4 @@
+// server/src/routes/analytics.js
 import express from "express";
 import { auth } from "../middleware/auth.js";
 import { adminAuth } from "../middleware/auth.js";
