@@ -25,16 +25,16 @@ interface ForumPost {
   author: {
     _id: string;
     email: string;
-  };
+  } | null;
   tags: string[];
   likes: string[];
   comments: {
     _id: string;
-    content: string;
     author: {
       _id: string;
       email: string;
-    };
+    } | null;
+    content: string;
     createdAt: string;
   }[];
   createdAt: string;
@@ -64,7 +64,7 @@ const DiscussionForum: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    // Scroll to bottom of comments when new comments arrive
+    // Scroll to bottom of messages when new comments arrive
     if (commentsEndRef.current) {
       commentsEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
@@ -371,7 +371,11 @@ const DiscussionForum: React.FC = () => {
                   ))}
                 </div>
                 <div className="flex justify-between text-xs text-gray-400">
-                  <span>{post.author.email.split("@")[0]}</span>
+                  <span>
+                    {post.author
+                      ? post.author.email.split("@")[0]
+                      : "Utilisateur inconnu"}
+                  </span>
                   <div className="flex items-center space-x-3">
                     <span className="flex items-center">
                       <ThumbsUp className="w-3 h-3 mr-1" />
@@ -426,7 +430,11 @@ const DiscussionForum: React.FC = () => {
                 <div className="flex justify-between text-sm text-gray-400">
                   <div className="flex items-center">
                     <User className="w-4 h-4 mr-1" />
-                    <span>{selectedPost.author.email.split("@")[0]}</span>
+                    <span>
+                      {selectedPost.author
+                        ? selectedPost.author.email.split("@")[0]
+                        : "Utilisateur inconnu"}
+                    </span>
                   </div>
                   <span>{formatDate(selectedPost.createdAt)}</span>
                 </div>
@@ -452,7 +460,11 @@ const DiscussionForum: React.FC = () => {
                       >
                         <p className="text-gray-300 mb-2">{comment.content}</p>
                         <div className="flex justify-between text-xs text-gray-400">
-                          <span>{comment.author.email.split("@")[0]}</span>
+                          <span>
+                            {comment.author
+                              ? comment.author.email.split("@")[0]
+                              : "Utilisateur inconnu"}
+                          </span>
                           <span>{formatDate(comment.createdAt)}</span>
                         </div>
                       </div>

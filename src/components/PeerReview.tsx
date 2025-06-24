@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { api } from "../config/api";
 import {
@@ -29,14 +29,14 @@ interface PeerReviewSubmission {
   author: {
     _id: string;
     email: string;
-  };
+  } | null;
   status: "pending" | "reviewed" | "completed";
   reviews: {
     _id: string;
     reviewer: {
       _id: string;
       email: string;
-    };
+    } | null;
     content: string;
     rating: number;
     createdAt: string;
@@ -241,10 +241,10 @@ const PeerReview: React.FC = () => {
   });
 
   const mySubmissions = filteredSubmissions.filter(
-    submission => submission.author._id === user?.id
+    submission => submission.author && submission.author._id === user?.id
   );
   const otherSubmissions = filteredSubmissions.filter(
-    submission => submission.author._id !== user?.id
+    submission => !submission.author || submission.author._id !== user?.id
   );
 
   if (loading) {
@@ -385,7 +385,11 @@ const PeerReview: React.FC = () => {
                 <div className="flex justify-between items-center text-xs text-gray-400">
                   <div className="flex items-center">
                     <User className="w-3 h-3 mr-1" />
-                    <span>{submission.author.email.split("@")[0]}</span>
+                    <span>
+                      {submission.author
+                        ? submission.author.email.split("@")[0]
+                        : "Utilisateur inconnu"}
+                    </span>
                   </div>
                   <div className="flex items-center">
                     <span>{formatDate(submission.createdAt)}</span>
@@ -419,7 +423,11 @@ const PeerReview: React.FC = () => {
               <div className="flex justify-between items-center mb-2">
                 <div className="flex items-center text-sm text-gray-400">
                   <User className="w-4 h-4 mr-1" />
-                  <span>{selectedSubmission.author.email.split("@")[0]}</span>
+                  <span>
+                    {selectedSubmission.author
+                      ? selectedSubmission.author.email.split("@")[0]
+                      : "Utilisateur inconnu"}
+                  </span>
                   <span className="mx-2">•</span>
                   <span>{formatDate(selectedSubmission.createdAt)}</span>
                 </div>
@@ -473,7 +481,9 @@ const PeerReview: React.FC = () => {
                         <div className="flex items-center text-sm">
                           <User className="w-4 h-4 mr-1 text-gray-400" />
                           <span className="text-gray-300">
-                            {review.reviewer.email.split("@")[0]}
+                            {review.reviewer
+                              ? review.reviewer.email.split("@")[0]
+                              : "Utilisateur inconnu"}
                           </span>
                         </div>
                         <div className="flex items-center">
@@ -511,15 +521,16 @@ const PeerReview: React.FC = () => {
               >
                 Fermer
               </button>
-              {selectedSubmission.author._id !== user?.id && (
-                <button
-                  onClick={() => setShowReviewModal(true)}
-                  className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center"
-                >
-                  <MessageSquare className="w-4 h-4 mr-1" />
-                  Ajouter une revue
-                </button>
-              )}
+              {selectedSubmission.author &&
+                selectedSubmission.author._id !== user?.id && (
+                  <button
+                    onClick={() => setShowReviewModal(true)}
+                    className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center"
+                  >
+                    <MessageSquare className="w-4 h-4 mr-1" />
+                    Ajouter une revue
+                  </button>
+                )}
             </div>
           </div>
         </div>

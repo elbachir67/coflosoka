@@ -16,7 +16,6 @@ import {
   Video,
   GraduationCap,
   Laptop,
-  Download,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { useGamification } from "../contexts/GamificationContext";
@@ -31,7 +30,7 @@ interface SharedResource {
   author: {
     _id: string;
     email: string;
-  };
+  } | null;
   likes: string[];
   downloads: number;
   createdAt: string;
@@ -418,7 +417,11 @@ const ResourceSharing: React.FC = () => {
               <div className="flex justify-between items-center">
                 <div className="flex items-center text-xs text-gray-400">
                   <User className="w-3 h-3 mr-1" />
-                  <span>{resource.author.email.split("@")[0]}</span>
+                  <span>
+                    {resource.author
+                      ? resource.author.email.split("@")[0]
+                      : "Utilisateur inconnu"}
+                  </span>
                   <span className="mx-2">•</span>
                   <span>{formatDate(resource.createdAt)}</span>
                 </div>
