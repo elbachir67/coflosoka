@@ -6,6 +6,7 @@ import {
   Target,
   ArrowRight,
   Bot,
+  Clock,
   Sparkles,
   Code,
   Database,
@@ -17,7 +18,11 @@ import {
   Zap,
   BarChart,
   Lightbulb,
+  ChevronRight,
+  Play,
+  Star,
 } from "lucide-react";
+import { motion } from "framer-motion";
 
 const CategoryCard = ({
   icon: Icon,
@@ -30,13 +35,17 @@ const CategoryCard = ({
   description: string;
   color: string;
 }) => (
-  <div className="glass-card rounded-xl p-6 transform hover:scale-105 transition-all duration-300">
+  <motion.div
+    whileHover={{ scale: 1.05 }}
+    whileTap={{ scale: 0.98 }}
+    className="glass-card rounded-xl p-6 transition-all duration-300"
+  >
     <div className={`p-2 rounded-lg ${color} w-fit mb-4`}>
       <Icon className="w-6 h-6 text-gray-100" />
     </div>
     <h3 className="text-lg font-bold text-gray-100 mb-2">{title}</h3>
     <p className="text-gray-400 text-sm">{description}</p>
-  </div>
+  </motion.div>
 );
 
 const ActionCard = ({
@@ -79,7 +88,10 @@ const FeatureCard = ({
   title: string;
   description: string;
 }) => (
-  <div className="glass-card rounded-xl p-6 hover:bg-gray-800/30 transition-colors duration-300">
+  <motion.div
+    whileHover={{ y: -5 }}
+    className="glass-card rounded-xl p-6 hover:bg-gray-800/30 transition-colors duration-300"
+  >
     <div className="flex items-center mb-4">
       <div className="p-2 rounded-lg bg-purple-500/20 mr-3">
         <Icon className="w-5 h-5 text-purple-400" />
@@ -87,7 +99,7 @@ const FeatureCard = ({
       <h3 className="text-lg font-bold text-gray-100">{title}</h3>
     </div>
     <p className="text-gray-400 text-sm">{description}</p>
-  </div>
+  </motion.div>
 );
 
 const TestimonialCard = ({
@@ -101,7 +113,7 @@ const TestimonialCard = ({
   quote: string;
   avatar: string;
 }) => (
-  <div className="glass-card rounded-xl p-6">
+  <motion.div whileHover={{ y: -5 }} className="glass-card rounded-xl p-6">
     <div className="flex items-center mb-4">
       <img
         src={avatar}
@@ -114,7 +126,12 @@ const TestimonialCard = ({
       </div>
     </div>
     <p className="text-gray-300 italic">"{quote}"</p>
-  </div>
+    <div className="mt-4 flex">
+      {[1, 2, 3, 4, 5].map(star => (
+        <Star key={star} className="w-4 h-4 text-yellow-400" fill="#FBBF24" />
+      ))}
+    </div>
+  </motion.div>
 );
 
 const HomePage = () => {
@@ -129,14 +146,29 @@ const HomePage = () => {
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16">
         {/* Hero Section */}
         <div className="text-center mb-16">
-          <h1 className="text-4xl md:text-6xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 animate-gradient bg-300">
+          <motion.h1
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="text-4xl md:text-6xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 animate-gradient bg-300"
+          >
             Votre Parcours en Intelligence Artificielle
-          </h1>
-          <p className="text-lg md:text-xl text-gray-400 max-w-3xl mx-auto mb-8">
+          </motion.h1>
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="text-lg md:text-xl text-gray-400 max-w-3xl mx-auto mb-8"
+          >
             Une formation adaptative et personnalisée pour maîtriser l'IA, de la
             théorie à la pratique
-          </p>
-          <div className="flex flex-wrap justify-center gap-4">
+          </motion.p>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+            className="flex flex-wrap justify-center gap-4"
+          >
             <Link
               to="/assessment"
               className="px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl hover:from-purple-700 hover:to-blue-700 transition-all duration-300 flex items-center"
@@ -153,23 +185,164 @@ const HomePage = () => {
                 Mon tableau de bord
               </Link>
             )}
+          </motion.div>
+        </div>
+
+        {/* Featured Courses Section */}
+        <div className="mb-20">
+          <div className="flex justify-between items-center mb-8">
+            <h2 className="text-2xl font-bold text-gray-100">
+              Parcours populaires
+            </h2>
+            <Link
+              to="/goals"
+              className="text-purple-400 hover:text-purple-300 flex items-center"
+            >
+              Voir tous les parcours
+              <ChevronRight className="w-4 h-4 ml-1" />
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <motion.div
+              whileHover={{ scale: 1.03 }}
+              className="glass-card rounded-xl overflow-hidden"
+            >
+              <div className="h-40 bg-gradient-to-r from-blue-500/30 to-purple-500/30 relative">
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <Brain className="w-16 h-16 text-white/70" />
+                </div>
+              </div>
+              <div className="p-6">
+                <div className="flex justify-between items-start mb-2">
+                  <h3 className="text-xl font-bold text-gray-100">
+                    Fondamentaux du Machine Learning
+                  </h3>
+                  <span className="px-2 py-1 bg-green-500/20 text-green-400 rounded-full text-xs">
+                    Débutant
+                  </span>
+                </div>
+                <p className="text-gray-400 mb-4">
+                  Maîtrisez les concepts de base du machine learning avec une
+                  approche pratique et théorique solide.
+                </p>
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center text-gray-500">
+                    <Clock className="w-4 h-4 mr-1" />
+                    <span>8 semaines</span>
+                  </div>
+                  <Link
+                    to="/goals"
+                    className="flex items-center text-purple-400 hover:text-purple-300"
+                  >
+                    <Play className="w-4 h-4 mr-1" />
+                    Commencer
+                  </Link>
+                </div>
+              </div>
+            </motion.div>
+
+            <motion.div
+              whileHover={{ scale: 1.03 }}
+              className="glass-card rounded-xl overflow-hidden"
+            >
+              <div className="h-40 bg-gradient-to-r from-green-500/30 to-blue-500/30 relative">
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <Bot className="w-16 h-16 text-white/70" />
+                </div>
+              </div>
+              <div className="p-6">
+                <div className="flex justify-between items-start mb-2">
+                  <h3 className="text-xl font-bold text-gray-100">
+                    Deep Learning Avancé
+                  </h3>
+                  <span className="px-2 py-1 bg-purple-500/20 text-purple-400 rounded-full text-xs">
+                    Avancé
+                  </span>
+                </div>
+                <p className="text-gray-400 mb-4">
+                  Plongez dans les architectures de réseaux de neurones profonds
+                  et leurs applications modernes.
+                </p>
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center text-gray-500">
+                    <Clock className="w-4 h-4 mr-1" />
+                    <span>16 semaines</span>
+                  </div>
+                  <Link
+                    to="/goals"
+                    className="flex items-center text-purple-400 hover:text-purple-300"
+                  >
+                    <Play className="w-4 h-4 mr-1" />
+                    Commencer
+                  </Link>
+                </div>
+              </div>
+            </motion.div>
+
+            <motion.div
+              whileHover={{ scale: 1.03 }}
+              className="glass-card rounded-xl overflow-hidden"
+            >
+              <div className="h-40 bg-gradient-to-r from-orange-500/30 to-red-500/30 relative">
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <Database className="w-16 h-16 text-white/70" />
+                </div>
+              </div>
+              <div className="p-6">
+                <div className="flex justify-between items-start mb-2">
+                  <h3 className="text-xl font-bold text-gray-100">
+                    Computer Vision Pratique
+                  </h3>
+                  <span className="px-2 py-1 bg-blue-500/20 text-blue-400 rounded-full text-xs">
+                    Intermédiaire
+                  </span>
+                </div>
+                <p className="text-gray-400 mb-4">
+                  Développez des applications de vision par ordinateur pour
+                  résoudre des problèmes réels.
+                </p>
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center text-gray-500">
+                    <Clock className="w-4 h-4 mr-1" />
+                    <span>12 semaines</span>
+                  </div>
+                  <Link
+                    to="/goals"
+                    className="flex items-center text-purple-400 hover:text-purple-300"
+                  >
+                    <Play className="w-4 h-4 mr-1" />
+                    Commencer
+                  </Link>
+                </div>
+              </div>
+            </motion.div>
           </div>
         </div>
 
         {/* Stats Section */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-20">
-          <div className="glass-card rounded-xl p-6 text-center">
+          <motion.div
+            whileHover={{ y: -5 }}
+            className="glass-card rounded-xl p-6 text-center"
+          >
             <div className="text-3xl font-bold text-purple-400 mb-2">15+</div>
             <p className="text-gray-300">Parcours d'apprentissage</p>
-          </div>
-          <div className="glass-card rounded-xl p-6 text-center">
+          </motion.div>
+          <motion.div
+            whileHover={{ y: -5 }}
+            className="glass-card rounded-xl p-6 text-center"
+          >
             <div className="text-3xl font-bold text-blue-400 mb-2">200+</div>
             <p className="text-gray-300">Ressources pédagogiques</p>
-          </div>
-          <div className="glass-card rounded-xl p-6 text-center">
+          </motion.div>
+          <motion.div
+            whileHover={{ y: -5 }}
+            className="glass-card rounded-xl p-6 text-center"
+          >
             <div className="text-3xl font-bold text-green-400 mb-2">1000+</div>
             <p className="text-gray-300">Apprenants actifs</p>
-          </div>
+          </motion.div>
         </div>
 
         {/* Main Action Cards */}
@@ -306,14 +479,14 @@ const HomePage = () => {
             <TestimonialCard
               name="Serigne Modou Guèye"
               role="Data Scientist chez Synapsis"
-              quote="Cette plateforme m'a permis de passer de débutante à experte en ML en seulement 6 mois. Les parcours sont parfaitement structurés et les ressources sont de grande qualité."
+              quote="Cette plateforme m'a permis de passer de débutant à expert en ML en seulement 6 mois. Les parcours sont parfaitement structurés et les ressources sont de grande qualité."
               avatar="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
             />
             <TestimonialCard
               name="Lamine Ba"
               role="ML Engineer chez Forge ESP"
               quote="Les quiz et évaluations m'ont permis d'identifier mes lacunes et de me concentrer sur les compétences essentielles. J'ai pu décrocher mon poste actuel grâce à cette formation."
-              avatar="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
+              avatar="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
             />
             <TestimonialCard
               name="Amina Ndiaye"

@@ -1,7 +1,14 @@
 import React from "react";
 import { Goal } from "../types";
-import { BookOpen, Clock, BarChart, Sparkles } from "lucide-react";
+import {
+  BookOpen,
+  Clock,
+  BarChart,
+  Sparkles,
+  ChevronRight,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 
 interface GoalCardProps {
   goal: Goal;
@@ -58,8 +65,10 @@ const GoalCard: React.FC<GoalCardProps> = ({
   };
 
   return (
-    <div
-      className={`glass-card rounded-xl p-6 hover:scale-105 transition-all duration-300 cursor-pointer relative ${className}`}
+    <motion.div
+      whileHover={{ scale: 1.03 }}
+      whileTap={{ scale: 0.98 }}
+      className={`glass-card rounded-xl p-6 transition-all duration-300 cursor-pointer relative overflow-hidden ${className}`}
       onClick={handleClick}
     >
       {isRecommended && (
@@ -76,27 +85,36 @@ const GoalCard: React.FC<GoalCardProps> = ({
             goal.level
           )}`}
         >
-          {goal.level}
+          {goal.level === "beginner"
+            ? "Débutant"
+            : goal.level === "intermediate"
+            ? "Intermédiaire"
+            : "Avancé"}
         </span>
       </div>
 
       <p className="text-gray-400 mb-6 line-clamp-2">{goal.description}</p>
 
-      <div className="flex items-center space-x-4 text-sm text-gray-400">
-        <div className="flex items-center">
-          <Clock className="w-4 h-4 mr-1" />
-          <span>{goal.estimatedDuration} semaines</span>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-4 text-sm text-gray-400">
+          <div className="flex items-center">
+            <Clock className="w-4 h-4 mr-1" />
+            <span>{goal.estimatedDuration} sem.</span>
+          </div>
+          <div className="flex items-center">
+            <BookOpen className="w-4 h-4 mr-1" />
+            <span>{goal.modules?.length || 0} modules</span>
+          </div>
         </div>
-        <div className="flex items-center">
-          <BookOpen className="w-4 h-4 mr-1" />
-          <span>{goal.modules?.length || 0} modules</span>
-        </div>
-        <div className="flex items-center">
-          <BarChart className="w-4 h-4 mr-1" />
-          <span>{getCategoryIcon(goal.category)}</span>
+
+        <div className="flex items-center text-purple-400 group">
+          <span className="text-sm">Détails</span>
+          <ChevronRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
         </div>
       </div>
-    </div>
+
+      <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500/50 to-blue-500/50"></div>
+    </motion.div>
   );
 };
 

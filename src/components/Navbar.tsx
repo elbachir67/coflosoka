@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { useGamification } from "../contexts/GamificationContext";
@@ -21,6 +21,9 @@ import {
   Zap,
   Share2,
   ExternalLink,
+  ChevronDown,
+  Bell,
+  Home,
 } from "lucide-react";
 
 function Navbar() {
@@ -29,6 +32,25 @@ function Navbar() {
   const { isAdmin, signOut, user, isAuthenticated } = useAuth();
   const { profile } = useGamification();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [notifications, setNotifications] = useState([
+    {
+      id: 1,
+      title: "Nouveau module disponible",
+      message:
+        "Le module 'Introduction au Deep Learning' est maintenant disponible",
+      time: "Il y a 2 heures",
+      read: false,
+    },
+    {
+      id: 2,
+      title: "Quiz terminé",
+      message: "Vous avez obtenu un score de 85% au quiz 'Fondamentaux du ML'",
+      time: "Hier",
+      read: true,
+    },
+  ]);
 
   const isActive = (path: string) => {
     return location.pathname === path ? "active" : "";
@@ -43,8 +65,46 @@ function Navbar() {
     setMobileMenuOpen(!mobileMenuOpen);
   };
 
+  const toggleUserMenu = () => {
+    setUserMenuOpen(!userMenuOpen);
+    if (notificationsOpen) setNotificationsOpen(false);
+  };
+
+  const toggleNotifications = () => {
+    setNotificationsOpen(!notificationsOpen);
+    if (userMenuOpen) setUserMenuOpen(false);
+  };
+
+  // Fermer les menus déroulants quand on clique ailleurs
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (
+        !target.closest(".user-menu") &&
+        !target.closest(".notifications-menu")
+      ) {
+        setUserMenuOpen(false);
+        setNotificationsOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  // Fermer les menus au changement de route
+  useEffect(() => {
+    setMobileMenuOpen(false);
+    setUserMenuOpen(false);
+    setNotificationsOpen(false);
+  }, [location.pathname]);
+
+  const unreadNotificationsCount = notifications.filter(n => !n.read).length;
+
   return (
-    <nav className="glass sticky top-0 z-50 shadow-sm">
+    <nav className="glass sticky top-0 z-50 shadow-sm backdrop-blur-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">
@@ -59,7 +119,10 @@ function Navbar() {
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
             <Link to="/" className={`nav-link ${isActive("/")}`}>
-              Accueil
+              <div className="flex items-center space-x-1">
+                <Home className="w-4 h-4" />
+                <span>Accueil</span>
+              </div>
             </Link>
 
             {isAuthenticated ? (
@@ -73,27 +136,59 @@ function Navbar() {
                     <span>Tableau de bord</span>
                   </div>
                 </Link>
-                <Link to="/goals" className={`nav-link ${isActive("/goals")}`}>
-                  Objectifs
-                </Link>
-                <Link
-                  to="/achievements"
-                  className={`nav-link ${isActive("/achievements")}`}
-                >
-                  <div className="flex items-center space-x-1">
-                    <Award className="w-4 h-4" />
-                    <span>Achievements</span>
+
+                <div className="relative group">
+                  <button className="flex items-center space-x-1 text-gray-400 hover:text-gray-200 transition-colors duration-200">
+                    <Target className="w-4 h-4" />
+                    <span>Apprentissage</span>
+                    <ChevronDown className="w-3 h-3 ml-1 group-hover:rotate-180 transition-transform duration-200" />
+                  </button>
+                  <div className="absolute left-0 mt-2 w-48 bg-gray-900 rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                    <div className="py-1">
+                      <Link
+                        to="/goals"
+                        className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-white"
+                      >
+                        <Target className="w-4 h-4 inline mr-2" />
+                        Objectifs
+                      </Link>
+                      <Link
+                        to="/assessment"
+                        className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-white"
+                      >
+                        <Brain className="w-4 h-4 inline mr-2" />
+                        Évaluation
+                      </Link>
+                    </div>
                   </div>
-                </Link>
-                <Link
-                  to="/collaboration"
-                  className={`nav-link ${isActive("/collaboration")}`}
-                >
-                  <div className="flex items-center space-x-1">
-                    <Users className="w-4 h-4" />
-                    <span>Collaboration</span>
+                </div>
+
+                <div className="relative group">
+                  <button className="flex items-center space-x-1 text-gray-400 hover:text-gray-200 transition-colors duration-200">
+                    <Share2 className="w-4 h-4" />
+                    <span>Communauté</span>
+                    <ChevronDown className="w-3 h-3 ml-1 group-hover:rotate-180 transition-transform duration-200" />
+                  </button>
+                  <div className="absolute left-0 mt-2 w-48 bg-gray-900 rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                    <div className="py-1">
+                      <Link
+                        to="/collaboration"
+                        className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-white"
+                      >
+                        <Users className="w-4 h-4 inline mr-2" />
+                        Collaboration
+                      </Link>
+                      <Link
+                        to="/achievements"
+                        className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-white"
+                      >
+                        <Award className="w-4 h-4 inline mr-2" />
+                        Achievements
+                      </Link>
+                    </div>
                   </div>
-                </Link>
+                </div>
+
                 <Link
                   to="/external-apis"
                   className={`nav-link ${isActive("/external-apis")}`}
@@ -119,8 +214,9 @@ function Navbar() {
                 <button className="flex items-center px-4 py-2 rounded-md bg-purple-600 text-white hover:bg-purple-700 transition-colors duration-200">
                   <Settings className="w-4 h-4 mr-2" />
                   Admin
+                  <ChevronDown className="w-3 h-3 ml-1 group-hover:rotate-180 transition-transform duration-200" />
                 </button>
-                <div className="absolute right-0 mt-2 w-48 bg-gray-900 rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+                <div className="absolute right-0 mt-2 w-48 bg-gray-900 rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
                   <div className="py-1">
                     <Link
                       to="/admin/dashboard"
@@ -157,6 +253,71 @@ function Navbar() {
 
             {isAuthenticated ? (
               <div className="flex items-center space-x-4">
+                {/* Notifications */}
+                <div className="relative notifications-menu">
+                  <button
+                    onClick={toggleNotifications}
+                    className="p-1.5 rounded-full bg-gray-800/50 hover:bg-gray-700/50 transition-colors relative"
+                  >
+                    <Bell className="w-5 h-5 text-gray-300" />
+                    {unreadNotificationsCount > 0 && (
+                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+                        {unreadNotificationsCount}
+                      </span>
+                    )}
+                  </button>
+
+                  {notificationsOpen && (
+                    <div className="absolute right-0 mt-2 w-80 bg-gray-900 rounded-lg shadow-lg z-50 overflow-hidden">
+                      <div className="p-3 border-b border-gray-800 flex justify-between items-center">
+                        <h3 className="font-medium text-gray-200">
+                          Notifications
+                        </h3>
+                        <button className="text-xs text-blue-400 hover:text-blue-300">
+                          Marquer tout comme lu
+                        </button>
+                      </div>
+                      <div className="max-h-96 overflow-y-auto">
+                        {notifications.length > 0 ? (
+                          notifications.map(notification => (
+                            <div
+                              key={notification.id}
+                              className={`p-3 border-b border-gray-800 hover:bg-gray-800/50 ${
+                                !notification.read ? "bg-gray-800/30" : ""
+                              }`}
+                            >
+                              <div className="flex justify-between">
+                                <p className="font-medium text-gray-200">
+                                  {notification.title}
+                                </p>
+                                {!notification.read && (
+                                  <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                                )}
+                              </div>
+                              <p className="text-sm text-gray-400 mt-1">
+                                {notification.message}
+                              </p>
+                              <p className="text-xs text-gray-500 mt-1">
+                                {notification.time}
+                              </p>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="p-4 text-center text-gray-400">
+                            Aucune notification
+                          </div>
+                        )}
+                      </div>
+                      <div className="p-2 border-t border-gray-800 text-center">
+                        <button className="text-sm text-gray-400 hover:text-gray-300">
+                          Voir toutes les notifications
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* XP and Level */}
                 {profile && (
                   <div className="flex items-center space-x-2 bg-gray-800/50 px-3 py-1 rounded-lg">
                     <div className="flex items-center">
@@ -174,17 +335,62 @@ function Navbar() {
                     </div>
                   </div>
                 )}
-                <div className="flex items-center space-x-2 text-gray-300">
-                  <User className="w-4 h-4" />
-                  <span>{user?.email}</span>
+
+                {/* User Menu */}
+                <div className="relative user-menu">
+                  <button
+                    onClick={toggleUserMenu}
+                    className="flex items-center space-x-2 text-gray-300 hover:text-white transition-colors"
+                  >
+                    <div className="w-8 h-8 rounded-full bg-purple-600/30 flex items-center justify-center">
+                      <User className="w-4 h-4 text-purple-400" />
+                    </div>
+                    <span className="hidden lg:block max-w-[120px] truncate">
+                      {user?.email?.split("@")[0]}
+                    </span>
+                    <ChevronDown
+                      className={`w-4 h-4 transition-transform duration-200 ${
+                        userMenuOpen ? "rotate-180" : ""
+                      }`}
+                    />
+                  </button>
+
+                  {userMenuOpen && (
+                    <div className="absolute right-0 mt-2 w-48 bg-gray-900 rounded-lg shadow-lg z-50">
+                      <div className="p-3 border-b border-gray-800">
+                        <p className="font-medium text-gray-200">
+                          {user?.email}
+                        </p>
+                        <p className="text-xs text-gray-400 mt-1">
+                          {profile?.rank || "Utilisateur"}
+                        </p>
+                      </div>
+                      <div className="py-1">
+                        <Link
+                          to="/dashboard"
+                          className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-white"
+                        >
+                          <LayoutDashboard className="w-4 h-4 inline mr-2" />
+                          Tableau de bord
+                        </Link>
+                        <Link
+                          to="/achievements"
+                          className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-white"
+                        >
+                          <Award className="w-4 h-4 inline mr-2" />
+                          Achievements
+                        </Link>
+                        <button
+                          onClick={handleSignOut}
+                          className="block w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-gray-800 hover:text-red-300"
+                        >
+                          <LogOut className="w-4 h-4 inline mr-2" />
+                          Déconnexion
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
-                <button
-                  onClick={handleSignOut}
-                  className="flex items-center px-4 py-2 rounded-md bg-red-600 text-white hover:bg-red-700 transition-colors duration-200"
-                >
-                  <LogOut className="w-4 h-4 mr-2" />
-                  Déconnexion
-                </button>
               </div>
             ) : (
               <Link
@@ -222,6 +428,7 @@ function Navbar() {
               className="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
               onClick={() => setMobileMenuOpen(false)}
             >
+              <Home className="w-4 h-4 inline mr-2" />
               Accueil
             </Link>
 
@@ -240,7 +447,16 @@ function Navbar() {
                   className="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
                   onClick={() => setMobileMenuOpen(false)}
                 >
+                  <Target className="w-4 h-4 inline mr-2" />
                   Objectifs
+                </Link>
+                <Link
+                  to="/assessment"
+                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <Brain className="w-4 h-4 inline mr-2" />
+                  Évaluation
                 </Link>
                 <Link
                   to="/achievements"
