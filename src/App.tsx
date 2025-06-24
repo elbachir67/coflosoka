@@ -52,7 +52,7 @@ function PrivateRoute({
     return <Navigate to="/" />;
   }
 
-  // Modification: Suggérer l'évaluation au lieu de la forcer
+  // Suggestion d'évaluation au lieu de forcer
   if (requireAssessment && !hasCompletedAssessment) {
     return <Navigate to="/dashboard" />;
   }
@@ -84,7 +84,14 @@ function App() {
       <Navbar />
       <Routes>
         <Route path="/" element={<HomePage />} />
-        <Route path="/assessment" element={<AssessmentPage />} />
+        <Route
+          path="/assessment"
+          element={
+            <PrivateRoute>
+              <AssessmentPage />
+            </PrivateRoute>
+          }
+        />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/admin" element={<AdminLoginPage />} />
@@ -170,6 +177,15 @@ function App() {
           }
         />
 
+        <Route
+          path="/analytics"
+          element={
+            <PrivateRoute>
+              <AnalyticsPage />
+            </PrivateRoute>
+          }
+        />
+
         {/* Concept assessment routes */}
         <Route
           path="/concepts/:conceptId/assessment"
@@ -185,15 +201,6 @@ function App() {
           element={
             <PrivateRoute>
               <ConceptAssessmentResultsPage />
-            </PrivateRoute>
-          }
-        />
-
-        <Route
-          path="/analytics"
-          element={
-            <PrivateRoute>
-              <AnalyticsPage />
             </PrivateRoute>
           }
         />

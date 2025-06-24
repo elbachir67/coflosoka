@@ -75,6 +75,15 @@ function Navbar() {
     if (userMenuOpen) setUserMenuOpen(false);
   };
 
+  const markAllNotificationsAsRead = () => {
+    setNotifications(
+      notifications.map(notification => ({
+        ...notification,
+        read: true,
+      }))
+    );
+  };
+
   // Fermer les menus déroulants quand on clique ailleurs
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -158,6 +167,13 @@ function Navbar() {
                       >
                         <Brain className="w-4 h-4 inline mr-2" />
                         Évaluation
+                      </Link>
+                      <Link
+                        to="/analytics"
+                        className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-white"
+                      >
+                        <Database className="w-4 h-4 inline mr-2" />
+                        Analytiques
                       </Link>
                     </div>
                   </div>
@@ -273,7 +289,10 @@ function Navbar() {
                         <h3 className="font-medium text-gray-200">
                           Notifications
                         </h3>
-                        <button className="text-xs text-blue-400 hover:text-blue-300">
+                        <button
+                          className="text-xs text-blue-400 hover:text-blue-300"
+                          onClick={markAllNotificationsAsRead}
+                        >
                           Marquer tout comme lu
                         </button>
                       </div>
@@ -481,6 +500,14 @@ function Navbar() {
                 >
                   <ExternalLink className="w-4 h-4 mr-2" />
                   APIs Externes
+                </Link>
+                <Link
+                  to="/analytics"
+                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white flex items-center"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <Database className="w-4 h-4 mr-2" />
+                  Analytiques
                 </Link>
 
                 {/* Admin mobile menu */}

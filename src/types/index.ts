@@ -101,6 +101,11 @@ export interface Goal {
   };
   isRecommended?: boolean;
   matchScore?: number;
+  recommendedFor?: {
+    profile: string;
+    reason: string;
+  }[];
+  requiredConcepts?: string[];
 }
 
 // Pathway Types

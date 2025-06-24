@@ -439,6 +439,27 @@ function GoalDetailPage() {
               </div>
             </div>
 
+            {/* Recommandé pour */}
+            {goal.recommendedFor && goal.recommendedFor.length > 0 && (
+              <div className="glass-card rounded-xl p-6">
+                <h2 className="text-xl font-bold text-gray-100 mb-4 flex items-center">
+                  <Users className="w-5 h-5 text-purple-400 mr-2" />
+                  Recommandé pour
+                </h2>
+
+                <div className="space-y-3">
+                  {goal.recommendedFor.map((recommendation, index) => (
+                    <div key={index} className="p-4 bg-gray-800/50 rounded-lg">
+                      <h3 className="text-lg font-medium text-gray-200 mb-1">
+                        {recommendation.profile}
+                      </h3>
+                      <p className="text-gray-400">{recommendation.reason}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Certification */}
             {goal.certification?.available && (
               <div className="glass-card rounded-xl p-6">

@@ -30,6 +30,13 @@ function AssessmentPage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    // Rediriger vers la page de connexion si l'utilisateur n'est pas authentifié
+    if (!isAuthenticated) {
+      localStorage.setItem("redirectAfterLogin", "/assessment");
+      navigate("/login");
+      return;
+    }
+
     // Ajouter le message initial
     const initialMessage =
       location.state?.message ||
@@ -43,7 +50,7 @@ function AssessmentPage() {
         options: ["Commencer l'évaluation"],
       },
     ]);
-  }, [location.state]);
+  }, [location.state, isAuthenticated, navigate]);
 
   const addBotMessage = (content: string, options?: string[]) => {
     setMessages(prev => [
@@ -171,7 +178,19 @@ function AssessmentPage() {
       }
 
       const data = await response.json();
-      setQuestions(data);
+
+      // Mélanger les options pour chaque question
+      const questionsWithRandomizedOptions = data.map((question: Question) => {
+        const shuffledOptions = [...question.options].sort(
+          () => Math.random() - 0.5
+        );
+        return {
+          ...question,
+          options: shuffledOptions,
+        };
+      });
+
+      setQuestions(questionsWithRandomizedOptions);
       setCurrentStep("quiz");
       addBotMessage(
         "Super ! Je vais maintenant vous poser quelques questions pour évaluer vos connaissances. Prenez votre temps pour répondre."
