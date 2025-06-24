@@ -1,3 +1,7 @@
+/**
+ * Script to populate the database with extensive data
+ */
+
 import mongoose from "mongoose";
 import { User } from "../models/User.js";
 import { Goal } from "../models/LearningGoal.js";
@@ -13,7 +17,7 @@ import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-dotenv.config({ path: path.resolve(__dirname, "../../.env") });
+dotenv.config({ path: path.resolve(__dirname, "../../../.env") });
 
 const MONGODB_URI = process.env.MONGODB_URI;
 
@@ -555,108 +559,6 @@ const EXTENSIVE_GOALS = [
       url: "https://ucad.sn/certifications/mlops-professional",
     },
   },
-
-  {
-    title: "Data Science pour l'Afrique",
-    description:
-      "Appliquez la data science aux défis spécifiques du continent africain.",
-    category: "data_science",
-    level: "intermediate",
-    estimatedDuration: 12,
-    prerequisites: [
-      {
-        category: "programming",
-        skills: [
-          { name: "Python", level: "intermediate" },
-          { name: "SQL", level: "basic" },
-        ],
-      },
-      {
-        category: "math",
-        skills: [{ name: "Statistiques", level: "intermediate" }],
-      },
-    ],
-    modules: [
-      {
-        title: "Analyse de Données Socio-économiques",
-        description:
-          "Analysez les données démographiques et économiques africaines",
-        duration: 30,
-        skills: [
-          { name: "Analyse exploratoire", level: "advanced" },
-          { name: "Visualisation", level: "intermediate" },
-          { name: "Données géospatiales", level: "intermediate" },
-        ],
-        resources: [
-          {
-            title: "African Development Data",
-            url: "https://www.afdb.org/en/knowledge/statistics",
-            type: "article",
-            duration: 90,
-          },
-          {
-            title: "Geospatial Analysis with Python",
-            url: "https://geopandas.org/",
-            type: "article",
-            duration: 120,
-          },
-        ],
-        validationCriteria: [
-          "Analyser des données démographiques",
-          "Créer des visualisations géospatiales",
-          "Identifier des tendances socio-économiques",
-        ],
-      },
-      {
-        title: "Applications Sectorielles",
-        description:
-          "Développez des solutions data science pour l'agriculture, la santé et la finance",
-        duration: 35,
-        skills: [
-          { name: "Domain expertise", level: "intermediate" },
-          { name: "Modélisation prédictive", level: "advanced" },
-        ],
-        resources: [
-          {
-            title: "Data Science for Social Good",
-            url: "https://www.datascienceforsocialgood.org/",
-            type: "article",
-            duration: 60,
-          },
-          {
-            title: "Agricultural Data Analysis",
-            url: "https://www.fao.org/statistics/en/",
-            type: "use_case",
-            duration: 150,
-          },
-        ],
-        validationCriteria: [
-          "Développer un modèle prédictif sectoriel",
-          "Analyser l'impact social",
-          "Présenter des recommandations",
-        ],
-      },
-    ],
-    careerOpportunities: [
-      {
-        title: "Data Scientist - Impact Social",
-        description: "Analyste de données pour organisations à impact social",
-        averageSalary: "40-70k€/an",
-        companies: [
-          "ONG",
-          "Organisations internationales",
-          "Gouvernements",
-          "Startups sociales",
-        ],
-      },
-    ],
-    certification: {
-      available: true,
-      name: "Certificat Data Science Afrique",
-      provider: "UCAD Social Innovation",
-      url: "https://ucad.sn/certifications/data-science-africa",
-    },
-  },
 ];
 
 // Questions d'évaluation étendues
@@ -698,35 +600,11 @@ const EXTENSIVE_ASSESSMENT_QUESTIONS = {
       explanation:
         "Pour une matrice triangulaire, les valeurs propres sont les éléments diagonaux. La plus grande est 3.",
     },
-    {
-      text: "Quelle est la formule de la covariance entre deux variables X et Y ?",
-      options: [
-        { text: "E[(X - μₓ)(Y - μᵧ)]", isCorrect: true },
-        { text: "E[XY] - E[X]E[Y]", isCorrect: false },
-        { text: "√(Var(X)Var(Y))", isCorrect: false },
-        { text: "E[X²Y²]", isCorrect: false },
-      ],
-      difficulty: "intermediate",
-      explanation:
-        "La covariance mesure la variation conjointe de deux variables autour de leurs moyennes respectives.",
-    },
-    {
-      text: "Qu'est-ce que le théorème de Bayes ?",
-      options: [
-        { text: "P(A|B) = P(B|A)P(A) / P(B)", isCorrect: true },
-        { text: "P(A∩B) = P(A)P(B)", isCorrect: false },
-        { text: "P(A∪B) = P(A) + P(B)", isCorrect: false },
-        { text: "P(A|B) = P(A)P(B)", isCorrect: false },
-      ],
-      difficulty: "intermediate",
-      explanation:
-        "Le théorème de Bayes permet de calculer une probabilité conditionnelle inverse.",
-    },
   ],
 
   programming: [
     {
-      text: "Quelle est la complexité temporelle de l'algorithme de tri fusion (merge sort) ?",
+      text: "Quelle est la complexité temporelle de l'algorithme de tri fusion (merge sort) dans le pire cas ?",
       options: [
         { text: "O(n log n)", isCorrect: true },
         { text: "O(n²)", isCorrect: false },
@@ -761,116 +639,59 @@ const EXTENSIVE_ASSESSMENT_QUESTIONS = {
       explanation:
         "LIFO signifie Last In First Out, caractéristique principale des piles.",
     },
-    {
-      text: "Qu'est-ce que la programmation orientée objet ?",
-      options: [
-        {
-          text: "Un paradigme basé sur les objets et l'encapsulation",
-          isCorrect: true,
-        },
-        { text: "Une méthode de programmation séquentielle", isCorrect: false },
-        { text: "Un langage de programmation spécifique", isCorrect: false },
-        { text: "Une technique d'optimisation", isCorrect: false },
-      ],
-      difficulty: "basic",
-      explanation:
-        "La POO organise le code autour d'objets qui encapsulent données et comportements.",
-    },
-    {
-      text: "Quelle est la différence entre une liste et un tuple en Python ?",
-      options: [
-        {
-          text: "Les tuples sont immutables, les listes sont mutables",
-          isCorrect: true,
-        },
-        { text: "Les listes sont plus rapides", isCorrect: false },
-        {
-          text: "Les tuples ne peuvent contenir que des nombres",
-          isCorrect: false,
-        },
-        { text: "Il n'y a pas de différence", isCorrect: false },
-      ],
-      difficulty: "basic",
-      explanation:
-        "Les tuples ne peuvent pas être modifiés après création, contrairement aux listes.",
-    },
   ],
 
   ml: [
     {
-      text: "Qu'est-ce que la validation croisée k-fold ?",
+      text: "Qu'est-ce que l'overfitting en machine learning ?",
       options: [
         {
-          text: "Diviser les données en k parties pour validation",
+          text: "Quand le modèle mémorise les données d'entraînement mais généralise mal",
           isCorrect: true,
         },
-        { text: "Répéter l'entraînement k fois", isCorrect: false },
-        { text: "Utiliser k modèles différents", isCorrect: false },
-        { text: "Valider sur k datasets", isCorrect: false },
+        { text: "Quand le modèle est trop simple", isCorrect: false },
+        { text: "Quand les données sont insuffisantes", isCorrect: false },
+        { text: "Quand l'algorithme converge trop vite", isCorrect: false },
       ],
-      difficulty: "intermediate",
+      difficulty: "basic",
       explanation:
-        "La validation croisée k-fold divise les données en k parties, utilisant k-1 pour l'entraînement et 1 pour la validation.",
+        "L'overfitting se produit quand le modèle s'adapte trop aux données d'entraînement et perd sa capacité de généralisation.",
     },
     {
-      text: "Quelle métrique est appropriée pour un problème de classification déséquilibré ?",
-      options: [
-        { text: "F1-score", isCorrect: true },
-        { text: "Accuracy", isCorrect: false },
-        { text: "MSE", isCorrect: false },
-        { text: "R²", isCorrect: false },
-      ],
-      difficulty: "intermediate",
-      explanation:
-        "Le F1-score combine précision et rappel, plus approprié pour les classes déséquilibrées que l'accuracy.",
-    },
-    {
-      text: "Qu'est-ce que le biais en machine learning ?",
+      text: "Quelle est la différence entre classification et régression ?",
       options: [
         {
-          text: "L'erreur due aux hypothèses simplificatrices du modèle",
+          text: "Classification: variables catégorielles, Régression: variables continues",
           isCorrect: true,
         },
-        { text: "L'erreur due au bruit dans les données", isCorrect: false },
-        { text: "L'erreur de mesure", isCorrect: false },
-        { text: "L'erreur humaine", isCorrect: false },
-      ],
-      difficulty: "advanced",
-      explanation:
-        "Le biais représente l'erreur systématique due aux hypothèses du modèle qui l'empêchent de capturer la vraie relation.",
-    },
-    {
-      text: "Quelle est la différence entre bagging et boosting ?",
-      options: [
         {
-          text: "Bagging entraîne en parallèle, boosting en séquence",
-          isCorrect: true,
-        },
-        { text: "Bagging est plus rapide que boosting", isCorrect: false },
-        { text: "Boosting utilise plus de données", isCorrect: false },
-        { text: "Il n'y a pas de différence", isCorrect: false },
-      ],
-      difficulty: "advanced",
-      explanation:
-        "Le bagging entraîne des modèles indépendamment, le boosting entraîne séquentiellement en corrigeant les erreurs.",
-    },
-    {
-      text: "Qu'est-ce que la régularisation L1 (Lasso) ?",
-      options: [
-        {
-          text: "Ajoute la somme des valeurs absolues des paramètres",
-          isCorrect: true,
-        },
-        { text: "Ajoute la somme des carrés des paramètres", isCorrect: false },
-        {
-          text: "Multiplie les paramètres par une constante",
+          text: "Classification: supervisé, Régression: non-supervisé",
           isCorrect: false,
         },
-        { text: "Divise les paramètres par leur moyenne", isCorrect: false },
+        { text: "Aucune différence", isCorrect: false },
+        {
+          text: "Classification: linéaire, Régression: non-linéaire",
+          isCorrect: false,
+        },
       ],
-      difficulty: "advanced",
+      difficulty: "basic",
       explanation:
-        "La régularisation L1 ajoute la somme des valeurs absolues des paramètres, favorisant la sparsité.",
+        "La classification prédit des catégories/classes, la régression prédit des valeurs numériques continues.",
+    },
+    {
+      text: "Qu'est-ce que la validation croisée ?",
+      options: [
+        {
+          text: "Une technique pour évaluer la performance d'un modèle en divisant les données",
+          isCorrect: true,
+        },
+        { text: "Une méthode de nettoyage des données", isCorrect: false },
+        { text: "Un algorithme d'optimisation", isCorrect: false },
+        { text: "Une technique de feature engineering", isCorrect: false },
+      ],
+      difficulty: "intermediate",
+      explanation:
+        "La validation croisée divise les données en k-folds pour entraîner et tester le modèle plusieurs fois.",
     },
   ],
 
@@ -879,7 +700,7 @@ const EXTENSIVE_ASSESSMENT_QUESTIONS = {
       text: "Qu'est-ce que la rétropropagation ?",
       options: [
         {
-          text: "L'algorithme pour calculer les gradients dans un réseau",
+          text: "L'algorithme pour calculer les gradients dans un réseau de neurones",
           isCorrect: true,
         },
         { text: "Une technique de régularisation", isCorrect: false },
@@ -891,37 +712,16 @@ const EXTENSIVE_ASSESSMENT_QUESTIONS = {
         "La rétropropagation calcule les gradients en propageant l'erreur de la sortie vers l'entrée.",
     },
     {
-      text: "Pourquoi utilise-t-on ReLU plutôt que sigmoid ?",
+      text: "Quelle est la fonction d'activation la plus utilisée actuellement ?",
       options: [
-        {
-          text: "ReLU évite le problème de gradient vanishing",
-          isCorrect: true,
-        },
-        { text: "ReLU est plus complexe à calculer", isCorrect: false },
-        { text: "Sigmoid est plus récent", isCorrect: false },
-        {
-          text: "ReLU fonctionne seulement en classification",
-          isCorrect: false,
-        },
+        { text: "ReLU", isCorrect: true },
+        { text: "Sigmoid", isCorrect: false },
+        { text: "Tanh", isCorrect: false },
+        { text: "Linear", isCorrect: false },
       ],
-      difficulty: "intermediate",
+      difficulty: "basic",
       explanation:
-        "ReLU maintient des gradients constants pour les valeurs positives, évitant la saturation du sigmoid.",
-    },
-    {
-      text: "Qu'est-ce que le dropout ?",
-      options: [
-        {
-          text: "Désactiver aléatoirement des neurones pendant l'entraînement",
-          isCorrect: true,
-        },
-        { text: "Supprimer des couches du réseau", isCorrect: false },
-        { text: "Arrêter l'entraînement prématurément", isCorrect: false },
-        { text: "Réduire le learning rate", isCorrect: false },
-      ],
-      difficulty: "intermediate",
-      explanation:
-        "Le dropout désactive aléatoirement des neurones pour éviter l'overfitting et améliorer la généralisation.",
+        "ReLU (Rectified Linear Unit) est populaire car elle évite le problème de gradient vanishing.",
     },
     {
       text: "Qu'est-ce qu'un CNN ?",
@@ -933,22 +733,7 @@ const EXTENSIVE_ASSESSMENT_QUESTIONS = {
       ],
       difficulty: "basic",
       explanation:
-        "CNN utilise des couches de convolution pour traiter des données avec structure spatiale comme les images.",
-    },
-    {
-      text: "Qu'est-ce que l'attention mechanism ?",
-      options: [
-        {
-          text: "Un mécanisme qui pondère l'importance des éléments",
-          isCorrect: true,
-        },
-        { text: "Une fonction d'activation", isCorrect: false },
-        { text: "Un algorithme d'optimisation", isCorrect: false },
-        { text: "Une technique de régularisation", isCorrect: false },
-      ],
-      difficulty: "advanced",
-      explanation:
-        "L'attention permet au modèle de se concentrer sur les parties pertinentes de l'entrée.",
+        "CNN utilise des couches de convolution pour traiter des données avec une structure spatiale comme les images.",
     },
   ],
 
@@ -969,10 +754,25 @@ const EXTENSIVE_ASSESSMENT_QUESTIONS = {
         "La convolution applique un noyau (kernel) sur l'image pour extraire des caractéristiques.",
     },
     {
+      text: "Qu'est-ce que la détection d'objets ?",
+      options: [
+        {
+          text: "Localiser et classifier des objets dans une image",
+          isCorrect: true,
+        },
+        { text: "Classifier une image entière", isCorrect: false },
+        { text: "Segmenter une image en régions", isCorrect: false },
+        { text: "Améliorer la qualité d'une image", isCorrect: false },
+      ],
+      difficulty: "basic",
+      explanation:
+        "La détection d'objets combine localisation (où) et classification (quoi) des objets.",
+    },
+    {
       text: "Qu'est-ce que YOLO ?",
       options: [
         {
-          text: "You Only Look Once - algorithme de détection d'objets",
+          text: "You Only Look Once - un algorithme de détection d'objets",
           isCorrect: true,
         },
         { text: "Un type de réseau de neurones", isCorrect: false },
@@ -982,48 +782,6 @@ const EXTENSIVE_ASSESSMENT_QUESTIONS = {
       difficulty: "intermediate",
       explanation:
         "YOLO est un algorithme de détection d'objets en temps réel qui traite l'image en une seule passe.",
-    },
-    {
-      text: "Qu'est-ce que la segmentation sémantique ?",
-      options: [
-        { text: "Classifier chaque pixel d'une image", isCorrect: true },
-        { text: "Détecter les contours", isCorrect: false },
-        { text: "Réduire le bruit", isCorrect: false },
-        { text: "Compresser l'image", isCorrect: false },
-      ],
-      difficulty: "intermediate",
-      explanation:
-        "La segmentation sémantique assigne une classe à chaque pixel de l'image.",
-    },
-    {
-      text: "Qu'est-ce que l'augmentation de données ?",
-      options: [
-        {
-          text: "Créer de nouvelles données en transformant les existantes",
-          isCorrect: true,
-        },
-        { text: "Collecter plus de données", isCorrect: false },
-        { text: "Nettoyer les données", isCorrect: false },
-        { text: "Compresser les données", isCorrect: false },
-      ],
-      difficulty: "basic",
-      explanation:
-        "L'augmentation applique des transformations (rotation, zoom, etc.) pour enrichir le dataset.",
-    },
-    {
-      text: "Qu'est-ce que l'IoU (Intersection over Union) ?",
-      options: [
-        {
-          text: "Une métrique pour évaluer la qualité des bounding boxes",
-          isCorrect: true,
-        },
-        { text: "Un algorithme de détection", isCorrect: false },
-        { text: "Une fonction de perte", isCorrect: false },
-        { text: "Une technique d'augmentation", isCorrect: false },
-      ],
-      difficulty: "intermediate",
-      explanation:
-        "IoU mesure le chevauchement entre la prédiction et la vérité terrain.",
     },
   ],
 
@@ -1069,33 +827,6 @@ const EXTENSIVE_ASSESSMENT_QUESTIONS = {
       difficulty: "intermediate",
       explanation:
         "BERT est un modèle de langage bidirectionnel basé sur l'architecture Transformer.",
-    },
-    {
-      text: "Qu'est-ce que TF-IDF ?",
-      options: [
-        { text: "Term Frequency-Inverse Document Frequency", isCorrect: true },
-        { text: "Text Filtering-Information Detection", isCorrect: false },
-        { text: "Token Frequency-Index Distribution", isCorrect: false },
-        { text: "Text Feature-Input Data Format", isCorrect: false },
-      ],
-      difficulty: "basic",
-      explanation:
-        "TF-IDF mesure l'importance d'un terme dans un document par rapport à une collection.",
-    },
-    {
-      text: "Qu'est-ce que l'attention dans les transformers ?",
-      options: [
-        {
-          text: "Un mécanisme qui pondère l'importance des mots",
-          isCorrect: true,
-        },
-        { text: "Une technique de régularisation", isCorrect: false },
-        { text: "Un type de couche de neurones", isCorrect: false },
-        { text: "Une méthode d'optimisation", isCorrect: false },
-      ],
-      difficulty: "intermediate",
-      explanation:
-        "L'attention permet au modèle de se concentrer sur les parties pertinentes de la séquence.",
     },
   ],
 };
@@ -1148,13 +879,25 @@ async function createExtensiveQuizzes() {
         const shuffled = questionPool.sort(() => 0.5 - Math.random());
         const selectedQuestions = shuffled.slice(0, 10);
 
+        // Randomize which answer is correct
+        const randomizedQuestions = selectedQuestions.map(q => {
+          // Randomly shuffle the options
+          const shuffledOptions = [...q.options].sort(
+            () => 0.5 - Math.random()
+          );
+          return {
+            ...q,
+            options: shuffledOptions,
+          };
+        });
+
         const quiz = new Quiz({
           moduleId: module._id.toString(),
           title: `Quiz - ${module.title}`,
           description: `Évaluez vos connaissances sur ${module.title}`,
           timeLimit: 1800, // 30 minutes
           passingScore: 70,
-          questions: selectedQuestions,
+          questions: randomizedQuestions,
         });
 
         await quiz.save();
@@ -1353,6 +1096,7 @@ async function createActivePathways() {
           resourceId: resource._id || `resource_${index}_${Math.random()}`,
           completed: Math.random() > 0.3,
           completedAt: Math.random() > 0.5 ? new Date() : undefined,
+          type: resource.type || "article",
         })),
         quiz: {
           completed: Math.random() > 0.4,
@@ -1434,11 +1178,10 @@ async function populateExtensiveData() {
       const existingAssessment = await Assessment.findOne({ category });
       if (!existingAssessment) {
         const assessment = new Assessment({
-          title: `Évaluation ${category.toUpperCase()}`,
+          title: `${category.toUpperCase()} Assessment`,
           category,
           difficulty: "intermediate",
           questions,
-          recommendedGoals: [],
         });
         await assessment.save();
         logger.info(`Assessment created for category: ${category}`);

@@ -57,12 +57,12 @@ const PeerReview: React.FC = () => {
   const [reviewRating, setReviewRating] = useState(3);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     title: "",
     description: "",
     file: null as File | null,
   });
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchSubmissions();
