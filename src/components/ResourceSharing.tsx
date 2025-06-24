@@ -54,17 +54,21 @@ const ResourceSharing: React.FC = () => {
     tags: [] as string[],
     newTag: "",
   });
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchResources();
   }, []);
 
   const fetchResources = async () => {
+    if (!user?.token) return;
+
     try {
       setLoading(true);
+      setError(null);
       const response = await fetch(`${api.API_URL}/api/shared-resources`, {
         headers: {
-          Authorization: `Bearer ${user?.token}`,
+          Authorization: `Bearer ${user.token}`,
           "Content-Type": "application/json",
         },
       });
@@ -77,6 +81,7 @@ const ResourceSharing: React.FC = () => {
       setResources(data);
     } catch (error) {
       console.error("Error fetching shared resources:", error);
+      setError("Erreur lors du chargement des ressources");
       toast.error("Erreur lors du chargement des ressources");
     } finally {
       setLoading(false);
@@ -85,11 +90,13 @@ const ResourceSharing: React.FC = () => {
 
   const handleCreateResource = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user?.token) return;
+
     try {
       const response = await fetch(`${api.API_URL}/api/shared-resources`, {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${user?.token}`,
+          Authorization: `Bearer ${user.token}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
@@ -147,13 +154,15 @@ const ResourceSharing: React.FC = () => {
   };
 
   const handleLikeResource = async (resourceId: string) => {
+    if (!user?.token) return;
+
     try {
       const response = await fetch(
         `${api.API_URL}/api/shared-resources/${resourceId}/like`,
         {
           method: "POST",
           headers: {
-            Authorization: `Bearer ${user?.token}`,
+            Authorization: `Bearer ${user.token}`,
             "Content-Type": "application/json",
           },
         }
@@ -179,6 +188,8 @@ const ResourceSharing: React.FC = () => {
   };
 
   const handleDownloadResource = async (resourceId: string, url: string) => {
+    if (!user?.token) return;
+
     try {
       // Ouvrir l'URL dans un nouvel onglet
       window.open(url, "_blank");
@@ -189,7 +200,7 @@ const ResourceSharing: React.FC = () => {
         {
           method: "POST",
           headers: {
-            Authorization: `Bearer ${user?.token}`,
+            Authorization: `Bearer ${user.token}`,
             "Content-Type": "application/json",
           },
         }
@@ -273,9 +284,18 @@ const ResourceSharing: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="glass-card rounded-xl p-6 flex items-center justify-center">
+      <div className="glass-card rounded-xl p-6 flex items-center justify-center min-h-[400px]">
         <Loader2 className="w-6 h-6 text-purple-400 animate-spin mr-2" />
         <span className="text-gray-400">Chargement des ressources...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="glass-card rounded-xl p-6 flex items-center justify-center min-h-[400px]">
+        <AlertCircle className="w-6 h-6 text-red-400 mr-2" />
+        <span className="text-gray-400">{error}</span>
       </div>
     );
   }
@@ -344,7 +364,7 @@ const ResourceSharing: React.FC = () => {
 
       {/* Liste des ressources */}
       {filteredResources.length === 0 ? (
-        <div className="text-center py-8">
+        <div className="text-center py-8 min-h-[300px] flex flex-col items-center justify-center">
           <Share2 className="w-12 h-12 text-gray-600 mx-auto mb-4" />
           <p className="text-gray-400 mb-4">
             Aucune ressource ne correspond à vos critères.

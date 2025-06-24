@@ -10,9 +10,9 @@ import {
   ThumbsUp,
   MessageCircle,
   Send,
+  X,
   Filter,
   Search,
-  X,
   Tag,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
@@ -57,6 +57,7 @@ const DiscussionForum: React.FC = () => {
     newTag: "",
   });
   const commentsEndRef = useRef<HTMLDivElement>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchPosts();
@@ -70,11 +71,14 @@ const DiscussionForum: React.FC = () => {
   }, [selectedPost?.comments]);
 
   const fetchPosts = async () => {
+    if (!user?.token) return;
+
     try {
       setLoading(true);
+      setError(null);
       const response = await fetch(`${api.API_URL}/api/forum/posts`, {
         headers: {
-          Authorization: `Bearer ${user?.token}`,
+          Authorization: `Bearer ${user.token}`,
           "Content-Type": "application/json",
         },
       });
@@ -97,6 +101,7 @@ const DiscussionForum: React.FC = () => {
       }
     } catch (error) {
       console.error("Error fetching forum posts:", error);
+      setError("Erreur lors du chargement des discussions");
       toast.error("Erreur lors du chargement des discussions");
     } finally {
       setLoading(false);
@@ -105,11 +110,13 @@ const DiscussionForum: React.FC = () => {
 
   const handleCreatePost = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user?.token) return;
+
     try {
       const response = await fetch(`${api.API_URL}/api/forum/posts`, {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${user?.token}`,
+          Authorization: `Bearer ${user.token}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
@@ -163,13 +170,15 @@ const DiscussionForum: React.FC = () => {
   };
 
   const handleLikePost = async (postId: string) => {
+    if (!user?.token) return;
+
     try {
       const response = await fetch(
         `${api.API_URL}/api/forum/posts/${postId}/like`,
         {
           method: "POST",
           headers: {
-            Authorization: `Bearer ${user?.token}`,
+            Authorization: `Bearer ${user.token}`,
             "Content-Type": "application/json",
           },
         }
@@ -195,7 +204,7 @@ const DiscussionForum: React.FC = () => {
 
   const handleAddComment = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedPost || !newComment.trim()) return;
+    if (!selectedPost || !newComment.trim() || !user?.token) return;
 
     try {
       const response = await fetch(
@@ -203,7 +212,7 @@ const DiscussionForum: React.FC = () => {
         {
           method: "POST",
           headers: {
-            Authorization: `Bearer ${user?.token}`,
+            Authorization: `Bearer ${user.token}`,
             "Content-Type": "application/json",
           },
           body: JSON.stringify({ content: newComment }),
@@ -253,9 +262,18 @@ const DiscussionForum: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="glass-card rounded-xl p-6 flex items-center justify-center">
+      <div className="glass-card rounded-xl p-6 flex items-center justify-center min-h-[400px]">
         <Loader2 className="w-6 h-6 text-purple-400 animate-spin mr-2" />
         <span className="text-gray-400">Chargement des discussions...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="glass-card rounded-xl p-6 flex items-center justify-center min-h-[400px]">
+        <AlertCircle className="w-6 h-6 text-red-400 mr-2" />
+        <span className="text-gray-400">{error}</span>
       </div>
     );
   }
@@ -463,7 +481,7 @@ const DiscussionForum: React.FC = () => {
               </div>
             </div>
           ) : (
-            <div className="flex items-center justify-center h-full">
+            <div className="flex items-center justify-center h-full min-h-[400px]">
               <div className="text-center py-12">
                 <MessageSquare className="w-16 h-16 text-gray-600 mx-auto mb-4" />
                 <p className="text-gray-400">

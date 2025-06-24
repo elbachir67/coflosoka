@@ -70,6 +70,7 @@ const StudyGroup: React.FC = () => {
     topic: "",
   });
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchStudyGroups();
@@ -83,11 +84,14 @@ const StudyGroup: React.FC = () => {
   }, [selectedGroup?.messages]);
 
   const fetchStudyGroups = async () => {
+    if (!user?.token) return;
+
     try {
       setLoading(true);
+      setError(null);
       const response = await fetch(`${api.API_URL}/api/study-groups`, {
         headers: {
-          Authorization: `Bearer ${user?.token}`,
+          Authorization: `Bearer ${user.token}`,
           "Content-Type": "application/json",
         },
       });
@@ -110,6 +114,7 @@ const StudyGroup: React.FC = () => {
       }
     } catch (error) {
       console.error("Error fetching study groups:", error);
+      setError("Erreur lors du chargement des groupes d'étude");
       toast.error("Erreur lors du chargement des groupes d'étude");
     } finally {
       setLoading(false);
@@ -118,11 +123,13 @@ const StudyGroup: React.FC = () => {
 
   const handleCreateGroup = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user?.token) return;
+
     try {
       const response = await fetch(`${api.API_URL}/api/study-groups`, {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${user?.token}`,
+          Authorization: `Bearer ${user.token}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify(formData),
@@ -148,7 +155,7 @@ const StudyGroup: React.FC = () => {
 
   const handleInviteMember = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedGroup) return;
+    if (!selectedGroup || !user?.token) return;
 
     try {
       const response = await fetch(
@@ -156,7 +163,7 @@ const StudyGroup: React.FC = () => {
         {
           method: "POST",
           headers: {
-            Authorization: `Bearer ${user?.token}`,
+            Authorization: `Bearer ${user.token}`,
             "Content-Type": "application/json",
           },
           body: JSON.stringify({ email: inviteEmail }),
@@ -186,7 +193,7 @@ const StudyGroup: React.FC = () => {
 
   const handleScheduleMeeting = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedGroup) return;
+    if (!selectedGroup || !user?.token) return;
 
     try {
       const dateTime = new Date(`${scheduleData.date}T${scheduleData.time}`);
@@ -196,7 +203,7 @@ const StudyGroup: React.FC = () => {
         {
           method: "POST",
           headers: {
-            Authorization: `Bearer ${user?.token}`,
+            Authorization: `Bearer ${user.token}`,
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
@@ -235,7 +242,7 @@ const StudyGroup: React.FC = () => {
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedGroup || !newMessage.trim()) return;
+    if (!selectedGroup || !newMessage.trim() || !user?.token) return;
 
     try {
       const response = await fetch(
@@ -243,7 +250,7 @@ const StudyGroup: React.FC = () => {
         {
           method: "POST",
           headers: {
-            Authorization: `Bearer ${user?.token}`,
+            Authorization: `Bearer ${user.token}`,
             "Content-Type": "application/json",
           },
           body: JSON.stringify({ content: newMessage }),
@@ -282,9 +289,18 @@ const StudyGroup: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="glass-card rounded-xl p-6 flex items-center justify-center">
+      <div className="glass-card rounded-xl p-6 flex items-center justify-center min-h-[400px]">
         <Loader2 className="w-6 h-6 text-purple-400 animate-spin mr-2" />
         <span className="text-gray-400">Chargement des groupes d'étude...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="glass-card rounded-xl p-6 flex items-center justify-center min-h-[400px]">
+        <AlertCircle className="w-6 h-6 text-red-400 mr-2" />
+        <span className="text-gray-400">{error}</span>
       </div>
     );
   }

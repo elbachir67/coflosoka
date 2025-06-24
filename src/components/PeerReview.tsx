@@ -62,19 +62,23 @@ const PeerReview: React.FC = () => {
     description: "",
     file: null as File | null,
   });
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchSubmissions();
   }, []);
 
   const fetchSubmissions = async () => {
+    if (!user?.token) return;
+
     try {
       setLoading(true);
+      setError(null);
       const response = await fetch(
         `${api.API_URL}/api/peer-review/submissions`,
         {
           headers: {
-            Authorization: `Bearer ${user?.token}`,
+            Authorization: `Bearer ${user.token}`,
             "Content-Type": "application/json",
           },
         }
@@ -88,6 +92,7 @@ const PeerReview: React.FC = () => {
       setSubmissions(data);
     } catch (error) {
       console.error("Error fetching peer review submissions:", error);
+      setError("Erreur lors du chargement des soumissions");
       toast.error("Erreur lors du chargement des soumissions");
     } finally {
       setLoading(false);
@@ -105,7 +110,7 @@ const PeerReview: React.FC = () => {
 
   const handleCreateSubmission = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.file) return;
+    if (!formData.file || !user?.token) return;
 
     try {
       const formDataObj = new FormData();
@@ -118,7 +123,7 @@ const PeerReview: React.FC = () => {
         {
           method: "POST",
           headers: {
-            Authorization: `Bearer ${user?.token}`,
+            Authorization: `Bearer ${user.token}`,
           },
           body: formDataObj,
         }
@@ -148,7 +153,7 @@ const PeerReview: React.FC = () => {
 
   const handleSubmitReview = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedSubmission) return;
+    if (!selectedSubmission || !user?.token) return;
 
     try {
       const response = await fetch(
@@ -156,7 +161,7 @@ const PeerReview: React.FC = () => {
         {
           method: "POST",
           headers: {
-            Authorization: `Bearer ${user?.token}`,
+            Authorization: `Bearer ${user.token}`,
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
@@ -244,9 +249,18 @@ const PeerReview: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="glass-card rounded-xl p-6 flex items-center justify-center">
+      <div className="glass-card rounded-xl p-6 flex items-center justify-center min-h-[400px]">
         <Loader2 className="w-6 h-6 text-purple-400 animate-spin mr-2" />
         <span className="text-gray-400">Chargement des soumissions...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="glass-card rounded-xl p-6 flex items-center justify-center min-h-[400px]">
+        <AlertCircle className="w-6 h-6 text-red-400 mr-2" />
+        <span className="text-gray-400">{error}</span>
       </div>
     );
   }
@@ -339,7 +353,7 @@ const PeerReview: React.FC = () => {
           Soumissions à réviser
         </h3>
         {otherSubmissions.length === 0 ? (
-          <div className="text-center py-8">
+          <div className="text-center py-8 min-h-[200px] flex flex-col items-center justify-center">
             <FileText className="w-12 h-12 text-gray-600 mx-auto mb-4" />
             <p className="text-gray-400">
               Aucune soumission disponible pour révision.
