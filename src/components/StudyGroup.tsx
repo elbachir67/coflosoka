@@ -10,13 +10,8 @@ import {
   MessageSquare,
   Send,
   X,
-  Upload,
-  Download,
-  CheckCircle,
-  Clock,
-  Filter,
-  Search,
   Calendar,
+  Clock,
   UserPlus,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
@@ -107,7 +102,7 @@ const StudyGroup: React.FC = () => {
       // Si un groupe était sélectionné, mettre à jour ses données
       if (selectedGroup) {
         const updatedGroup = data.find(
-          (g: { _id: string }) => g._id === selectedGroup._id
+          (g: StudyGroup) => g._id === selectedGroup._id
         );
         if (updatedGroup) {
           setSelectedGroup(updatedGroup);

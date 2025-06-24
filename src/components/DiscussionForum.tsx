@@ -89,7 +89,7 @@ const DiscussionForum: React.FC = () => {
       // Si un post était sélectionné, mettre à jour ses données
       if (selectedPost) {
         const updatedPost = data.find(
-          (p: { _id: string }) => p._id === selectedPost._id
+          (p: ForumPost) => p._id === selectedPost._id
         );
         if (updatedPost) {
           setSelectedPost(updatedPost);
