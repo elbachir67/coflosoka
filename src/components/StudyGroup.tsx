@@ -1,17 +1,23 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { api } from "../config/api";
 import {
   Users,
-  MessageSquare,
-  Calendar,
   Plus,
   Loader2,
   AlertCircle,
-  UserPlus,
-  X,
+  User,
+  MessageSquare,
   Send,
+  X,
+  Upload,
+  Download,
+  CheckCircle,
   Clock,
+  Filter,
+  Search,
+  Calendar,
+  UserPlus,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { useGamification } from "../contexts/GamificationContext";
@@ -68,10 +74,18 @@ const StudyGroup: React.FC = () => {
     duration: 60,
     topic: "",
   });
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetchStudyGroups();
   }, []);
+
+  useEffect(() => {
+    // Scroll to bottom of messages when new messages arrive
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [selectedGroup?.messages]);
 
   const fetchStudyGroups = async () => {
     try {
@@ -89,6 +103,16 @@ const StudyGroup: React.FC = () => {
 
       const data = await response.json();
       setGroups(data);
+
+      // Si un groupe était sélectionné, mettre à jour ses données
+      if (selectedGroup) {
+        const updatedGroup = data.find(
+          (g: { _id: string }) => g._id === selectedGroup._id
+        );
+        if (updatedGroup) {
+          setSelectedGroup(updatedGroup);
+        }
+      }
     } catch (error) {
       console.error("Error fetching study groups:", error);
       toast.error("Erreur lors du chargement des groupes d'étude");
@@ -377,7 +401,7 @@ const StudyGroup: React.FC = () => {
                   key={member._id}
                   className="px-3 py-1 rounded-full bg-gray-800 text-gray-300 text-sm flex items-center"
                 >
-                  <User className="w-3 h-3 mr-1" />
+                  <Users className="w-3 h-3 mr-1" />
                   {member.email.split("@")[0]}
                   {member._id === selectedGroup.createdBy._id && (
                     <span className="ml-1 text-xs text-purple-400">
@@ -412,43 +436,52 @@ const StudyGroup: React.FC = () => {
                         }`}
                       >
                         <div
-                          className={`max-w-[80%] p-3 rounded-lg ${
+                          className={`flex max-w-[80%] ${
                             isCurrentUser
-                              ? "bg-purple-600 text-white"
-                              : "bg-gray-700 text-gray-200"
+                              ? "flex-row-reverse items-end"
+                              : "items-start"
                           }`}
                         >
-                          <div className="flex items-center mb-1">
-                            <span
-                              className={`text-xs font-medium ${
+                          <div
+                            className={`p-3 rounded-lg ${
+                              isCurrentUser
+                                ? "bg-purple-600 text-white"
+                                : "bg-gray-700 text-gray-200"
+                            }`}
+                          >
+                            <div className="flex items-center mb-1">
+                              <span
+                                className={`text-xs font-medium ${
+                                  isCurrentUser
+                                    ? "text-purple-200"
+                                    : "text-gray-400"
+                                }`}
+                              >
+                                {message.sender.email.split("@")[0]}
+                              </span>
+                            </div>
+                            <p>{message.content}</p>
+                            <div
+                              className={`text-right text-xs ${
                                 isCurrentUser
                                   ? "text-purple-200"
                                   : "text-gray-400"
                               }`}
                             >
-                              {message.sender.email.split("@")[0]}
-                            </span>
-                          </div>
-                          <p>{message.content}</p>
-                          <div
-                            className={`text-right text-xs ${
-                              isCurrentUser
-                                ? "text-purple-200"
-                                : "text-gray-400"
-                            }`}
-                          >
-                            {new Date(message.createdAt).toLocaleTimeString(
-                              "fr-FR",
-                              {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              }
-                            )}
+                              {new Date(message.createdAt).toLocaleTimeString(
+                                "fr-FR",
+                                {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                }
+                              )}
+                            </div>
                           </div>
                         </div>
                       </div>
                     );
                   })}
+                  <div ref={messagesEndRef} />
                 </div>
               )}
             </div>

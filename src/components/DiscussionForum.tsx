@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { api } from "../config/api";
 import {
@@ -56,10 +56,18 @@ const DiscussionForum: React.FC = () => {
     tags: [] as string[],
     newTag: "",
   });
+  const commentsEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetchPosts();
   }, []);
+
+  useEffect(() => {
+    // Scroll to bottom of comments when new comments arrive
+    if (commentsEndRef.current) {
+      commentsEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [selectedPost?.comments]);
 
   const fetchPosts = async () => {
     try {
@@ -77,6 +85,16 @@ const DiscussionForum: React.FC = () => {
 
       const data = await response.json();
       setPosts(data);
+
+      // Si un post était sélectionné, mettre à jour ses données
+      if (selectedPost) {
+        const updatedPost = data.find(
+          (p: { _id: string }) => p._id === selectedPost._id
+        );
+        if (updatedPost) {
+          setSelectedPost(updatedPost);
+        }
+      }
     } catch (error) {
       console.error("Error fetching forum posts:", error);
       toast.error("Erreur lors du chargement des discussions");
@@ -422,6 +440,7 @@ const DiscussionForum: React.FC = () => {
                       </div>
                     ))
                   )}
+                  <div ref={commentsEndRef} />
                 </div>
 
                 <form onSubmit={handleAddComment} className="flex space-x-2">

@@ -97,7 +97,7 @@ const CollaborationHub: React.FC = () => {
       </div>
 
       {/* Content */}
-      <div className="min-h-[400px]">
+      <div className="min-h-[600px]">
         {activeTab === "groups" && <StudyGroup />}
         {activeTab === "forum" && <DiscussionForum />}
         {activeTab === "resources" && <ResourceSharing />}
