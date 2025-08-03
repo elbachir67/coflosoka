@@ -23,6 +23,7 @@ import { collaborationRoutes } from "./routes/collaboration.js";
 import externalApisRoutes from "./routes/externalApis.js";
 
 import analyticsRoutes from "./routes/analytics.js";
+import { ollamaRoutes } from "./routes/ollama.js";
 
 import { config } from "./config/env.js";
 
@@ -90,6 +91,7 @@ app.use("/api/gamification", gamificationRoutes);
 app.use("/api", collaborationRoutes);
 app.use("/api/external", externalApisRoutes);
 app.use("/api/analytics", analyticsRoutes);
+app.use("/api/ollama", ollamaRoutes);
 
 // Error handling
 app.use(errorHandler);

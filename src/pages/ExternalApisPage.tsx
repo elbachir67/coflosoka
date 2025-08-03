@@ -9,26 +9,24 @@ import {
   CloudSun,
   Loader2,
   AlertCircle,
-  Send,
   Search,
   ExternalLink,
-  Calendar,
   Clock,
   ThermometerSun,
   Wind,
   Droplets,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
-import AIModelPlayground from "../components/AIModelPlayground";
 import DatasetExplorer from "../components/DatasetExplorer";
 import NewsWidget from "../components/NewsWidget";
+import OllamaChat from "../components/OllamaChat";
 
 function ExternalApisPage() {
   const { user } = useAuth();
   const { rewardAction } = useGamification();
   const [activeTab, setActiveTab] = useState<
-    "ai" | "datasets" | "news" | "weather"
-  >("ai");
+    "ollama" | "datasets" | "news" | "weather"
+  >("ollama");
   const [weatherData, setWeatherData] = useState<any>(null);
   const [weatherCity, setWeatherCity] = useState("Dakar");
   const [weatherLoading, setWeatherLoading] = useState(false);
@@ -89,16 +87,16 @@ function ExternalApisPage() {
         {/* Navigation Tabs */}
         <div className="flex border-b border-gray-800 mb-8 overflow-x-auto">
           <button
-            onClick={() => setActiveTab("ai")}
+            onClick={() => setActiveTab("ollama")}
             className={`px-4 py-2 font-medium text-sm whitespace-nowrap ${
-              activeTab === "ai"
+              activeTab === "ollama"
                 ? "text-purple-400 border-b-2 border-purple-400"
                 : "text-gray-400 hover:text-gray-300"
             }`}
           >
             <div className="flex items-center">
               <Brain className="w-4 h-4 mr-1" />
-              IA Générative
+              Assistant IA Local
             </div>
           </button>
           <button
@@ -143,7 +141,7 @@ function ExternalApisPage() {
         </div>
 
         {/* Content */}
-        {activeTab === "ai" && <AIModelPlayground />}
+        {activeTab === "ollama" && <OllamaChat />}
         {activeTab === "datasets" && <DatasetExplorer />}
         {activeTab === "news" && <NewsWidget />}
 
