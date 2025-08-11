@@ -3,8 +3,20 @@ import { logger } from "../utils/logger.js";
 
 class OllamaService {
   constructor() {
-    this.baseUrl = process.env.OLLAMA_URL || "http://127.0.0.1:11434";
+    // Ollama n'est disponible qu'en développement local
+    this.isProduction =
+      process.env.NODE_ENV === "production" || process.env.RENDER;
+    this.baseUrl = this.isProduction
+      ? null
+      : process.env.OLLAMA_URL || "http://127.0.0.1:11434";
     this.defaultModel = process.env.OLLAMA_DEFAULT_MODEL || "mistral";
+  }
+
+  /**
+   * Vérifie si Ollama est disponible dans l'environnement actuel
+   */
+  isAvailable() {
+    return !this.isProduction && this.baseUrl;
   }
 
   /**
@@ -12,6 +24,12 @@ class OllamaService {
    */
   async generateResponse(prompt, options = {}) {
     try {
+      if (!this.isAvailable()) {
+        throw new Error(
+          "Ollama n'est disponible qu'en environnement de développement local"
+        );
+      }
+
       const {
         model = this.defaultModel,
         temperature = 0.7,
@@ -59,6 +77,12 @@ class OllamaService {
    */
   async chat(messages, options = {}) {
     try {
+      if (!this.isAvailable()) {
+        throw new Error(
+          "Ollama n'est disponible qu'en environnement de développement local"
+        );
+      }
+
       const {
         model = this.defaultModel,
         temperature = 0.7,
@@ -105,6 +129,12 @@ class OllamaService {
    */
   async generateCode(description, language = "python", context = "") {
     try {
+      if (!this.isAvailable()) {
+        throw new Error(
+          "Ollama n'est disponible qu'en environnement de développement local"
+        );
+      }
+
       const prompt = `Tu es un assistant de programmation expert. Génère du code ${language} pour: ${description}
 
 ${context ? `Contexte: ${context}` : ""}
@@ -283,6 +313,10 @@ Sois spécifique et actionnable dans tes recommandations.`;
    */
   async listModels() {
     try {
+      if (!this.isAvailable()) {
+        return [];
+      }
+
       const response = await fetch(`${this.baseUrl}/api/tags`);
       if (!response.ok) {
         throw new Error(`Failed to fetch models: ${response.status}`);

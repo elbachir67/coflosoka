@@ -233,7 +233,6 @@ const OllamaChat: React.FC = () => {
                   }`}
                 />
                 <span className="text-sm text-gray-400">
-                  {selectedModel} •{" "}
                   {ollamaStatus === "healthy" ? "En ligne" : "Hors ligne"}
                 </span>
               </div>
@@ -350,27 +349,38 @@ const OllamaChat: React.FC = () => {
           <div className="p-4 rounded-lg bg-red-500/20 border border-red-500/30 flex items-start">
             <AlertCircle className="w-5 h-5 text-red-400 mr-3 mt-0.5 flex-shrink-0" />
             <div>
-              <p className="text-red-300 font-medium">Ollama non disponible</p>
-              <p className="text-red-400 text-sm">
-                Assurez-vous qu'Ollama est en cours d'exécution sur le port
-                11434.
+              <p className="text-red-300 font-medium">
+                {ollamaStatus === "unavailable"
+                  ? "Assistant IA Local non disponible"
+                  : "Ollama non disponible"}
               </p>
-              <div className="text-red-400 text-xs mt-2 space-y-1">
-                <p>
-                  1. Démarrez Ollama :{" "}
-                  <code className="bg-gray-800 px-1 rounded">ollama serve</code>
-                </p>
-                <p>
-                  2. Vérifiez les modèles :{" "}
-                  <code className="bg-gray-800 px-1 rounded">ollama list</code>
-                </p>
-                <p>
-                  3. Si besoin, installez :{" "}
-                  <code className="bg-gray-800 px-1 rounded">
-                    ollama pull mistral
-                  </code>
-                </p>
-              </div>
+              <p className="text-red-400 text-sm">
+                {process.env.NODE_ENV === "production"
+                  ? "L'assistant IA local n'est disponible qu'en environnement de développement. En production, cette fonctionnalité est désactivée pour des raisons de performance et de sécurité."
+                  : "Assurez-vous qu'Ollama est en cours d'exécution sur le port 11434."}
+              </p>
+              {process.env.NODE_ENV !== "production" && (
+                <div className="text-red-400 text-xs mt-2 space-y-1">
+                  <p>
+                    1. Démarrez Ollama :{" "}
+                    <code className="bg-gray-800 px-1 rounded">
+                      ollama serve
+                    </code>
+                  </p>
+                  <p>
+                    2. Vérifiez les modèles :{" "}
+                    <code className="bg-gray-800 px-1 rounded">
+                      ollama list
+                    </code>
+                  </p>
+                  <p>
+                    3. Si besoin, installez :{" "}
+                    <code className="bg-gray-800 px-1 rounded">
+                      ollama pull mistral
+                    </code>
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         )}

@@ -96,7 +96,8 @@ function ExternalApisPage() {
           >
             <div className="flex items-center">
               <Brain className="w-4 h-4 mr-1" />
-              Assistant IA Local
+              Assistant IA Local{" "}
+              {process.env.NODE_ENV === "production" && "(Dev uniquement)"}
             </div>
           </button>
           <button
