@@ -69,7 +69,6 @@ function App() {
     setShowXPNotification,
     lastXPGain,
     newAchievement,
-    setNewAchievement,
     markAchievementAsViewed,
   } = useGamification();
 
