@@ -17,20 +17,15 @@ class AIRecommendationService {
         .limit(10);
 
       // Analyser les patterns d'apprentissage
-      const learningPatterns = this.analyzeLearningPatterns(
-        profile,
-        pathways,
-        quizAttempts
-      );
+      const learningPatterns = await this.analyzeLearningPatterns(userId);
 
       // Prédire les performances futures
       const performancePrediction = this.predictPerformance(learningPatterns);
 
       // Générer des recommandations personnalisées
       const recommendations = await this.generatePersonalizedRecommendations(
-        profile,
-        learningPatterns,
-        performancePrediction
+        userId,
+        learningPatterns
       );
 
       // Recommandations adaptatives basées sur le contexte
@@ -53,9 +48,27 @@ class AIRecommendationService {
   }
 
   /**
+   * Analyse les patterns d'apprentissage pour un utilisateur spécifique
+   */
+  static async analyzeLearningPatterns(userId) {
+    try {
+      const profile = await LearnerProfile.findOne({ userId });
+      const pathways = await Pathway.find({ userId }).populate("goalId");
+      const quizAttempts = await QuizAttempt.find({ userId })
+        .sort({ createdAt: -1 })
+        .limit(20);
+
+      return this.analyzePatterns(profile, pathways, quizAttempts);
+    } catch (error) {
+      logger.error("Error analyzing learning patterns:", error);
+      throw error;
+    }
+  }
+
+  /**
    * Analyse avancée des patterns d'apprentissage
    */
-  static analyzeLearningPatterns(profile, pathways, quizAttempts) {
+  static analyzePatterns(profile, pathways, quizAttempts) {
     const patterns = {
       learningVelocity: 0,
       consistencyScore: 0,
@@ -75,6 +88,9 @@ class AIRecommendationService {
       },
       retentionRate: 0,
       engagementLevel: 0,
+      recentPerformance: 0,
+      learningStyle: profile?.learningStyle || "visual",
+      preferredDomain: profile?.preferences?.preferredDomain || "ml",
     };
 
     // Analyser la vélocité d'apprentissage
@@ -122,6 +138,9 @@ class AIRecommendationService {
       pathways,
       quizAttempts
     );
+
+    // Calculer la performance récente
+    patterns.recentPerformance = this.calculateRecentPerformance(quizAttempts);
 
     return patterns;
   }
@@ -201,13 +220,102 @@ class AIRecommendationService {
   }
 
   /**
-   * Génère des recommandations personnalisées avancées
+   * Génère des recommandations personnalisées avec Ollama
    */
-  static async generatePersonalizedRecommendations(
-    profile,
-    patterns,
-    prediction
-  ) {
+  static async generatePersonalizedRecommendations(userId, patterns) {
+    try {
+      // Récupérer le profil utilisateur
+      const profile = await LearnerProfile.findOne({ userId });
+      if (!profile) {
+        throw new Error("Profil utilisateur non trouvé");
+      }
+
+      // Utiliser Ollama pour générer des recommandations intelligentes
+      const OllamaService = (await import("./OllamaService.js")).default;
+
+      if (OllamaService.isAvailable()) {
+        // Générer des recommandations avec Ollama
+        const ollamaRecommendations = await this.generateOllamaRecommendations(
+          profile,
+          patterns
+        );
+        return ollamaRecommendations;
+      } else {
+        // Fallback vers recommandations basiques
+        return this.generateBasicRecommendations(patterns);
+      }
+    } catch (error) {
+      logger.error("Error generating personalized recommendations:", error);
+      // Fallback vers recommandations basiques en cas d'erreur
+      return this.generateBasicRecommendations(patterns);
+    }
+  }
+
+  /**
+   * Génère des recommandations avec Ollama
+   */
+  static async generateOllamaRecommendations(profile, patterns) {
+    try {
+      const OllamaService = (await import("./OllamaService.js")).default;
+
+      const prompt = `Tu es un expert en pédagogie et en intelligence artificielle. Analyse ce profil d'apprenant et génère des recommandations personnalisées.
+
+PROFIL APPRENANT:
+- Style d'apprentissage: ${patterns.learningStyle}
+- Domaine préféré: ${patterns.preferredDomain}
+- Vitesse d'apprentissage: ${patterns.learningVelocity.toFixed(2)}
+- Score de consistance: ${patterns.consistencyScore.toFixed(2)}
+- Niveau d'engagement: ${patterns.engagementLevel.toFixed(2)}
+- Taux de rétention: ${patterns.retentionRate.toFixed(2)}
+- Performance récente: ${patterns.recentPerformance.toFixed(2)}
+- Points forts: ${patterns.strengths.join(", ") || "Aucun identifié"}
+- Difficultés: ${patterns.strugglingAreas.join(", ") || "Aucune identifiée"}
+
+INSTRUCTIONS:
+1. Génère 3-5 recommandations personnalisées et actionnables
+2. Priorise les recommandations (high, medium, low)
+3. Fournis des actions concrètes pour chaque recommandation
+4. Adapte le ton et le contenu au profil de l'apprenant
+5. Réponds UNIQUEMENT en JSON valide
+
+FORMAT DE RÉPONSE (JSON uniquement):
+{
+  "recommendations": [
+    {
+      "type": "learning_pace|consistency|strength_based|improvement|cognitive_load|timing",
+      "title": "Titre de la recommandation",
+      "description": "Description détaillée",
+      "priority": "high|medium|low",
+      "actions": ["Action 1", "Action 2", "Action 3"],
+      "estimatedImpact": "Impact estimé",
+      "reasoning": "Pourquoi cette recommandation"
+    }
+  ]
+}`;
+
+      const response = await OllamaService.generateResponse(prompt, {
+        model: "mistral",
+        temperature: 0.7,
+        maxTokens: 1000,
+      });
+
+      try {
+        const parsed = JSON.parse(response.response);
+        return parsed.recommendations || [];
+      } catch (parseError) {
+        logger.warn("Could not parse Ollama recommendations, using fallback");
+        return this.generateBasicRecommendations(patterns);
+      }
+    } catch (error) {
+      logger.error("Error generating Ollama recommendations:", error);
+      return this.generateBasicRecommendations(patterns);
+    }
+  }
+
+  /**
+   * Génère des recommandations basiques (fallback)
+   */
+  static generateBasicRecommendations(patterns) {
     const recommendations = [];
 
     // Recommandations basées sur la vélocité d'apprentissage
@@ -224,6 +332,7 @@ class AIRecommendationService {
           "Fixer des objectifs quotidiens réalisables",
         ],
         estimatedImpact: "Amélioration de 40% de la rétention",
+        reasoning: "Vitesse d'apprentissage actuelle faible",
       });
     }
 
@@ -241,6 +350,7 @@ class AIRecommendationService {
           "Commencer par 15 minutes par jour",
         ],
         estimatedImpact: "Progression 60% plus rapide",
+        reasoning: "Manque de régularité dans l'apprentissage",
       });
     }
 
@@ -253,8 +363,13 @@ class AIRecommendationService {
           .slice(0, 2)
           .join(" et ")}. Utilisez ces compétences comme levier.`,
         priority: "medium",
-        actions: await this.getAdvancedGoalsForCategories(patterns.strengths),
+        actions: [
+          "Explorer des sujets avancés dans vos domaines forts",
+          "Mentorer d'autres apprenants",
+          "Participer à des projets collaboratifs",
+        ],
         estimatedImpact: "Confiance accrue et motivation renforcée",
+        reasoning: "Points forts identifiés à exploiter",
       });
     }
 
@@ -267,48 +382,13 @@ class AIRecommendationService {
           .slice(0, 2)
           .join(" et ")} pour solidifier vos fondations.`,
         priority: "high",
-        actions: await this.getFoundationalResourcesForCategories(
-          patterns.strugglingAreas
-        ),
+        actions: [
+          "Réviser les concepts fondamentaux",
+          "Pratiquer avec des exercices simples",
+          "Demander de l'aide sur le forum",
+        ],
         estimatedImpact: "Réduction de 50% des lacunes identifiées",
-      });
-    }
-
-    // Recommandations basées sur la charge cognitive
-    if (patterns.cognitiveLoad.recommendation === "increase") {
-      recommendations.push({
-        type: "cognitive_load",
-        title: "Augmenter le défi",
-        description:
-          "Vous pouvez gérer une charge cognitive plus élevée. Il est temps d'augmenter la difficulté.",
-        priority: "medium",
-        actions: [
-          "Aborder des sujets plus complexes",
-          "Combiner plusieurs concepts",
-          "Prendre des projets plus ambitieux",
-        ],
-        estimatedImpact: "Accélération de l'apprentissage de 30%",
-      });
-    }
-
-    // Recommandations temporelles
-    if (patterns.timePatterns.preferredHours.length > 0) {
-      const bestHours = patterns.timePatterns.preferredHours.slice(0, 2);
-      recommendations.push({
-        type: "timing",
-        title: "Optimiser vos créneaux d'apprentissage",
-        description: `Vos meilleures performances sont entre ${bestHours.join(
-          "h et "
-        )}h.`,
-        priority: "low",
-        actions: [
-          `Planifier les sujets difficiles entre ${bestHours[0]}h et ${
-            bestHours[0] + 2
-          }h`,
-          "Réserver les révisions pour les autres créneaux",
-          "Respecter votre rythme circadien",
-        ],
-        estimatedImpact: "Efficacité accrue de 25%",
+        reasoning: "Difficultés identifiées nécessitant un renforcement",
       });
     }
 
@@ -322,7 +402,7 @@ class AIRecommendationService {
     const adaptiveRecs = [];
 
     // Adaptation basée sur la performance récente
-    const recentPerformance = this.calculateRecentPerformance(patterns);
+    const recentPerformance = patterns.recentPerformance;
 
     if (recentPerformance < 0.6) {
       adaptiveRecs.push({
@@ -405,6 +485,17 @@ class AIRecommendationService {
         description: "Vous retenez très bien les informations apprises.",
         recommendation:
           "Votre méthode d'apprentissage est efficace, continuez ainsi.",
+      });
+    }
+
+    // Insight sur l'engagement
+    if (patterns.engagementLevel > 0.8) {
+      insights.push({
+        type: "engagement",
+        title: "Engagement exceptionnel",
+        description: "Votre niveau d'engagement est remarquable.",
+        recommendation:
+          "Votre motivation est un atout majeur, exploitez-la pour des défis plus ambitieux.",
       });
     }
 
@@ -531,18 +622,51 @@ class AIRecommendationService {
   }
 
   static calculateRetentionRate(quizAttempts) {
-    // Simuler un taux de rétention
-    return Math.random() * 0.4 + 0.5; // 0.5-0.9
+    if (quizAttempts.length === 0) return 0.7;
+
+    // Calculer le taux de rétention basé sur les scores récents vs anciens
+    const recentAttempts = quizAttempts.slice(0, 5);
+    const olderAttempts = quizAttempts.slice(5, 10);
+
+    if (recentAttempts.length === 0) return 0.7;
+
+    const recentAvg =
+      recentAttempts.reduce((sum, a) => sum + a.score, 0) /
+      recentAttempts.length;
+
+    if (olderAttempts.length === 0) return recentAvg / 100;
+
+    const olderAvg =
+      olderAttempts.reduce((sum, a) => sum + a.score, 0) / olderAttempts.length;
+
+    return Math.min(1, recentAvg / olderAvg);
   }
 
   static calculateEngagementLevel(pathways, quizAttempts) {
-    // Simuler un niveau d'engagement
-    return Math.random() * 0.6 + 0.3; // 0.3-0.9
+    if (pathways.length === 0) return 0.5;
+
+    // Calculer l'engagement basé sur l'activité récente
+    const now = new Date();
+    const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+    const recentActivity = pathways.filter(
+      p => new Date(p.lastAccessedAt) > oneWeekAgo
+    ).length;
+
+    const engagementScore = recentActivity / pathways.length;
+    return Math.min(1, engagementScore);
   }
 
-  static calculateRecentPerformance(patterns) {
-    // Simuler une performance récente
-    return Math.random() * 0.8 + 0.2; // 0.2-1.0
+  static calculateRecentPerformance(quizAttempts) {
+    if (quizAttempts.length === 0) return 0.7;
+
+    // Prendre les 3 derniers quiz
+    const recentQuizzes = quizAttempts.slice(0, 3);
+    const avgScore =
+      recentQuizzes.reduce((sum, quiz) => sum + quiz.score, 0) /
+      recentQuizzes.length;
+
+    return avgScore / 100;
   }
 
   static async getAdvancedGoalsForCategories(categories) {
@@ -578,24 +702,6 @@ class AIRecommendationService {
         "Bases de Python pour l'IA",
         "Introduction aux mathématiques pour l'IA",
       ];
-    }
-  }
-
-  /**
-   * Analyse les patterns d'apprentissage pour un utilisateur spécifique
-   */
-  static async analyzeLearningPatterns(userId) {
-    try {
-      const profile = await LearnerProfile.findOne({ userId });
-      const pathways = await Pathway.find({ userId }).populate("goalId");
-      const quizAttempts = await QuizAttempt.find({ userId })
-        .sort({ createdAt: -1 })
-        .limit(10);
-
-      return this.analyzeLearningPatterns(profile, pathways, quizAttempts);
-    } catch (error) {
-      logger.error("Error analyzing learning patterns:", error);
-      throw error;
     }
   }
 }

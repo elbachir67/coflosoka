@@ -19,6 +19,7 @@ import {
 import AIInsights from "../components/AIInsights";
 import PerformancePrediction from "../components/PerformancePrediction";
 import LearningProgressChart from "../components/LearningProgressChart";
+import SmartRecommendations from "../components/SmartRecommendations";
 
 function AnalyticsPage() {
   const { user, isAdmin } = useAuth();
@@ -27,7 +28,7 @@ function AnalyticsPage() {
   const [analyticsData, setAnalyticsData] = useState<any>(null);
   const [exportLoading, setExportLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<
-    "overview" | "insights" | "predictions"
+    "overview" | "recommendations" | "insights" | "predictions"
   >("overview");
 
   useEffect(() => {
@@ -192,6 +193,16 @@ function AnalyticsPage() {
             }`}
           >
             Vue d'ensemble
+          </button>
+          <button
+            onClick={() => setActiveTab("recommendations")}
+            className={`px-4 py-2 font-medium text-sm whitespace-nowrap ${
+              activeTab === "recommendations"
+                ? "text-purple-400 border-b-2 border-purple-400"
+                : "text-gray-400 hover:text-gray-300"
+            }`}
+          >
+            Recommandations IA
           </button>
           <button
             onClick={() => setActiveTab("insights")}
@@ -370,6 +381,7 @@ function AnalyticsPage() {
           </>
         )}
 
+        {activeTab === "recommendations" && <SmartRecommendations />}
         {activeTab === "insights" && <AIInsights />}
 
         {activeTab === "predictions" && <PerformancePrediction />}

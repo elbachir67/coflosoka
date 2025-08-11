@@ -23,6 +23,7 @@ import {
 import { toast } from "react-hot-toast";
 import AIInsights from "../components/AIInsights";
 import PerformancePrediction from "../components/PerformancePrediction";
+import SmartRecommendations from "../components/SmartRecommendations";
 
 function DashboardPage() {
   const navigate = useNavigate();
@@ -30,7 +31,7 @@ function DashboardPage() {
   const [dashboard, setDashboard] = useState<LearnerDashboard | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<
-    "overview" | "insights" | "predictions"
+    "overview" | "recommendations" | "insights" | "predictions"
   >("overview");
 
   useEffect(() => {
@@ -180,6 +181,16 @@ function DashboardPage() {
             }`}
           >
             Vue d'ensemble
+          </button>
+          <button
+            onClick={() => setActiveTab("recommendations")}
+            className={`px-4 py-2 font-medium text-sm whitespace-nowrap ${
+              activeTab === "recommendations"
+                ? "text-purple-400 border-b-2 border-purple-400"
+                : "text-gray-400 hover:text-gray-300"
+            }`}
+          >
+            Recommandations IA
           </button>
           <button
             onClick={() => setActiveTab("insights")}
@@ -387,6 +398,7 @@ function DashboardPage() {
           </>
         )}
 
+        {activeTab === "recommendations" && <SmartRecommendations />}
         {activeTab === "insights" && <AIInsights />}
 
         {activeTab === "predictions" && <PerformancePrediction />}

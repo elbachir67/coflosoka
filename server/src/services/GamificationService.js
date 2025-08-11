@@ -536,6 +536,15 @@ class GamificationService {
           reason = "Évaluation complétée";
           break;
 
+        case "use_global_search":
+          xpAmount = 2;
+          reason = "Utilisation de la recherche globale";
+          break;
+
+        case "use_semantic_search":
+          xpAmount = 5;
+          reason = "Utilisation de la recherche sémantique";
+          break;
         default:
           xpAmount = 1;
           reason = "Action non spécifiée";
