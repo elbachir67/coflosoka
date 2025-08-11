@@ -238,32 +238,132 @@ Assure-toi que les questions sont pertinentes et que les explications sont clair
    */
   async generatePersonalizedRecommendations(userProfile, learningHistory) {
     try {
-      const prompt = `Basé sur ce profil d'apprenant :
+      const prompt = `Tu es un expert en pédagogie IA. Génère EXACTEMENT 3 recommandations pour cet apprenant.
+
+PROFIL:
 - Niveau mathématiques : ${userProfile.preferences?.mathLevel}
 - Niveau programmation : ${userProfile.preferences?.programmingLevel}
 - Domaine préféré : ${userProfile.preferences?.preferredDomain}
 - Style d'apprentissage : ${userProfile.learningStyle}
 
-Et cet historique d'apprentissage :
-${JSON.stringify(learningHistory, null, 2)}
+HISTORIQUE: ${learningHistory ? "Données disponibles" : "Nouveau apprenant"}
 
-Génère 3-5 recommandations personnalisées pour améliorer l'apprentissage de cet utilisateur. 
-Sois spécifique et actionnable dans tes recommandations.`;
+Réponds UNIQUEMENT en JSON valide:
+{
+  "recommendations": [
+    {
+      "type": "learning_pace",
+      "title": "Titre court",
+      "description": "Description claire",
+      "priority": "high",
+      "actions": ["Action 1", "Action 2"],
+      "estimatedImpact": "Impact estimé",
+      "reasoning": "Raison"
+    },
+    {
+      "type": "consistency", 
+      "title": "Titre 2",
+      "description": "Description 2",
+      "priority": "medium",
+      "actions": ["Action 1", "Action 2"],
+      "estimatedImpact": "Impact 2",
+      "reasoning": "Raison 2"
+    },
+    {
+      "type": "improvement",
+      "title": "Titre 3", 
+      "description": "Description 3",
+      "priority": "low",
+      "actions": ["Action 1", "Action 2"],
+      "estimatedImpact": "Impact 3",
+      "reasoning": "Raison 3"
+    }
+  ]
+}`;
 
       const response = await this.generateResponse(prompt, {
         model: "mistral",
-        temperature: 0.7,
-        maxTokens: 600,
+        temperature: 0.2,
+        maxTokens: 800,
       });
 
-      return {
-        recommendations: response.response,
-        model: response.model,
-      };
+      // Nettoyer et parser la réponse
+      let cleanResponse = response.response.trim();
+
+      // Extraire uniquement le JSON
+      const jsonStart = cleanResponse.indexOf("{");
+      const jsonEnd = cleanResponse.lastIndexOf("}");
+
+      if (jsonStart !== -1 && jsonEnd !== -1) {
+        cleanResponse = cleanResponse.substring(jsonStart, jsonEnd + 1);
+      }
+
+      try {
+        const parsed = JSON.parse(cleanResponse);
+        return parsed;
+      } catch (parseError) {
+        logger.warn("Failed to parse Ollama response, using fallback");
+        return this.generateFallbackRecommendations(userProfile);
+      }
     } catch (error) {
       logger.error("Error generating recommendations with Ollama:", error);
-      throw error;
+      return this.generateFallbackRecommendations(userProfile);
     }
+  }
+
+  /**
+   * Génère des recommandations de fallback
+   */
+  generateFallbackRecommendations(userProfile) {
+    const domain = userProfile.preferences?.preferredDomain || "ml";
+    const mathLevel = userProfile.preferences?.mathLevel || "intermediate";
+    const progLevel =
+      userProfile.preferences?.programmingLevel || "intermediate";
+
+    return {
+      recommendations: [
+        {
+          type: "learning_pace",
+          title: "Optimiser votre rythme d'apprentissage",
+          description: `Adaptez votre rythme d'apprentissage en ${domain} selon votre niveau ${mathLevel} en mathématiques.`,
+          priority: "high",
+          actions: [
+            "Planifier des sessions de 30 minutes",
+            "Faire des pauses régulières",
+            "Réviser les concepts clés",
+          ],
+          estimatedImpact: "Amélioration de 30% de la rétention",
+          reasoning: "Optimisation basée sur votre profil d'apprentissage",
+        },
+        {
+          type: "consistency",
+          title: "Maintenir la régularité",
+          description:
+            "Une pratique régulière est essentielle pour maîtriser les concepts d'IA.",
+          priority: "medium",
+          actions: [
+            "Étudier à heures fixes",
+            "Utiliser des rappels",
+            "Suivre votre progression",
+          ],
+          estimatedImpact: "Progression 50% plus stable",
+          reasoning: "La régularité améliore l'apprentissage à long terme",
+        },
+        {
+          type: "improvement",
+          title: "Renforcer vos compétences",
+          description: `Développez vos compétences en programmation (niveau ${progLevel}) pour mieux appliquer les concepts.`,
+          priority: "low",
+          actions: [
+            "Pratiquer le coding quotidiennement",
+            "Faire des projets pratiques",
+            "Rejoindre des groupes d'étude",
+          ],
+          estimatedImpact: "Compétences pratiques renforcées",
+          reasoning: "La pratique consolide la théorie",
+        },
+      ],
+    };
   }
 
   /**

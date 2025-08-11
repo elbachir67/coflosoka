@@ -258,7 +258,7 @@ class AIRecommendationService {
     try {
       const OllamaService = (await import("./OllamaService.js")).default;
 
-      const prompt = `Tu es un expert en pédagogie et en intelligence artificielle. Analyse ce profil d'apprenant et génère des recommandations personnalisées.
+      const prompt = `Tu es un expert en pédagogie et en intelligence artificielle. Analyse ce profil d'apprenant et génère EXACTEMENT 3 recommandations personnalisées.
 
 PROFIL APPRENANT:
 - Style d'apprentissage: ${patterns.learningStyle}
@@ -272,38 +272,74 @@ PROFIL APPRENANT:
 - Difficultés: ${patterns.strugglingAreas.join(", ") || "Aucune identifiée"}
 
 INSTRUCTIONS:
-1. Génère 3-5 recommandations personnalisées et actionnables
+1. Génère EXACTEMENT 3 recommandations personnalisées et actionnables
 2. Priorise les recommandations (high, medium, low)
 3. Fournis des actions concrètes pour chaque recommandation
 4. Adapte le ton et le contenu au profil de l'apprenant
-5. Réponds UNIQUEMENT en JSON valide
+5. Réponds UNIQUEMENT en JSON valide, sans texte avant ou après
 
-FORMAT DE RÉPONSE (JSON uniquement):
+RÉPONSE ATTENDUE (JSON strict):
 {
   "recommendations": [
     {
-      "type": "learning_pace|consistency|strength_based|improvement|cognitive_load|timing",
+      "type": "learning_pace",
       "title": "Titre de la recommandation",
       "description": "Description détaillée",
-      "priority": "high|medium|low",
+      "priority": "high",
       "actions": ["Action 1", "Action 2", "Action 3"],
       "estimatedImpact": "Impact estimé",
       "reasoning": "Pourquoi cette recommandation"
+    },
+    {
+      "type": "consistency",
+      "title": "Titre de la recommandation 2",
+      "description": "Description détaillée 2",
+      "priority": "medium",
+      "actions": ["Action 1", "Action 2"],
+      "estimatedImpact": "Impact estimé 2",
+      "reasoning": "Pourquoi cette recommandation 2"
+    },
+    {
+      "type": "improvement",
+      "title": "Titre de la recommandation 3",
+      "description": "Description détaillée 3",
+      "priority": "low",
+      "actions": ["Action 1", "Action 2"],
+      "estimatedImpact": "Impact estimé 3",
+      "reasoning": "Pourquoi cette recommandation 3"
     }
   ]
 }`;
 
       const response = await OllamaService.generateResponse(prompt, {
         model: "mistral",
-        temperature: 0.7,
-        maxTokens: 1000,
+        temperature: 0.3,
+        maxTokens: 1200,
       });
 
       try {
-        const parsed = JSON.parse(response.response);
+        // Nettoyer la réponse avant de parser
+        let cleanResponse = response.response.trim();
+
+        // Supprimer tout texte avant le premier {
+        const firstBrace = cleanResponse.indexOf("{");
+        if (firstBrace > 0) {
+          cleanResponse = cleanResponse.substring(firstBrace);
+        }
+
+        // Supprimer tout texte après le dernier }
+        const lastBrace = cleanResponse.lastIndexOf("}");
+        if (lastBrace > 0) {
+          cleanResponse = cleanResponse.substring(0, lastBrace + 1);
+        }
+
+        const parsed = JSON.parse(cleanResponse);
         return parsed.recommendations || [];
       } catch (parseError) {
-        logger.warn("Could not parse Ollama recommendations, using fallback");
+        logger.warn("Could not parse Ollama recommendations:", {
+          error: parseError.message,
+          response: response.response.substring(0, 200) + "...",
+        });
         return this.generateBasicRecommendations(patterns);
       }
     } catch (error) {
@@ -390,6 +426,40 @@ FORMAT DE RÉPONSE (JSON uniquement):
         estimatedImpact: "Réduction de 50% des lacunes identifiées",
         reasoning: "Difficultés identifiées nécessitant un renforcement",
       });
+    }
+
+    // Ajouter des recommandations par défaut si aucune n'est générée
+    if (recommendations.length === 0) {
+      recommendations.push(
+        {
+          type: "learning_pace",
+          title: "Maintenir un rythme d'apprentissage régulier",
+          description:
+            "Continuez votre excellent travail en maintenant un rythme d'apprentissage constant.",
+          priority: "medium",
+          actions: [
+            "Planifier 30 minutes d'étude par jour",
+            "Réviser régulièrement les concepts appris",
+            "Pratiquer avec des exercices variés",
+          ],
+          estimatedImpact: "Progression stable et durable",
+          reasoning: "Maintien d'un bon équilibre d'apprentissage",
+        },
+        {
+          type: "engagement",
+          title: "Explorer de nouveaux domaines",
+          description:
+            "Diversifiez vos compétences en explorant d'autres domaines de l'IA.",
+          priority: "low",
+          actions: [
+            "Essayer un nouveau parcours",
+            "Participer aux discussions communautaires",
+            "Consulter les ressources partagées",
+          ],
+          estimatedImpact: "Élargissement des compétences",
+          reasoning: "Diversification des connaissances recommandée",
+        }
+      );
     }
 
     return recommendations;
