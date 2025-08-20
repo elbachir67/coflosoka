@@ -25,6 +25,7 @@ import {
   MessageSquare,
   BarChart3,
   Sparkles,
+  Shield,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -266,8 +267,8 @@ function Navbar() {
 
               {isAuthenticated ? (
                 <>
-                  {/* XP and Level Display */}
-                  {profile && (
+                  {/* XP and Level Display - Only for non-admin users */}
+                  {profile && !isAdmin && (
                     <motion.div
                       whileHover={{ scale: 1.05 }}
                       className="hidden sm:flex items-center space-x-3 bg-gradient-to-r from-purple-500/10 to-blue-500/10 px-4 py-2 rounded-lg border border-purple-500/20"
@@ -289,83 +290,100 @@ function Navbar() {
                     </motion.div>
                   )}
 
-                  {/* Notifications */}
-                  <div className="relative notifications-menu">
-                    <motion.button
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={toggleNotifications}
-                      className="relative p-2 rounded-lg bg-gray-800/50 hover:bg-gray-700/50 transition-colors"
+                  {/* Admin Badge */}
+                  {isAdmin && (
+                    <motion.div
+                      whileHover={{ scale: 1.05 }}
+                      className="hidden sm:flex items-center space-x-2 bg-gradient-to-r from-red-500/10 to-purple-500/10 px-4 py-2 rounded-lg border border-red-500/20"
                     >
-                      <Bell className="w-5 h-5 text-gray-300" />
-                      {unreadNotificationsCount > 0 && (
-                        <motion.span
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-medium"
-                        >
-                          {unreadNotificationsCount}
-                        </motion.span>
-                      )}
-                    </motion.button>
+                      <Shield className="w-4 h-4 text-red-400" />
+                      <span className="text-red-400 font-semibold text-sm">
+                        ADMIN
+                      </span>
+                    </motion.div>
+                  )}
 
-                    <AnimatePresence>
-                      {notificationsOpen && (
-                        <motion.div
-                          initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                          animate={{ opacity: 1, y: 0, scale: 1 }}
-                          exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                          className="absolute right-0 mt-2 w-80 bg-gray-900/95 backdrop-blur-xl rounded-xl shadow-2xl border border-gray-800/50 overflow-hidden"
-                        >
-                          <div className="p-4 border-b border-gray-800/50 flex justify-between items-center">
-                            <h3 className="font-semibold text-gray-200">
-                              Notifications
-                            </h3>
-                            <button
-                              className="text-xs text-blue-400 hover:text-blue-300 transition-colors"
-                              onClick={markAllNotificationsAsRead}
-                            >
-                              Tout marquer comme lu
-                            </button>
-                          </div>
-                          <div className="max-h-80 overflow-y-auto">
-                            {notifications.length > 0 ? (
-                              notifications.map(notification => (
-                                <div
-                                  key={notification.id}
-                                  className={`p-4 border-b border-gray-800/30 hover:bg-gray-800/30 transition-colors ${
-                                    !notification.read ? "bg-purple-500/5" : ""
-                                  }`}
-                                >
-                                  <div className="flex justify-between items-start">
-                                    <div className="flex-1">
-                                      <p className="font-medium text-gray-200 mb-1">
-                                        {notification.title}
-                                      </p>
-                                      <p className="text-sm text-gray-400 mb-2">
-                                        {notification.message}
-                                      </p>
-                                      <p className="text-xs text-gray-500">
-                                        {notification.time}
-                                      </p>
+                  {/* Notifications - Only for non-admin users */}
+                  {!isAdmin && (
+                    <div className="relative notifications-menu">
+                      <motion.button
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={toggleNotifications}
+                        className="relative p-2 rounded-lg bg-gray-800/50 hover:bg-gray-700/50 transition-colors"
+                      >
+                        <Bell className="w-5 h-5 text-gray-300" />
+                        {unreadNotificationsCount > 0 && (
+                          <motion.span
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-medium"
+                          >
+                            {unreadNotificationsCount}
+                          </motion.span>
+                        )}
+                      </motion.button>
+
+                      <AnimatePresence>
+                        {notificationsOpen && (
+                          <motion.div
+                            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                            className="absolute right-0 mt-2 w-80 bg-gray-900/95 backdrop-blur-xl rounded-xl shadow-2xl border border-gray-800/50 overflow-hidden"
+                          >
+                            <div className="p-4 border-b border-gray-800/50 flex justify-between items-center">
+                              <h3 className="font-semibold text-gray-200">
+                                Notifications
+                              </h3>
+                              <button
+                                className="text-xs text-blue-400 hover:text-blue-300 transition-colors"
+                                onClick={markAllNotificationsAsRead}
+                              >
+                                Tout marquer comme lu
+                              </button>
+                            </div>
+                            <div className="max-h-80 overflow-y-auto">
+                              {notifications.length > 0 ? (
+                                notifications.map(notification => (
+                                  <div
+                                    key={notification.id}
+                                    className={`p-4 border-b border-gray-800/30 hover:bg-gray-800/30 transition-colors ${
+                                      !notification.read
+                                        ? "bg-purple-500/5"
+                                        : ""
+                                    }`}
+                                  >
+                                    <div className="flex justify-between items-start">
+                                      <div className="flex-1">
+                                        <p className="font-medium text-gray-200 mb-1">
+                                          {notification.title}
+                                        </p>
+                                        <p className="text-sm text-gray-400 mb-2">
+                                          {notification.message}
+                                        </p>
+                                        <p className="text-xs text-gray-500">
+                                          {notification.time}
+                                        </p>
+                                      </div>
+                                      {!notification.read && (
+                                        <div className="w-2 h-2 bg-purple-500 rounded-full mt-1"></div>
+                                      )}
                                     </div>
-                                    {!notification.read && (
-                                      <div className="w-2 h-2 bg-purple-500 rounded-full mt-1"></div>
-                                    )}
                                   </div>
+                                ))
+                              ) : (
+                                <div className="p-6 text-center text-gray-400">
+                                  <Bell className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                                  <p>Aucune notification</p>
                                 </div>
-                              ))
-                            ) : (
-                              <div className="p-6 text-center text-gray-400">
-                                <Bell className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                                <p>Aucune notification</p>
-                              </div>
-                            )}
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
+                              )}
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  )}
 
                   {/* User Menu */}
                   <div className="relative user-menu">
@@ -373,23 +391,47 @@ function Navbar() {
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       onClick={toggleUserMenu}
-                      className="flex items-center space-x-3 px-3 py-2 rounded-lg bg-gray-800/50 hover:bg-gray-700/50 transition-all duration-200 border border-gray-700/50 hover:border-gray-600/50"
+                      className={`flex items-center space-x-3 px-3 py-2 rounded-lg transition-all duration-200 border ${
+                        isAdmin
+                          ? "bg-red-800/50 hover:bg-red-700/50 border-red-700/50 hover:border-red-600/50"
+                          : "bg-gray-800/50 hover:bg-gray-700/50 border-gray-700/50 hover:border-gray-600/50"
+                      }`}
                     >
-                      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center shadow-lg">
-                        <User className="w-4 h-4 text-white" />
+                      <div
+                        className={`w-8 h-8 rounded-lg flex items-center justify-center shadow-lg ${
+                          isAdmin
+                            ? "bg-gradient-to-br from-red-500 to-purple-500"
+                            : "bg-gradient-to-br from-purple-500 to-blue-500"
+                        }`}
+                      >
+                        {isAdmin ? (
+                          <Shield className="w-4 h-4 text-white" />
+                        ) : (
+                          <User className="w-4 h-4 text-white" />
+                        )}
                       </div>
                       <div className="hidden lg:block text-left">
-                        <div className="text-sm font-medium text-gray-200 max-w-[120px] truncate">
+                        <div
+                          className={`text-sm font-medium max-w-[120px] truncate ${
+                            isAdmin ? "text-red-200" : "text-gray-200"
+                          }`}
+                        >
                           {user?.email?.split("@")[0]}
                         </div>
-                        <div className="text-xs text-gray-400">
-                          {profile?.rank || "Utilisateur"}
+                        <div
+                          className={`text-xs ${
+                            isAdmin ? "text-red-400" : "text-gray-400"
+                          }`}
+                        >
+                          {isAdmin
+                            ? "Administrateur"
+                            : profile?.rank || "Utilisateur"}
                         </div>
                       </div>
                       <ChevronDown
-                        className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${
-                          userMenuOpen ? "rotate-180" : ""
-                        }`}
+                        className={`w-4 h-4 transition-transform duration-200 ${
+                          isAdmin ? "text-red-400" : "text-gray-400"
+                        } ${userMenuOpen ? "rotate-180" : ""}`}
                       />
                     </motion.button>
 
@@ -402,19 +444,45 @@ function Navbar() {
                           className="absolute right-0 mt-2 w-64 bg-gray-900/95 backdrop-blur-xl rounded-xl shadow-2xl border border-gray-800/50 overflow-hidden"
                         >
                           {/* User Info */}
-                          <div className="p-4 border-b border-gray-800/50 bg-gradient-to-r from-purple-500/10 to-blue-500/10">
+                          <div
+                            className={`p-4 border-b border-gray-800/50 ${
+                              isAdmin
+                                ? "bg-gradient-to-r from-red-500/10 to-purple-500/10"
+                                : "bg-gradient-to-r from-purple-500/10 to-blue-500/10"
+                            }`}
+                          >
                             <div className="flex items-center space-x-3">
-                              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center">
-                                <User className="w-6 h-6 text-white" />
+                              <div
+                                className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                                  isAdmin
+                                    ? "bg-gradient-to-br from-red-500 to-purple-500"
+                                    : "bg-gradient-to-br from-purple-500 to-blue-500"
+                                }`}
+                              >
+                                {isAdmin ? (
+                                  <Shield className="w-6 h-6 text-white" />
+                                ) : (
+                                  <User className="w-6 h-6 text-white" />
+                                )}
                               </div>
                               <div>
-                                <p className="font-semibold text-gray-200">
+                                <p
+                                  className={`font-semibold ${
+                                    isAdmin ? "text-red-200" : "text-gray-200"
+                                  }`}
+                                >
                                   {user?.email?.split("@")[0]}
                                 </p>
-                                <p className="text-sm text-gray-400">
-                                  {profile?.rank || "Utilisateur"}
+                                <p
+                                  className={`text-sm ${
+                                    isAdmin ? "text-red-400" : "text-gray-400"
+                                  }`}
+                                >
+                                  {isAdmin
+                                    ? "Administrateur"
+                                    : profile?.rank || "Utilisateur"}
                                 </p>
-                                {profile && (
+                                {profile && !isAdmin && (
                                   <div className="flex items-center space-x-2 mt-1">
                                     <div className="flex items-center space-x-1">
                                       <Zap className="w-3 h-3 text-yellow-400" />
@@ -436,59 +504,12 @@ function Navbar() {
 
                           {/* Menu Items */}
                           <div className="py-2">
-                            <Link
-                              to="/dashboard"
-                              className="flex items-center space-x-3 px-4 py-3 text-sm text-gray-300 hover:bg-gray-800/50 hover:text-white transition-colors"
-                              onClick={() => setUserMenuOpen(false)}
-                            >
-                              <LayoutDashboard className="w-4 h-4" />
-                              <span>Tableau de bord</span>
-                            </Link>
-                            <Link
-                              to="/achievements"
-                              className="flex items-center space-x-3 px-4 py-3 text-sm text-gray-300 hover:bg-gray-800/50 hover:text-white transition-colors"
-                              onClick={() => setUserMenuOpen(false)}
-                            >
-                              <Award className="w-4 h-4" />
-                              <span>Achievements</span>
-                            </Link>
-                            <Link
-                              to="/analytics"
-                              className="flex items-center space-x-3 px-4 py-3 text-sm text-gray-300 hover:bg-gray-800/50 hover:text-white transition-colors"
-                              onClick={() => setUserMenuOpen(false)}
-                            >
-                              <BarChart3 className="w-4 h-4" />
-                              <span>Analytiques</span>
-                            </Link>
-                            <button
-                              onClick={() => {
-                                toggleSearch();
-                                setUserMenuOpen(false);
-                              }}
-                              className="flex items-center space-x-3 px-4 py-3 text-sm text-gray-300 hover:bg-gray-800/50 hover:text-white transition-colors w-full text-left"
-                            >
-                              <Search className="w-4 h-4" />
-                              <span>Recherche globale</span>
-                              <div className="ml-auto flex items-center space-x-1">
-                                <kbd className="px-1.5 py-0.5 bg-gray-700 rounded text-xs">
-                                  ⌘K
-                                </kbd>
-                              </div>
-                            </button>
-                          </div>
-
-                          {/* Admin Section */}
-                          {isAdmin && (
-                            <>
-                              <div className="border-t border-gray-800/50">
-                                <div className="px-4 py-2 bg-purple-500/10">
-                                  <p className="text-xs font-semibold text-purple-400 uppercase tracking-wider">
-                                    Administration
-                                  </p>
-                                </div>
+                            {isAdmin ? (
+                              // Admin Menu Items
+                              <>
                                 <Link
                                   to="/admin/dashboard"
-                                  className="flex items-center space-x-3 px-4 py-3 text-sm text-gray-300 hover:bg-gray-800/50 hover:text-white transition-colors"
+                                  className="flex items-center space-x-3 px-4 py-3 text-sm text-red-300 hover:bg-red-500/10 hover:text-red-200 transition-colors"
                                   onClick={() => setUserMenuOpen(false)}
                                 >
                                   <Settings className="w-4 h-4" />
@@ -496,7 +517,7 @@ function Navbar() {
                                 </Link>
                                 <Link
                                   to="/admin/goals"
-                                  className="flex items-center space-x-3 px-4 py-3 text-sm text-gray-300 hover:bg-gray-800/50 hover:text-white transition-colors"
+                                  className="flex items-center space-x-3 px-4 py-3 text-sm text-red-300 hover:bg-red-500/10 hover:text-red-200 transition-colors"
                                   onClick={() => setUserMenuOpen(false)}
                                 >
                                   <Target className="w-4 h-4" />
@@ -504,7 +525,7 @@ function Navbar() {
                                 </Link>
                                 <Link
                                   to="/admin/users"
-                                  className="flex items-center space-x-3 px-4 py-3 text-sm text-gray-300 hover:bg-gray-800/50 hover:text-white transition-colors"
+                                  className="flex items-center space-x-3 px-4 py-3 text-sm text-red-300 hover:bg-red-500/10 hover:text-red-200 transition-colors"
                                   onClick={() => setUserMenuOpen(false)}
                                 >
                                   <Users className="w-4 h-4" />
@@ -512,21 +533,68 @@ function Navbar() {
                                 </Link>
                                 <Link
                                   to="/admin/goals/new"
-                                  className="flex items-center space-x-3 px-4 py-3 text-sm text-gray-300 hover:bg-gray-800/50 hover:text-white transition-colors"
+                                  className="flex items-center space-x-3 px-4 py-3 text-sm text-red-300 hover:bg-red-500/10 hover:text-red-200 transition-colors"
                                   onClick={() => setUserMenuOpen(false)}
                                 >
                                   <Plus className="w-4 h-4" />
                                   <span>Nouvel Objectif</span>
                                 </Link>
-                              </div>
-                            </>
-                          )}
+                              </>
+                            ) : (
+                              // Regular User Menu Items
+                              <>
+                                <Link
+                                  to="/dashboard"
+                                  className="flex items-center space-x-3 px-4 py-3 text-sm text-gray-300 hover:bg-gray-800/50 hover:text-white transition-colors"
+                                  onClick={() => setUserMenuOpen(false)}
+                                >
+                                  <LayoutDashboard className="w-4 h-4" />
+                                  <span>Tableau de bord</span>
+                                </Link>
+                                <Link
+                                  to="/achievements"
+                                  className="flex items-center space-x-3 px-4 py-3 text-sm text-gray-300 hover:bg-gray-800/50 hover:text-white transition-colors"
+                                  onClick={() => setUserMenuOpen(false)}
+                                >
+                                  <Award className="w-4 h-4" />
+                                  <span>Achievements</span>
+                                </Link>
+                                <Link
+                                  to="/analytics"
+                                  className="flex items-center space-x-3 px-4 py-3 text-sm text-gray-300 hover:bg-gray-800/50 hover:text-white transition-colors"
+                                  onClick={() => setUserMenuOpen(false)}
+                                >
+                                  <BarChart3 className="w-4 h-4" />
+                                  <span>Analytiques</span>
+                                </Link>
+                                <button
+                                  onClick={() => {
+                                    toggleSearch();
+                                    setUserMenuOpen(false);
+                                  }}
+                                  className="flex items-center space-x-3 px-4 py-3 text-sm text-gray-300 hover:bg-gray-800/50 hover:text-white transition-colors w-full text-left"
+                                >
+                                  <Search className="w-4 h-4" />
+                                  <span>Recherche globale</span>
+                                  <div className="ml-auto flex items-center space-x-1">
+                                    <kbd className="px-1.5 py-0.5 bg-gray-700 rounded text-xs">
+                                      ⌘K
+                                    </kbd>
+                                  </div>
+                                </button>
+                              </>
+                            )}
+                          </div>
 
                           {/* Logout */}
                           <div className="border-t border-gray-800/50">
                             <button
                               onClick={handleSignOut}
-                              className="flex items-center space-x-3 px-4 py-3 text-sm text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors w-full text-left"
+                              className={`flex items-center space-x-3 px-4 py-3 text-sm transition-colors w-full text-left ${
+                                isAdmin
+                                  ? "text-red-400 hover:bg-red-500/10 hover:text-red-300"
+                                  : "text-red-400 hover:bg-red-500/10 hover:text-red-300"
+                              }`}
                             >
                               <LogOut className="w-4 h-4" />
                               <span>Déconnexion</span>
@@ -582,19 +650,45 @@ function Navbar() {
               <div className="px-4 py-4 space-y-2">
                 {/* User info for mobile */}
                 {isAuthenticated && (
-                  <div className="flex items-center space-x-3 p-3 bg-gradient-to-r from-purple-500/10 to-blue-500/10 rounded-lg border border-purple-500/20 mb-4">
-                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center">
-                      <User className="w-5 h-5 text-white" />
+                  <div
+                    className={`flex items-center space-x-3 p-3 rounded-lg border mb-4 ${
+                      isAdmin
+                        ? "bg-gradient-to-r from-red-500/10 to-purple-500/10 border-red-500/20"
+                        : "bg-gradient-to-r from-purple-500/10 to-blue-500/10 border-purple-500/20"
+                    }`}
+                  >
+                    <div
+                      className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                        isAdmin
+                          ? "bg-gradient-to-br from-red-500 to-purple-500"
+                          : "bg-gradient-to-br from-purple-500 to-blue-500"
+                      }`}
+                    >
+                      {isAdmin ? (
+                        <Shield className="w-5 h-5 text-white" />
+                      ) : (
+                        <User className="w-5 h-5 text-white" />
+                      )}
                     </div>
                     <div className="flex-1">
-                      <p className="font-medium text-gray-200">
+                      <p
+                        className={`font-medium ${
+                          isAdmin ? "text-red-200" : "text-gray-200"
+                        }`}
+                      >
                         {user?.email?.split("@")[0]}
                       </p>
-                      <p className="text-sm text-gray-400">
-                        {profile?.rank || "Utilisateur"}
+                      <p
+                        className={`text-sm ${
+                          isAdmin ? "text-red-400" : "text-gray-400"
+                        }`}
+                      >
+                        {isAdmin
+                          ? "Administrateur"
+                          : profile?.rank || "Utilisateur"}
                       </p>
                     </div>
-                    {profile && (
+                    {profile && !isAdmin && (
                       <div className="text-right">
                         <div className="flex items-center space-x-1 text-yellow-400">
                           <Zap className="w-3 h-3" />
@@ -629,147 +723,153 @@ function Navbar() {
 
                 {isAuthenticated ? (
                   <>
-                    <Link
-                      to="/dashboard"
-                      className={`flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
-                        isActive("/dashboard")
-                          ? "bg-purple-500/20 text-purple-400"
-                          : "text-gray-300 hover:bg-gray-800/50 hover:text-white"
-                      }`}
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      <LayoutDashboard className="w-5 h-5" />
-                      <span>Tableau de bord</span>
-                    </Link>
-
-                    <Link
-                      to="/goals"
-                      className={`flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
-                        isActive("/goals")
-                          ? "bg-purple-500/20 text-purple-400"
-                          : "text-gray-300 hover:bg-gray-800/50 hover:text-white"
-                      }`}
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      <Target className="w-5 h-5" />
-                      <span>Objectifs</span>
-                    </Link>
-
-                    <Link
-                      to="/assessment"
-                      className={`flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
-                        isActive("/assessment")
-                          ? "bg-purple-500/20 text-purple-400"
-                          : "text-gray-300 hover:bg-gray-800/50 hover:text-white"
-                      }`}
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      <Brain className="w-5 h-5" />
-                      <span>Évaluation</span>
-                    </Link>
-
-                    <Link
-                      to="/collaboration"
-                      className={`flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
-                        isActive("/collaboration")
-                          ? "bg-purple-500/20 text-purple-400"
-                          : "text-gray-300 hover:bg-gray-800/50 hover:text-white"
-                      }`}
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      <Users className="w-5 h-5" />
-                      <span>Communauté</span>
-                    </Link>
-
-                    <Link
-                      to="/achievements"
-                      className={`flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
-                        isActive("/achievements")
-                          ? "bg-purple-500/20 text-purple-400"
-                          : "text-gray-300 hover:bg-gray-800/50 hover:text-white"
-                      }`}
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      <Award className="w-5 h-5" />
-                      <span>Achievements</span>
-                    </Link>
-
-                    <Link
-                      to="/external-apis"
-                      className={`flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
-                        isActive("/external-apis")
-                          ? "bg-purple-500/20 text-purple-400"
-                          : "text-gray-300 hover:bg-gray-800/50 hover:text-white"
-                      }`}
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      <ExternalLink className="w-5 h-5" />
-                      <span>APIs Externes</span>
-                    </Link>
-
-                    <Link
-                      to="/analytics"
-                      className={`flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
-                        isActive("/analytics")
-                          ? "bg-purple-500/20 text-purple-400"
-                          : "text-gray-300 hover:bg-gray-800/50 hover:text-white"
-                      }`}
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      <BarChart3 className="w-5 h-5" />
-                      <span>Analytiques</span>
-                    </Link>
-
-                    {/* Admin Section Mobile */}
-                    {isAdmin && (
+                    {isAdmin ? (
+                      // Admin Mobile Menu
                       <>
-                        <div className="border-t border-gray-800/50 mt-2 pt-2">
-                          <div className="px-4 py-2">
-                            <p className="text-xs font-semibold text-purple-400 uppercase tracking-wider">
-                              Administration
-                            </p>
+                        <Link
+                          to="/admin/dashboard"
+                          className="flex items-center space-x-3 px-4 py-3 rounded-lg text-sm text-red-300 hover:bg-red-500/10 hover:text-red-200 transition-colors"
+                          onClick={() => setMobileMenuOpen(false)}
+                        >
+                          <Settings className="w-5 h-5" />
+                          <span>Dashboard Admin</span>
+                        </Link>
+                        <Link
+                          to="/admin/goals"
+                          className="flex items-center space-x-3 px-4 py-3 rounded-lg text-sm text-red-300 hover:bg-red-500/10 hover:text-red-200 transition-colors"
+                          onClick={() => setMobileMenuOpen(false)}
+                        >
+                          <Target className="w-5 h-5" />
+                          <span>Gérer Objectifs</span>
+                        </Link>
+                        <Link
+                          to="/admin/users"
+                          className="flex items-center space-x-3 px-4 py-3 rounded-lg text-sm text-red-300 hover:bg-red-500/10 hover:text-red-200 transition-colors"
+                          onClick={() => setMobileMenuOpen(false)}
+                        >
+                          <Users className="w-5 h-5" />
+                          <span>Gérer Utilisateurs</span>
+                        </Link>
+                        <Link
+                          to="/admin/goals/new"
+                          className="flex items-center space-x-3 px-4 py-3 rounded-lg text-sm text-red-300 hover:bg-red-500/10 hover:text-red-200 transition-colors"
+                          onClick={() => setMobileMenuOpen(false)}
+                        >
+                          <Plus className="w-5 h-5" />
+                          <span>Nouvel Objectif</span>
+                        </Link>
+                      </>
+                    ) : (
+                      // Regular User Mobile Menu
+                      <>
+                        <Link
+                          to="/dashboard"
+                          className={`flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
+                            isActive("/dashboard")
+                              ? "bg-purple-500/20 text-purple-400"
+                              : "text-gray-300 hover:bg-gray-800/50 hover:text-white"
+                          }`}
+                          onClick={() => setMobileMenuOpen(false)}
+                        >
+                          <LayoutDashboard className="w-5 h-5" />
+                          <span>Tableau de bord</span>
+                        </Link>
+
+                        <Link
+                          to="/goals"
+                          className={`flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
+                            isActive("/goals")
+                              ? "bg-purple-500/20 text-purple-400"
+                              : "text-gray-300 hover:bg-gray-800/50 hover:text-white"
+                          }`}
+                          onClick={() => setMobileMenuOpen(false)}
+                        >
+                          <Target className="w-5 h-5" />
+                          <span>Objectifs</span>
+                        </Link>
+
+                        <Link
+                          to="/assessment"
+                          className={`flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
+                            isActive("/assessment")
+                              ? "bg-purple-500/20 text-purple-400"
+                              : "text-gray-300 hover:bg-gray-800/50 hover:text-white"
+                          }`}
+                          onClick={() => setMobileMenuOpen(false)}
+                        >
+                          <Brain className="w-5 h-5" />
+                          <span>Évaluation</span>
+                        </Link>
+
+                        <Link
+                          to="/collaboration"
+                          className={`flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
+                            isActive("/collaboration")
+                              ? "bg-purple-500/20 text-purple-400"
+                              : "text-gray-300 hover:bg-gray-800/50 hover:text-white"
+                          }`}
+                          onClick={() => setMobileMenuOpen(false)}
+                        >
+                          <Users className="w-5 h-5" />
+                          <span>Communauté</span>
+                        </Link>
+
+                        <Link
+                          to="/achievements"
+                          className={`flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
+                            isActive("/achievements")
+                              ? "bg-purple-500/20 text-purple-400"
+                              : "text-gray-300 hover:bg-gray-800/50 hover:text-white"
+                          }`}
+                          onClick={() => setMobileMenuOpen(false)}
+                        >
+                          <Award className="w-5 h-5" />
+                          <span>Achievements</span>
+                        </Link>
+
+                        <Link
+                          to="/external-apis"
+                          className={`flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
+                            isActive("/external-apis")
+                              ? "bg-purple-500/20 text-purple-400"
+                              : "text-gray-300 hover:bg-gray-800/50 hover:text-white"
+                          }`}
+                          onClick={() => setMobileMenuOpen(false)}
+                        >
+                          <ExternalLink className="w-5 h-5" />
+                          <span>APIs Externes</span>
+                        </Link>
+
+                        <Link
+                          to="/analytics"
+                          className={`flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
+                            isActive("/analytics")
+                              ? "bg-purple-500/20 text-purple-400"
+                              : "text-gray-300 hover:bg-gray-800/50 hover:text-white"
+                          }`}
+                          onClick={() => setMobileMenuOpen(false)}
+                        >
+                          <BarChart3 className="w-5 h-5" />
+                          <span>Analytiques</span>
+                        </Link>
+
+                        <button
+                          onClick={() => {
+                            toggleSearch();
+                            setMobileMenuOpen(false);
+                          }}
+                          className="flex items-center space-x-3 px-4 py-3 text-sm text-gray-300 hover:bg-gray-800/50 hover:text-white transition-colors w-full text-left"
+                        >
+                          <Search className="w-4 h-4" />
+                          <span>Recherche globale</span>
+                          <div className="ml-auto flex items-center space-x-1">
+                            <kbd className="px-1.5 py-0.5 bg-gray-700 rounded text-xs">
+                              ⌘K
+                            </kbd>
                           </div>
-                          <Link
-                            to="/admin/dashboard"
-                            className="flex items-center space-x-3 px-4 py-3 rounded-lg text-sm text-gray-300 hover:bg-gray-800/50 hover:text-white transition-colors"
-                            onClick={() => setMobileMenuOpen(false)}
-                          >
-                            <Settings className="w-5 h-5" />
-                            <span>Dashboard Admin</span>
-                          </Link>
-                          <Link
-                            to="/admin/goals"
-                            className="flex items-center space-x-3 px-4 py-3 rounded-lg text-sm text-gray-300 hover:bg-gray-800/50 hover:text-white transition-colors"
-                            onClick={() => setMobileMenuOpen(false)}
-                          >
-                            <Target className="w-5 h-5" />
-                            <span>Gérer Objectifs</span>
-                          </Link>
-                          <Link
-                            to="/admin/users"
-                            className="flex items-center space-x-3 px-4 py-3 rounded-lg text-sm text-gray-300 hover:bg-gray-800/50 hover:text-white transition-colors"
-                            onClick={() => setMobileMenuOpen(false)}
-                          >
-                            <Users className="w-5 h-5" />
-                            <span>Gérer Utilisateurs</span>
-                          </Link>
-                        </div>
+                        </button>
                       </>
                     )}
-
-                    {/* Logout */}
-                    <div className="border-t border-gray-800/50 mt-2">
-                      <button
-                        onClick={() => {
-                          handleSignOut();
-                          setMobileMenuOpen(false);
-                        }}
-                        className="flex items-center space-x-3 px-4 py-3 rounded-lg text-sm text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors w-full text-left"
-                      >
-                        <LogOut className="w-5 h-5" />
-                        <span>Déconnexion</span>
-                      </button>
-                    </div>
                   </>
                 ) : (
                   <>
@@ -792,6 +892,22 @@ function Navbar() {
                       </Link>
                     </div>
                   </>
+                )}
+
+                {/* Logout */}
+                {isAuthenticated && (
+                  <div className="border-t border-gray-800/50 mt-2">
+                    <button
+                      onClick={() => {
+                        handleSignOut();
+                        setMobileMenuOpen(false);
+                      }}
+                      className="flex items-center space-x-3 px-4 py-3 rounded-lg text-sm text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors w-full text-left"
+                    >
+                      <LogOut className="w-5 h-5" />
+                      <span>Déconnexion</span>
+                    </button>
+                  </div>
                 )}
               </div>
             </motion.div>

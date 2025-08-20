@@ -68,7 +68,6 @@ function LoginPage() {
   // Utilisateurs de test
   const testUsers = [
     { email: "student1@ucad.edu.sn", password: "Student123!" },
-    { email: "admin@ucad.edu.sn", password: "Admin123!" },
   ];
 
   const fillTestUser = (user: { email: string; password: string }) => {
