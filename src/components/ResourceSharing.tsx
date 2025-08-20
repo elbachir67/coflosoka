@@ -65,12 +65,15 @@ const ResourceSharing: React.FC = () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await fetch(`${api.API_URL}/api/shared-resources`, {
-        headers: {
-          Authorization: `Bearer ${user.token}`,
-          "Content-Type": "application/json",
-        },
-      });
+      const response = await fetch(
+        `${api.API_URL}/api/collaboration/shared-resources`,
+        {
+          headers: {
+            Authorization: `Bearer ${user.token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
       if (!response.ok) {
         throw new Error("Erreur lors du chargement des ressources");
@@ -92,20 +95,23 @@ const ResourceSharing: React.FC = () => {
     if (!user?.token) return;
 
     try {
-      const response = await fetch(`${api.API_URL}/api/shared-resources`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${user.token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          title: formData.title,
-          description: formData.description,
-          url: formData.url,
-          type: formData.type,
-          tags: formData.tags,
-        }),
-      });
+      const response = await fetch(
+        `${api.API_URL}/api/collaboration/shared-resources`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${user.token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            title: formData.title,
+            description: formData.description,
+            url: formData.url,
+            type: formData.type,
+            tags: formData.tags,
+          }),
+        }
+      );
 
       if (!response.ok) {
         throw new Error("Erreur lors du partage de la ressource");
@@ -157,7 +163,7 @@ const ResourceSharing: React.FC = () => {
 
     try {
       const response = await fetch(
-        `${api.API_URL}/api/shared-resources/${resourceId}/like`,
+        `${api.API_URL}/api/collaboration/shared-resources/${resourceId}/like`,
         {
           method: "POST",
           headers: {
@@ -195,7 +201,7 @@ const ResourceSharing: React.FC = () => {
 
       // Incrémenter le compteur de téléchargements
       const response = await fetch(
-        `${api.API_URL}/api/shared-resources/${resourceId}/download`,
+        `${api.API_URL}/api/collaboration/shared-resources/${resourceId}/download`,
         {
           method: "POST",
           headers: {

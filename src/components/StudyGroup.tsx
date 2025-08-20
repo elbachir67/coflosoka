@@ -89,12 +89,15 @@ const StudyGroup: React.FC = () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await fetch(`${api.API_URL}/api/study-groups`, {
-        headers: {
-          Authorization: `Bearer ${user.token}`,
-          "Content-Type": "application/json",
-        },
-      });
+      const response = await fetch(
+        `${api.API_URL}/api/collaboration/study-groups`,
+        {
+          headers: {
+            Authorization: `Bearer ${user.token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
       if (!response.ok) {
         throw new Error("Erreur lors du chargement des groupes d'étude");
@@ -126,14 +129,17 @@ const StudyGroup: React.FC = () => {
     if (!user?.token) return;
 
     try {
-      const response = await fetch(`${api.API_URL}/api/study-groups`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${user.token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
+      const response = await fetch(
+        `${api.API_URL}/api/collaboration/study-groups`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${user.token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(formData),
+        }
+      );
 
       if (!response.ok) {
         throw new Error("Erreur lors de la création du groupe");
@@ -199,7 +205,7 @@ const StudyGroup: React.FC = () => {
       const dateTime = new Date(`${scheduleData.date}T${scheduleData.time}`);
 
       const response = await fetch(
-        `${api.API_URL}/api/study-groups/${selectedGroup._id}/schedule`,
+        `${api.API_URL}/api/collaboration/study-groups/${selectedGroup._id}/schedule`,
         {
           method: "POST",
           headers: {
@@ -246,7 +252,7 @@ const StudyGroup: React.FC = () => {
 
     try {
       const response = await fetch(
-        `${api.API_URL}/api/study-groups/${selectedGroup._id}/messages`,
+        `${api.API_URL}/api/collaboration/study-groups/${selectedGroup._id}/messages`,
         {
           method: "POST",
           headers: {

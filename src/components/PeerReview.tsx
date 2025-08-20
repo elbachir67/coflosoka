@@ -75,7 +75,7 @@ const PeerReview: React.FC = () => {
       setLoading(true);
       setError(null);
       const response = await fetch(
-        `${api.API_URL}/api/peer-review/submissions`,
+        `${api.API_URL}/api/collaboration/peer-review/submissions`,
         {
           headers: {
             Authorization: `Bearer ${user.token}`,
@@ -119,7 +119,7 @@ const PeerReview: React.FC = () => {
       formDataObj.append("file", formData.file);
 
       const response = await fetch(
-        `${api.API_URL}/api/peer-review/submissions`,
+        `${api.API_URL}/api/collaboration/peer-review/submissions`,
         {
           method: "POST",
           headers: {
@@ -157,7 +157,7 @@ const PeerReview: React.FC = () => {
 
     try {
       const response = await fetch(
-        `${api.API_URL}/api/peer-review/submissions/${selectedSubmission._id}/reviews`,
+        `${api.API_URL}/api/collaboration/peer-review/submissions/${selectedSubmission._id}/reviews`,
         {
           method: "POST",
           headers: {

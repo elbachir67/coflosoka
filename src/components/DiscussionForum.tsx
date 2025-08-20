@@ -76,7 +76,7 @@ const DiscussionForum: React.FC = () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await fetch(`${api.API_URL}/api/forum/posts`, {
+      const response = await fetch(`${api.API_URL}/api/collaboration/posts`, {
         headers: {
           Authorization: `Bearer ${user.token}`,
           "Content-Type": "application/json",
@@ -113,7 +113,7 @@ const DiscussionForum: React.FC = () => {
     if (!user?.token) return;
 
     try {
-      const response = await fetch(`${api.API_URL}/api/forum/posts`, {
+      const response = await fetch(`${api.API_URL}/api/collaboration/posts`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${user.token}`,
@@ -174,7 +174,7 @@ const DiscussionForum: React.FC = () => {
 
     try {
       const response = await fetch(
-        `${api.API_URL}/api/forum/posts/${postId}/like`,
+        `${api.API_URL}/api/collaboration/posts/${postId}/like`,
         {
           method: "POST",
           headers: {
@@ -208,7 +208,7 @@ const DiscussionForum: React.FC = () => {
 
     try {
       const response = await fetch(
-        `${api.API_URL}/api/forum/posts/${selectedPost._id}/comments`,
+        `${api.API_URL}/api/collaboration/posts/${selectedPost._id}/comments`,
         {
           method: "POST",
           headers: {

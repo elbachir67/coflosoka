@@ -19,6 +19,12 @@ import { pathwayRoutes } from "./routes/pathways.js";
 import { quizRoutes } from "./routes/quiz.js";
 import { aiRoutes } from "./routes/ai.js";
 import { adminRoutes } from "./routes/admin.js";
+import { collaborationRoutes } from "./routes/collaboration.js";
+import { gamificationRoutes } from "./routes/gamification.js";
+import analyticsRoutes from "./routes/analytics.js";
+import externalApisRoutes from "./routes/externalApis.js";
+import { ollamaRoutes } from "./routes/ollama.js";
+import { searchRoutes } from "./routes/search.js";
 
 import { config } from "./config/env.js";
 
@@ -80,6 +86,16 @@ app.use("/api/pathways", pathwayRoutes);
 app.use("/api", quizRoutes);
 app.use("/api/ai", aiRoutes); // Nouvelles routes IA
 app.use("/api/admin", adminRoutes); // Routes d'administration
+app.use("/api/collaboration", collaborationRoutes);
+app.use("/api/forum", collaborationRoutes); // Alias pour compatibilité
+app.use("/api/study-groups", collaborationRoutes); // Alias pour les groupes d'étude
+app.use("/api/shared-resources", collaborationRoutes); // Alias pour les ressources partagées
+app.use("/api/peer-review", collaborationRoutes); // Alias pour la revue par les pairs
+app.use("/api/gamification", gamificationRoutes);
+app.use("/api/analytics", analyticsRoutes);
+app.use("/api/external", externalApisRoutes);
+app.use("/api/ollama", ollamaRoutes);
+app.use("/api/search", searchRoutes);
 
 // Error handling
 app.use(errorHandler);

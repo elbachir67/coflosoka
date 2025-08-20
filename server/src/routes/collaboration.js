@@ -9,6 +9,7 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
+import mongoose from "mongoose";
 
 const router = express.Router();
 
@@ -190,7 +191,7 @@ router.post("/study-groups/:id/schedule", auth, async (req, res) => {
 });
 
 // Routes pour le forum de discussion
-router.get("/forum/posts", auth, async (req, res) => {
+router.get("/posts", auth, async (req, res) => {
   try {
     const posts = await ForumPost.find({ isActive: true })
       .populate("author", "email")
@@ -206,7 +207,7 @@ router.get("/forum/posts", auth, async (req, res) => {
   }
 });
 
-router.post("/forum/posts", auth, async (req, res) => {
+router.post("/posts", auth, async (req, res) => {
   try {
     const { title, content, tags } = req.body;
 
@@ -229,7 +230,7 @@ router.post("/forum/posts", auth, async (req, res) => {
   }
 });
 
-router.post("/forum/posts/:id/comments", auth, async (req, res) => {
+router.post("/posts/:id/comments", auth, async (req, res) => {
   try {
     const { content } = req.body;
     const post = await ForumPost.findById(req.params.id);
@@ -254,7 +255,7 @@ router.post("/forum/posts/:id/comments", auth, async (req, res) => {
   }
 });
 
-router.post("/forum/posts/:id/like", auth, async (req, res) => {
+router.post("/posts/:id/like", auth, async (req, res) => {
   try {
     const post = await ForumPost.findById(req.params.id);
 
