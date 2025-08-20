@@ -16,6 +16,8 @@ import {
   Video,
   GraduationCap,
   Laptop,
+  Edit,
+  Trash2,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { useGamification } from "../contexts/GamificationContext";
@@ -42,6 +44,10 @@ const ResourceSharing: React.FC = () => {
   const [resources, setResources] = useState<SharedResource[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingResource, setEditingResource] = useState<SharedResource | null>(
+    null
+  );
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
@@ -136,6 +142,103 @@ const ResourceSharing: React.FC = () => {
       console.error("Error sharing resource:", error);
       toast.error("Erreur lors du partage de la ressource");
     }
+  };
+
+  const handleUpdateResource = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user?.token || !editingResource) return;
+
+    try {
+      const response = await fetch(
+        `${api.API_URL}/api/collaboration/shared-resources/${editingResource._id}`,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${user.token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            title: formData.title,
+            description: formData.description,
+            url: formData.url,
+            type: formData.type,
+            tags: formData.tags,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Erreur lors de la mise à jour de la ressource");
+      }
+
+      const updatedResource = await response.json();
+      setResources(
+        resources.map(r =>
+          r._id === updatedResource._id ? updatedResource : r
+        )
+      );
+      setShowEditModal(false);
+      setEditingResource(null);
+      setFormData({
+        title: "",
+        description: "",
+        url: "",
+        type: "article",
+        tags: [],
+        newTag: "",
+      });
+      toast.success("Ressource mise à jour avec succès");
+    } catch (error) {
+      console.error("Error updating resource:", error);
+      toast.error("Erreur lors de la mise à jour de la ressource");
+    }
+  };
+
+  const handleDeleteResource = async (resourceId: string) => {
+    if (!user?.token) return;
+
+    if (!confirm("Êtes-vous sûr de vouloir supprimer cette ressource ?"))
+      return;
+
+    try {
+      const response = await fetch(
+        `${api.API_URL}/api/collaboration/shared-resources/${resourceId}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${user.token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Erreur lors de la suppression de la ressource");
+      }
+
+      setResources(resources.filter(r => r._id !== resourceId));
+      toast.success("Ressource supprimée avec succès");
+    } catch (error) {
+      console.error("Error deleting resource:", error);
+      toast.error("Erreur lors de la suppression de la ressource");
+    }
+  };
+
+  const startEditResource = (resource: SharedResource) => {
+    setEditingResource(resource);
+    setFormData({
+      title: resource.title,
+      description: resource.description,
+      url: resource.url,
+      type: resource.type,
+      tags: resource.tags,
+      newTag: "",
+    });
+    setShowEditModal(true);
+  };
+
+  const canEditOrDelete = (authorId: string) => {
+    return authorId === user?.id || user?.isAdmin;
   };
 
   const handleAddTag = () => {
@@ -392,7 +495,7 @@ const ResourceSharing: React.FC = () => {
               key={resource._id}
               className="p-4 rounded-lg bg-gray-800/50 hover:bg-gray-800/70 transition-colors"
             >
-              <div className="flex items-start mb-3">
+              <div className="flex items-start justify-between mb-3">
                 <div className="p-2 rounded-lg bg-gray-700 mr-3">
                   {getResourceIcon(resource.type)}
                 </div>
@@ -404,6 +507,26 @@ const ResourceSharing: React.FC = () => {
                     {resource.description}
                   </p>
                 </div>
+
+                {/* Actions pour l'auteur ou admin */}
+                {canEditOrDelete(resource.author?._id || "") && (
+                  <div className="flex space-x-2 ml-2">
+                    <button
+                      onClick={() => startEditResource(resource)}
+                      className="p-1.5 rounded-full bg-blue-600/20 text-blue-400 hover:bg-blue-600/30 transition-colors"
+                      title="Modifier"
+                    >
+                      <Edit className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteResource(resource._id)}
+                      className="p-1.5 rounded-full bg-red-600/20 text-red-400 hover:bg-red-600/30 transition-colors"
+                      title="Supprimer"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                )}
               </div>
 
               <div className="flex flex-wrap gap-1 mb-3">
@@ -608,6 +731,150 @@ const ResourceSharing: React.FC = () => {
                   className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
                 >
                   Partager
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de modification de ressource */}
+      {showEditModal && editingResource && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+          <div className="bg-gray-900 rounded-xl p-6 max-w-2xl w-full">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold text-gray-100">
+                Modifier la ressource
+              </h3>
+              <button
+                onClick={() => {
+                  setShowEditModal(false);
+                  setEditingResource(null);
+                }}
+                className="text-gray-400 hover:text-white"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <form onSubmit={handleUpdateResource} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-1">
+                  Titre
+                </label>
+                <input
+                  type="text"
+                  value={formData.title}
+                  onChange={e =>
+                    setFormData({ ...formData, title: e.target.value })
+                  }
+                  required
+                  className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-1">
+                  Description
+                </label>
+                <textarea
+                  value={formData.description}
+                  onChange={e =>
+                    setFormData({ ...formData, description: e.target.value })
+                  }
+                  required
+                  rows={3}
+                  className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-1">
+                  URL
+                </label>
+                <input
+                  type="url"
+                  value={formData.url}
+                  onChange={e =>
+                    setFormData({ ...formData, url: e.target.value })
+                  }
+                  required
+                  className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-1">
+                  Type de ressource
+                </label>
+                <select
+                  value={formData.type}
+                  onChange={e =>
+                    setFormData({ ...formData, type: e.target.value as any })
+                  }
+                  required
+                  className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                >
+                  <option value="article">Article</option>
+                  <option value="video">Vidéo</option>
+                  <option value="course">Cours</option>
+                  <option value="book">Livre</option>
+                  <option value="use_case">Cas pratique</option>
+                  <option value="other">Autre</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-1">
+                  Tags
+                </label>
+                <div className="flex space-x-2 mb-2">
+                  <input
+                    type="text"
+                    value={formData.newTag}
+                    onChange={e =>
+                      setFormData({ ...formData, newTag: e.target.value })
+                    }
+                    placeholder="Ajouter un tag"
+                    className="flex-1 px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddTag}
+                    className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    Ajouter
+                  </button>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {formData.tags.map(tag => (
+                    <div
+                      key={tag}
+                      className="px-3 py-1 bg-gray-700 text-gray-300 rounded-full text-sm flex items-center"
+                    >
+                      {tag}
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveTag(tag)}
+                        className="ml-2 text-gray-400 hover:text-gray-200"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="flex justify-end space-x-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowEditModal(false);
+                    setEditingResource(null);
+                  }}
+                  className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors"
+                >
+                  Annuler
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  Mettre à jour
                 </button>
               </div>
             </form>

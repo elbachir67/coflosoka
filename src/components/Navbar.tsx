@@ -181,7 +181,7 @@ function Navbar() {
                 <span>Accueil</span>
               </Link>
 
-              {isAuthenticated && (
+              {isAuthenticated && !isAdmin && (
                 <>
                   <Link
                     to="/dashboard"
@@ -218,52 +218,59 @@ function Navbar() {
                     <Users className="w-4 h-4" />
                     <span>Communauté</span>
                   </Link>
-
-                  <Link
-                    to="/external-apis"
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center space-x-2 ${
-                      isActive("/external-apis")
-                        ? "bg-purple-500/20 text-purple-400 shadow-lg"
-                        : "text-gray-400 hover:text-gray-200 hover:bg-gray-800/50"
-                    }`}
-                  >
-                    <ExternalLink className="w-4 h-4" />
-                    <span>APIs</span>
-                  </Link>
                 </>
+              )}
+
+              {/* Admin Navigation */}
+              {isAdmin && (
+                <Link
+                  to="/admin/dashboard"
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center space-x-2 ${
+                    isActive("/admin")
+                      ? "bg-red-500/20 text-red-400 shadow-lg"
+                      : "text-gray-400 hover:text-gray-200 hover:bg-gray-800/50"
+                  }`}
+                >
+                  <Settings className="w-4 h-4" />
+                  <span>Administration</span>
+                </Link>
               )}
             </div>
 
-            {/* Search Button */}
-            <div className="hidden md:block">
-              <button
-                onClick={toggleSearch}
-                className="flex items-center space-x-2 px-4 py-2 bg-gray-800/50 hover:bg-gray-700/50 rounded-lg transition-all duration-200 border border-gray-700/50 hover:border-gray-600/50 group"
-              >
-                <Search className="w-4 h-4 text-gray-400 group-hover:text-gray-300" />
-                <span className="text-gray-400 group-hover:text-gray-300">
-                  Rechercher...
-                </span>
-                <div className="flex items-center space-x-1 text-xs text-gray-500">
-                  <kbd className="px-1.5 py-0.5 bg-gray-700 rounded text-xs">
-                    ⌘
-                  </kbd>
-                  <kbd className="px-1.5 py-0.5 bg-gray-700 rounded text-xs">
-                    K
-                  </kbd>
-                </div>
-              </button>
-            </div>
+            {/* Search Button - Only for non-admin users */}
+            {!isAdmin && (
+              <div className="hidden md:block">
+                <button
+                  onClick={toggleSearch}
+                  className="flex items-center space-x-2 px-4 py-2 bg-gray-800/50 hover:bg-gray-700/50 rounded-lg transition-all duration-200 border border-gray-700/50 hover:border-gray-600/50 group"
+                >
+                  <Search className="w-4 h-4 text-gray-400 group-hover:text-gray-300" />
+                  <span className="text-gray-400 group-hover:text-gray-300">
+                    Rechercher...
+                  </span>
+                  <div className="flex items-center space-x-1 text-xs text-gray-500">
+                    <kbd className="px-1.5 py-0.5 bg-gray-700 rounded text-xs">
+                      ⌘
+                    </kbd>
+                    <kbd className="px-1.5 py-0.5 bg-gray-700 rounded text-xs">
+                      K
+                    </kbd>
+                  </div>
+                </button>
+              </div>
+            )}
 
             {/* Right Side */}
             <div className="flex items-center space-x-3">
-              {/* Search button for mobile */}
-              <button
-                onClick={toggleSearch}
-                className="md:hidden p-2 rounded-lg bg-gray-800/50 hover:bg-gray-700/50 transition-colors"
-              >
-                <Search className="w-5 h-5 text-gray-400" />
-              </button>
+              {/* Search button for mobile - Only for non-admin */}
+              {!isAdmin && (
+                <button
+                  onClick={toggleSearch}
+                  className="md:hidden p-2 rounded-lg bg-gray-800/50 hover:bg-gray-700/50 transition-colors"
+                >
+                  <Search className="w-5 h-5 text-gray-400" />
+                </button>
+              )}
 
               {isAuthenticated ? (
                 <>
@@ -367,14 +374,14 @@ function Navbar() {
                                         </p>
                                       </div>
                                       {!notification.read && (
-                                        <div className="w-2 h-2 bg-purple-500 rounded-full mt-1"></div>
+                                        <div className="w-2 h-2 bg-blue-400 rounded-full mt-2"></div>
                                       )}
                                     </div>
                                   </div>
                                 ))
                               ) : (
-                                <div className="p-6 text-center text-gray-400">
-                                  <Bell className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                                <div className="p-8 text-center text-gray-500">
+                                  <Bell className="w-8 h-8 mx-auto mb-3 opacity-50" />
                                   <p>Aucune notification</p>
                                 </div>
                               )}
@@ -918,8 +925,13 @@ function Navbar() {
       {/* Spacer pour compenser la navbar fixe */}
       <div className="h-16"></div>
 
-      {/* Composant de recherche globale */}
-      <GlobalSearch isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
+      {/* Composant de recherche globale - Only for non-admin users */}
+      {!isAdmin && (
+        <GlobalSearch
+          isOpen={searchOpen}
+          onClose={() => setSearchOpen(false)}
+        />
+      )}
     </>
   );
 }

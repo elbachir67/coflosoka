@@ -13,6 +13,9 @@ import {
   Calendar,
   Clock,
   UserPlus,
+  Edit,
+  Trash2,
+  LogOut,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { useGamification } from "../contexts/GamificationContext";
@@ -54,6 +57,8 @@ const StudyGroup: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [selectedGroup, setSelectedGroup] = useState<StudyGroup | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingGroup, setEditingGroup] = useState<StudyGroup | null>(null);
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [newMessage, setNewMessage] = useState("");
@@ -165,7 +170,7 @@ const StudyGroup: React.FC = () => {
 
     try {
       const response = await fetch(
-        `${api.API_URL}/api/study-groups/${selectedGroup._id}/invite`,
+        `${api.API_URL}/api/collaboration/study-groups/${selectedGroup._id}/invite`,
         {
           method: "POST",
           headers: {
@@ -282,6 +287,180 @@ const StudyGroup: React.FC = () => {
     }
   };
 
+  const handleUpdateGroup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user?.token || !editingGroup) return;
+
+    try {
+      const response = await fetch(
+        `${api.API_URL}/api/collaboration/study-groups/${editingGroup._id}`,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${user.token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(formData),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Erreur lors de la mise à jour du groupe");
+      }
+
+      const updatedGroup = await response.json();
+      setGroups(
+        groups.map(g => (g._id === updatedGroup._id ? updatedGroup : g))
+      );
+
+      if (selectedGroup?._id === updatedGroup._id) {
+        setSelectedGroup(updatedGroup);
+      }
+
+      setShowEditModal(false);
+      setEditingGroup(null);
+      setFormData({ name: "", description: "", topic: "" });
+      toast.success("Groupe mis à jour avec succès");
+    } catch (error) {
+      console.error("Error updating group:", error);
+      toast.error("Erreur lors de la mise à jour du groupe");
+    }
+  };
+
+  const handleDeleteGroup = async (groupId: string) => {
+    if (!user?.token) return;
+
+    if (
+      !confirm(
+        "Êtes-vous sûr de vouloir supprimer ce groupe ? Cette action est irréversible."
+      )
+    )
+      return;
+
+    try {
+      const response = await fetch(
+        `${api.API_URL}/api/collaboration/study-groups/${groupId}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${user.token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Erreur lors de la suppression du groupe");
+      }
+
+      setGroups(groups.filter(g => g._id !== groupId));
+      if (selectedGroup?._id === groupId) {
+        setSelectedGroup(null);
+      }
+      toast.success("Groupe supprimé avec succès");
+    } catch (error) {
+      console.error("Error deleting group:", error);
+      toast.error("Erreur lors de la suppression du groupe");
+    }
+  };
+
+  const handleLeaveGroup = async (groupId: string) => {
+    if (!user?.token) return;
+
+    if (!confirm("Êtes-vous sûr de vouloir quitter ce groupe ?")) return;
+
+    try {
+      const response = await fetch(
+        `${api.API_URL}/api/collaboration/study-groups/${groupId}/leave`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${user.token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Erreur lors de la sortie du groupe");
+      }
+
+      const result = await response.json();
+
+      if (result.message?.includes("supprimé")) {
+        // Le groupe a été supprimé car plus de membres
+        setGroups(groups.filter(g => g._id !== groupId));
+        setSelectedGroup(null);
+      } else {
+        // Le groupe existe toujours, mettre à jour
+        setGroups(groups.map(g => (g._id === result._id ? result : g)));
+        if (selectedGroup?._id === groupId) {
+          setSelectedGroup(result);
+        }
+      }
+
+      toast.success("Vous avez quitté le groupe");
+    } catch (error) {
+      console.error("Error leaving group:", error);
+      toast.error("Erreur lors de la sortie du groupe");
+    }
+  };
+
+  const handleDeleteMessage = async (groupId: string, messageId: string) => {
+    if (!user?.token) return;
+
+    if (!confirm("Êtes-vous sûr de vouloir supprimer ce message ?")) return;
+
+    try {
+      const response = await fetch(
+        `${api.API_URL}/api/collaboration/study-groups/${groupId}/messages/${messageId}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${user.token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Erreur lors de la suppression du message");
+      }
+
+      const updatedGroup = await response.json();
+      setGroups(
+        groups.map(g => (g._id === updatedGroup._id ? updatedGroup : g))
+      );
+      setSelectedGroup(updatedGroup);
+      toast.success("Message supprimé avec succès");
+    } catch (error) {
+      console.error("Error deleting message:", error);
+      toast.error("Erreur lors de la suppression du message");
+    }
+  };
+
+  const startEditGroup = (group: StudyGroup) => {
+    setEditingGroup(group);
+    setFormData({
+      name: group.name,
+      description: group.description,
+      topic: group.topic,
+    });
+    setShowEditModal(true);
+  };
+
+  const canEditOrDeleteGroup = (group: StudyGroup) => {
+    return group.createdBy._id === user?.id || user?.role === "admin";
+  };
+
+  const canDeleteMessage = (message: any, group: StudyGroup) => {
+    return (
+      message.sender._id === user?.id ||
+      group.createdBy._id === user?.id ||
+      user?.role === "admin"
+    );
+  };
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString("fr-FR", {
@@ -352,9 +531,35 @@ const StudyGroup: React.FC = () => {
               } cursor-pointer transition-colors`}
               onClick={() => setSelectedGroup(group)}
             >
-              <h3 className="text-lg font-semibold text-gray-200 mb-1">
-                {group.name}
-              </h3>
+              <div className="flex justify-between items-start mb-1">
+                <h3 className="text-lg font-semibold text-gray-200 flex-1 pr-2">
+                  {group.name}
+                </h3>
+
+                {/* Actions pour le créateur ou admin */}
+                {canEditOrDeleteGroup(group) && (
+                  <div
+                    className="flex space-x-1"
+                    onClick={e => e.stopPropagation()}
+                  >
+                    <button
+                      onClick={() => startEditGroup(group)}
+                      className="p-1 rounded-full bg-blue-600/20 text-blue-400 hover:bg-blue-600/30 transition-colors"
+                      title="Modifier"
+                    >
+                      <Edit className="w-3 h-3" />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteGroup(group._id)}
+                      className="p-1 rounded-full bg-red-600/20 text-red-400 hover:bg-red-600/30 transition-colors"
+                      title="Supprimer"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </button>
+                  </div>
+                )}
+              </div>
+
               <p className="text-sm text-gray-400 mb-2">{group.description}</p>
               <div className="flex justify-between text-xs text-gray-400">
                 <span>{group.topic}</span>
@@ -372,6 +577,17 @@ const StudyGroup: React.FC = () => {
               {selectedGroup.name}
             </h3>
             <div className="flex space-x-2">
+              {/* Bouton Quitter pour les membres */}
+              {selectedGroup.members.some(m => m._id === user?.id) && (
+                <button
+                  onClick={() => handleLeaveGroup(selectedGroup._id)}
+                  className="px-3 py-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center text-sm"
+                >
+                  <LogOut className="w-4 h-4 mr-1" />
+                  Quitter
+                </button>
+              )}
+
               <button
                 onClick={() => setShowScheduleModal(true)}
                 className="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center text-sm"
@@ -459,6 +675,24 @@ const StudyGroup: React.FC = () => {
                               : "items-start"
                           }`}
                         >
+                          {/* Actions pour supprimer le message */}
+                          {canDeleteMessage(message, selectedGroup) && (
+                            <button
+                              onClick={() =>
+                                handleDeleteMessage(
+                                  selectedGroup._id,
+                                  message._id
+                                )
+                              }
+                              className={`p-1 rounded-full bg-red-600/20 text-red-400 hover:bg-red-600/30 transition-colors ${
+                                isCurrentUser ? "mr-2" : "ml-2"
+                              }`}
+                              title="Supprimer"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </button>
+                          )}
+
                           <div
                             className={`p-3 rounded-lg ${
                               isCurrentUser
@@ -613,6 +847,97 @@ const StudyGroup: React.FC = () => {
                   className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
                 >
                   Créer
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de modification de groupe */}
+      {showEditModal && editingGroup && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+          <div className="bg-gray-900 rounded-xl p-6 max-w-md w-full">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold text-gray-100">
+                Modifier le groupe
+              </h3>
+              <button
+                onClick={() => {
+                  setShowEditModal(false);
+                  setEditingGroup(null);
+                }}
+                className="text-gray-400 hover:text-white"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <form onSubmit={handleUpdateGroup} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-1">
+                  Nom du groupe
+                </label>
+                <input
+                  type="text"
+                  value={formData.name}
+                  onChange={e =>
+                    setFormData({ ...formData, name: e.target.value })
+                  }
+                  required
+                  className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-1">
+                  Sujet
+                </label>
+                <select
+                  value={formData.topic}
+                  onChange={e =>
+                    setFormData({ ...formData, topic: e.target.value })
+                  }
+                  required
+                  className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                >
+                  <option value="">Sélectionnez un sujet</option>
+                  <option value="Machine Learning">Machine Learning</option>
+                  <option value="Deep Learning">Deep Learning</option>
+                  <option value="Computer Vision">Computer Vision</option>
+                  <option value="NLP">NLP</option>
+                  <option value="MLOps">MLOps</option>
+                  <option value="Data Science">Data Science</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-1">
+                  Description
+                </label>
+                <textarea
+                  value={formData.description}
+                  onChange={e =>
+                    setFormData({ ...formData, description: e.target.value })
+                  }
+                  required
+                  rows={3}
+                  className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                />
+              </div>
+              <div className="flex justify-end space-x-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowEditModal(false);
+                    setEditingGroup(null);
+                  }}
+                  className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors"
+                >
+                  Annuler
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  Mettre à jour
                 </button>
               </div>
             </form>

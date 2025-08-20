@@ -18,6 +18,14 @@ import learnerProfileRoutes from "./routes/learnerProfiles.js";
 import { pathwayRoutes } from "./routes/pathways.js";
 import { quizRoutes } from "./routes/quiz.js";
 import { aiRoutes } from "./routes/ai.js";
+import { adminRoutes } from "./routes/admin.js";
+import { collaborationRoutes } from "./routes/collaboration.js";
+import { gamificationRoutes } from "./routes/gamification.js";
+import analyticsRoutes from "./routes/analytics.js";
+import externalApisRoutes from "./routes/externalApis.js";
+import { ollamaRoutes } from "./routes/ollama.js";
+import { searchRoutes } from "./routes/search.js";
+import externalApisRoutes from "./routes/externalApis.js";
 
 import { config } from "./config/env.js";
 
@@ -59,6 +67,9 @@ app.use(
 app.use(express.json());
 app.use(morgan("dev"));
 
+// Serve static files from uploads directory
+app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
+
 // Health check route
 app.get("/health", (req, res) => {
   res.json({
@@ -78,6 +89,13 @@ app.use("/api/profiles", learnerProfileRoutes);
 app.use("/api/pathways", pathwayRoutes);
 app.use("/api", quizRoutes);
 app.use("/api/ai", aiRoutes); // Nouvelles routes IA
+app.use("/api/admin", adminRoutes); // Routes d'administration
+app.use("/api/collaboration", collaborationRoutes);
+app.use("/api/gamification", gamificationRoutes);
+app.use("/api/analytics", analyticsRoutes);
+app.use("/api/external", externalApisRoutes);
+app.use("/api/ollama", ollamaRoutes);
+app.use("/api/search", searchRoutes);
 
 // Error handling
 app.use(errorHandler);

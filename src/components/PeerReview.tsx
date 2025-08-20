@@ -16,6 +16,8 @@ import {
   Clock,
   Filter,
   Search,
+  Edit,
+  Trash2,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { useGamification } from "../contexts/GamificationContext";
@@ -52,7 +54,16 @@ const PeerReview: React.FC = () => {
   const [selectedSubmission, setSelectedSubmission] =
     useState<PeerReviewSubmission | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingSubmission, setEditingSubmission] =
+    useState<PeerReviewSubmission | null>(null);
   const [showReviewModal, setShowReviewModal] = useState(false);
+  const [editingReview, setEditingReview] = useState<{
+    submissionId: string;
+    reviewId: string;
+    content: string;
+    rating: number;
+  } | null>(null);
   const [reviewContent, setReviewContent] = useState("");
   const [reviewRating, setReviewRating] = useState(3);
   const [searchQuery, setSearchQuery] = useState("");
@@ -112,11 +123,21 @@ const PeerReview: React.FC = () => {
     e.preventDefault();
     if (!formData.file || !user?.token) return;
 
+    console.log("Submitting peer review with file:", {
+      fileName: formData.file.name,
+      fileSize: formData.file.size,
+      fileType: formData.file.type,
+      title: formData.title,
+      description: formData.description,
+    });
+
     try {
       const formDataObj = new FormData();
       formDataObj.append("title", formData.title);
       formDataObj.append("description", formData.description);
       formDataObj.append("file", formData.file);
+
+      console.log("FormData created, sending request...");
 
       const response = await fetch(
         `${api.API_URL}/api/collaboration/peer-review/submissions`,
@@ -124,16 +145,25 @@ const PeerReview: React.FC = () => {
           method: "POST",
           headers: {
             Authorization: `Bearer ${user.token}`,
+            // Ne pas définir Content-Type pour FormData, le navigateur le fait automatiquement
           },
           body: formDataObj,
         }
       );
 
+      console.log("Response status:", response.status);
+
       if (!response.ok) {
-        throw new Error("Erreur lors de la soumission");
+        const errorData = await response.json();
+        console.error("Server error:", errorData);
+        throw new Error(
+          errorData.details || errorData.error || "Erreur lors de la soumission"
+        );
       }
 
       const newSubmission = await response.json();
+      console.log("Submission created successfully:", newSubmission);
+
       setSubmissions([newSubmission, ...submissions]);
       setShowCreateModal(false);
       setFormData({
@@ -147,7 +177,9 @@ const PeerReview: React.FC = () => {
       await rewardAction("create_submission");
     } catch (error) {
       console.error("Error creating submission:", error);
-      toast.error("Erreur lors de la soumission");
+      toast.error(
+        error instanceof Error ? error.message : "Erreur lors de la soumission"
+      );
     }
   };
 
@@ -193,6 +225,180 @@ const PeerReview: React.FC = () => {
       console.error("Error submitting review:", error);
       toast.error("Erreur lors de la soumission de la revue");
     }
+  };
+
+  const handleUpdateSubmission = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user?.token || !editingSubmission) return;
+
+    try {
+      const response = await fetch(
+        `${api.API_URL}/api/collaboration/peer-review/submissions/${editingSubmission._id}`,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${user.token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            title: formData.title,
+            description: formData.description,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Erreur lors de la mise à jour de la soumission");
+      }
+
+      const updatedSubmission = await response.json();
+      setSubmissions(
+        submissions.map(s =>
+          s._id === updatedSubmission._id ? updatedSubmission : s
+        )
+      );
+
+      if (selectedSubmission?._id === updatedSubmission._id) {
+        setSelectedSubmission(updatedSubmission);
+      }
+
+      setShowEditModal(false);
+      setEditingSubmission(null);
+      setFormData({ title: "", description: "", file: null });
+      toast.success("Soumission mise à jour avec succès");
+    } catch (error) {
+      console.error("Error updating submission:", error);
+      toast.error("Erreur lors de la mise à jour de la soumission");
+    }
+  };
+
+  const handleDeleteSubmission = async (submissionId: string) => {
+    if (!user?.token) return;
+
+    if (!confirm("Êtes-vous sûr de vouloir supprimer cette soumission ?"))
+      return;
+
+    try {
+      const response = await fetch(
+        `${api.API_URL}/api/collaboration/peer-review/submissions/${submissionId}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${user.token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Erreur lors de la suppression de la soumission");
+      }
+
+      setSubmissions(submissions.filter(s => s._id !== submissionId));
+      if (selectedSubmission?._id === submissionId) {
+        setSelectedSubmission(null);
+      }
+      toast.success("Soumission supprimée avec succès");
+    } catch (error) {
+      console.error("Error deleting submission:", error);
+      toast.error("Erreur lors de la suppression de la soumission");
+    }
+  };
+
+  const handleUpdateReview = async () => {
+    if (!editingReview || !user?.token) return;
+
+    try {
+      const response = await fetch(
+        `${api.API_URL}/api/collaboration/peer-review/submissions/${editingReview.submissionId}/reviews/${editingReview.reviewId}`,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${user.token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            content: editingReview.content,
+            rating: editingReview.rating,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Erreur lors de la mise à jour de la revue");
+      }
+
+      const updatedSubmission = await response.json();
+      setSubmissions(
+        submissions.map(s =>
+          s._id === updatedSubmission._id ? updatedSubmission : s
+        )
+      );
+      setSelectedSubmission(updatedSubmission);
+      setEditingReview(null);
+      toast.success("Revue mise à jour avec succès");
+    } catch (error) {
+      console.error("Error updating review:", error);
+      toast.error("Erreur lors de la mise à jour de la revue");
+    }
+  };
+
+  const handleDeleteReview = async (submissionId: string, reviewId: string) => {
+    if (!user?.token) return;
+
+    if (!confirm("Êtes-vous sûr de vouloir supprimer cette revue ?")) return;
+
+    try {
+      const response = await fetch(
+        `${api.API_URL}/api/collaboration/peer-review/submissions/${submissionId}/reviews/${reviewId}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${user.token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Erreur lors de la suppression de la revue");
+      }
+
+      const updatedSubmission = await response.json();
+      setSubmissions(
+        submissions.map(s =>
+          s._id === updatedSubmission._id ? updatedSubmission : s
+        )
+      );
+      setSelectedSubmission(updatedSubmission);
+      toast.success("Revue supprimée avec succès");
+    } catch (error) {
+      console.error("Error deleting review:", error);
+      toast.error("Erreur lors de la suppression de la revue");
+    }
+  };
+
+  const startEditSubmission = (submission: PeerReviewSubmission) => {
+    setEditingSubmission(submission);
+    setFormData({
+      title: submission.title,
+      description: submission.description,
+      file: null,
+    });
+    setShowEditModal(true);
+  };
+
+  const startEditReview = (
+    submissionId: string,
+    reviewId: string,
+    content: string,
+    rating: number
+  ) => {
+    setEditingReview({ submissionId, reviewId, content, rating });
+  };
+
+  const canEditOrDelete = (authorId: string) => {
+    return authorId === user?.id || user?.role === "admin";
   };
 
   const formatDate = (dateString: string) => {
@@ -323,9 +529,31 @@ const PeerReview: React.FC = () => {
                 onClick={() => setSelectedSubmission(submission)}
               >
                 <div className="flex justify-between items-start mb-2">
-                  <h4 className="text-lg font-semibold text-gray-200">
+                  <h4 className="text-lg font-semibold text-gray-200 flex-1 pr-2">
                     {submission.title}
                   </h4>
+
+                  {/* Actions pour l'auteur */}
+                  <div
+                    className="flex space-x-1"
+                    onClick={e => e.stopPropagation()}
+                  >
+                    <button
+                      onClick={() => startEditSubmission(submission)}
+                      className="p-1 rounded-full bg-blue-600/20 text-blue-400 hover:bg-blue-600/30 transition-colors"
+                      title="Modifier"
+                    >
+                      <Edit className="w-3 h-3" />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteSubmission(submission._id)}
+                      className="p-1 rounded-full bg-red-600/20 text-red-400 hover:bg-red-600/30 transition-colors"
+                      title="Supprimer"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </button>
+                  </div>
+
                   <span
                     className={`px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(
                       submission.status
@@ -477,7 +705,7 @@ const PeerReview: React.FC = () => {
                       key={review._id}
                       className="p-4 rounded-lg bg-gray-800/30"
                     >
-                      <div className="flex justify-between items-center mb-2">
+                      <div className="flex justify-between items-start mb-2">
                         <div className="flex items-center text-sm">
                           <User className="w-4 h-4 mr-1 text-gray-400" />
                           <span className="text-gray-300">
@@ -486,24 +714,121 @@ const PeerReview: React.FC = () => {
                               : "Utilisateur inconnu"}
                           </span>
                         </div>
-                        <div className="flex items-center">
-                          {Array.from({ length: 5 }).map((_, i) => (
-                            <span
-                              key={i}
-                              className={`text-lg ${
-                                i < review.rating
-                                  ? "text-yellow-400"
-                                  : "text-gray-600"
-                              }`}
-                            >
-                              ★
-                            </span>
-                          ))}
+
+                        <div className="flex items-center space-x-2">
+                          <div className="flex items-center">
+                            {Array.from({ length: 5 }).map((_, i) => (
+                              <span
+                                key={i}
+                                className={`text-lg ${
+                                  i < review.rating
+                                    ? "text-yellow-400"
+                                    : "text-gray-600"
+                                }`}
+                              >
+                                ★
+                              </span>
+                            ))}
+                          </div>
+
+                          {/* Actions pour l'auteur de la revue ou admin */}
+                          {canEditOrDelete(review.reviewer?._id || "") && (
+                            <div className="flex space-x-1">
+                              <button
+                                onClick={() =>
+                                  startEditReview(
+                                    selectedSubmission._id,
+                                    review._id,
+                                    review.content,
+                                    review.rating
+                                  )
+                                }
+                                className="p-1 rounded-full bg-blue-600/20 text-blue-400 hover:bg-blue-600/30 transition-colors"
+                                title="Modifier"
+                              >
+                                <Edit className="w-3 h-3" />
+                              </button>
+                              <button
+                                onClick={() =>
+                                  handleDeleteReview(
+                                    selectedSubmission._id,
+                                    review._id
+                                  )
+                                }
+                                className="p-1 rounded-full bg-red-600/20 text-red-400 hover:bg-red-600/30 transition-colors"
+                                title="Supprimer"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                              </button>
+                            </div>
+                          )}
                         </div>
                       </div>
-                      <p className="text-gray-300 whitespace-pre-line">
-                        {review.content}
-                      </p>
+
+                      {editingReview?.reviewId === review._id ? (
+                        <div className="space-y-3">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-300 mb-1">
+                              Note
+                            </label>
+                            <div className="flex items-center space-x-1">
+                              {Array.from({ length: 5 }).map((_, i) => (
+                                <button
+                                  key={i}
+                                  type="button"
+                                  onClick={() =>
+                                    setEditingReview({
+                                      ...editingReview,
+                                      rating: i + 1,
+                                    })
+                                  }
+                                  className="text-2xl focus:outline-none"
+                                >
+                                  <span
+                                    className={`${
+                                      i < editingReview.rating
+                                        ? "text-yellow-400"
+                                        : "text-gray-600"
+                                    } hover:text-yellow-300`}
+                                  >
+                                    ★
+                                  </span>
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                          <textarea
+                            value={editingReview.content}
+                            onChange={e =>
+                              setEditingReview({
+                                ...editingReview,
+                                content: e.target.value,
+                              })
+                            }
+                            className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                            rows={4}
+                          />
+                          <div className="flex space-x-2">
+                            <button
+                              onClick={handleUpdateReview}
+                              className="px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                            >
+                              Sauvegarder
+                            </button>
+                            <button
+                              onClick={() => setEditingReview(null)}
+                              className="px-3 py-1 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors text-sm"
+                            >
+                              Annuler
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <p className="text-gray-300 whitespace-pre-line">
+                          {review.content}
+                        </p>
+                      )}
+
                       <p className="text-right text-xs text-gray-400 mt-2">
                         {formatDate(review.createdAt)}
                       </p>
@@ -521,6 +846,30 @@ const PeerReview: React.FC = () => {
               >
                 Fermer
               </button>
+
+              {/* Actions pour l'auteur de la soumission ou admin */}
+              {selectedSubmission.author &&
+                canEditOrDelete(selectedSubmission.author._id) && (
+                  <>
+                    <button
+                      onClick={() => startEditSubmission(selectedSubmission)}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center"
+                    >
+                      <Edit className="w-4 h-4 mr-1" />
+                      Modifier
+                    </button>
+                    <button
+                      onClick={() =>
+                        handleDeleteSubmission(selectedSubmission._id)
+                      }
+                      className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center"
+                    >
+                      <Trash2 className="w-4 h-4 mr-1" />
+                      Supprimer
+                    </button>
+                  </>
+                )}
+
               {selectedSubmission.author &&
                 selectedSubmission.author._id !== user?.id && (
                   <button
@@ -616,15 +965,22 @@ const PeerReview: React.FC = () => {
                       id="file"
                       type="file"
                       className="hidden"
+                      accept=".pdf,.doc,.docx,.ppt,.pptx,.zip"
                       onChange={handleFileChange}
                       required
                     />
                   </label>
                 </div>
                 {formData.file && (
-                  <p className="mt-2 text-sm text-gray-400">
-                    Fichier sélectionné: {formData.file.name}
-                  </p>
+                  <div className="mt-2 p-2 bg-gray-800/50 rounded-lg">
+                    <p className="text-sm text-gray-300">
+                      <span className="font-medium">Fichier sélectionné:</span>{" "}
+                      {formData.file.name}
+                    </p>
+                    <p className="text-xs text-gray-400">
+                      Taille: {(formData.file.size / 1024 / 1024).toFixed(2)} MB
+                    </p>
+                  </div>
                 )}
               </div>
               <div className="flex justify-end space-x-3 pt-2">
@@ -637,9 +993,88 @@ const PeerReview: React.FC = () => {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                  disabled={
+                    !formData.file || !formData.title || !formData.description
+                  }
+                  className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Soumettre
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de modification de soumission */}
+      {showEditModal && editingSubmission && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+          <div className="bg-gray-900 rounded-xl p-6 max-w-2xl w-full">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold text-gray-100">
+                Modifier la soumission
+              </h3>
+              <button
+                onClick={() => {
+                  setShowEditModal(false);
+                  setEditingSubmission(null);
+                }}
+                className="text-gray-400 hover:text-white"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <form onSubmit={handleUpdateSubmission} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-1">
+                  Titre
+                </label>
+                <input
+                  type="text"
+                  value={formData.title}
+                  onChange={e =>
+                    setFormData({ ...formData, title: e.target.value })
+                  }
+                  required
+                  className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-1">
+                  Description
+                </label>
+                <textarea
+                  value={formData.description}
+                  onChange={e =>
+                    setFormData({ ...formData, description: e.target.value })
+                  }
+                  required
+                  rows={4}
+                  className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                />
+              </div>
+              <div className="p-3 rounded-lg bg-gray-800/50">
+                <p className="text-sm text-gray-400">
+                  <strong>Note :</strong> Le fichier ne peut pas être modifié.
+                  Pour changer le fichier, créez une nouvelle soumission.
+                </p>
+              </div>
+              <div className="flex justify-end space-x-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowEditModal(false);
+                    setEditingSubmission(null);
+                  }}
+                  className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors"
+                >
+                  Annuler
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  Mettre à jour
                 </button>
               </div>
             </form>
