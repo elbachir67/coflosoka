@@ -9,3 +9,6 @@ AI for policy maker
 
 déploiement de la plateforme
 
+
+
+https://api.openweathermap.org/data/2.5/weather?lat=14.6937&lon=-17.4441&appid=485eaae13c44dca81805beb5cfe0e7b3&units=metric
