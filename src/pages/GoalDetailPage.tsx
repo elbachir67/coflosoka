@@ -151,6 +151,38 @@ function GoalDetailPage() {
   const generatePathway = async () => {
     if (!goal || !user) return;
 
+    // Vérifier d'abord si un parcours existe déjà
+    try {
+      const checkResponse = await fetch(`${api.pathways}/user/dashboard`, {
+        headers: {
+          Authorization: `Bearer ${user.token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (checkResponse.ok) {
+        const dashboardData = await checkResponse.json();
+        const existingPathway = [
+          ...dashboardData.activePathways,
+          ...dashboardData.completedPathways,
+        ].find(p => p.goalId._id === goal._id);
+
+        if (existingPathway) {
+          toast.error(
+            "Un parcours pour cet objectif existe déjà. Consultez votre tableau de bord pour y accéder.",
+            {
+              duration: 5000,
+              icon: <AlertCircle className="text-orange-500" />,
+            }
+          );
+          setTimeout(() => navigate("/dashboard"), 2000);
+          return;
+        }
+      }
+    } catch (error) {
+      console.log("Could not check existing pathways, proceeding...");
+    }
+
     setGeneratingPathway(true);
     try {
       const response = await fetch(`${api.pathways}/generate`, {
@@ -176,18 +208,21 @@ function GoalDetailPage() {
     } catch (error) {
       console.error("Error:", error);
 
-      if (error instanceof Error && error.message.includes("existe déjà")) {
+      const errorMessage = error instanceof Error ? error.message : "";
+
+      if (errorMessage.includes("existe déjà")) {
         toast.error(
           "Un parcours pour cet objectif existe déjà. Consultez votre tableau de bord pour y accéder.",
           {
             duration: 5000,
-            icon: <AlertCircle className="text-red-500" />,
+            icon: <AlertCircle className="text-orange-500" />,
           }
         );
         setTimeout(() => navigate("/dashboard"), 2000);
       } else {
         toast.error(
-          "Impossible de générer le parcours. Veuillez réessayer plus tard.",
+          errorMessage ||
+            "Impossible de générer le parcours. Veuillez réessayer plus tard.",
           {
             duration: 4000,
           }

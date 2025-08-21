@@ -221,28 +221,36 @@ router.get("/user/dashboard", auth, async (req, res) => {
 
     let totalQuizzes = 0;
     let quizScoreSum = 0;
+    let totalResourcesCompleted = 0;
+    let totalSessionTime = 0;
 
     [...activePathways, ...completedPathways].forEach(pathway => {
-      // Calculate total time spent
-      const startDate = new Date(pathway.startedAt);
-      const lastDate = new Date(pathway.lastAccessedAt);
-      const hoursSpent = Math.round(
-        (lastDate.getTime() - startDate.getTime()) / (1000 * 60 * 60)
-      );
-      learningStats.totalHoursSpent += hoursSpent;
+      // Calculate realistic time spent based on completed resources
+      let pathwayHours = 0;
 
       // Count completed resources and calculate quiz scores
       pathway.moduleProgress.forEach(module => {
-        learningStats.completedResources += module.resources.filter(
-          r => r.completed
-        ).length;
+        const completedResources = module.resources.filter(r => r.completed);
+
+        totalResourcesCompleted += completedResources.length;
+
+        // Estimate realistic time: 30-45 minutes per completed resource
+        pathwayHours += completedResources.length * 0.6; // 36 minutes average
 
         if (module.quiz.completed && module.quiz.score) {
           quizScoreSum += module.quiz.score;
           totalQuizzes++;
+          // Add 20 minutes per completed quiz
+          pathwayHours += 0.33; // 20 minutes
         }
       });
+
+      totalSessionTime += pathwayHours;
     });
+
+    // Set realistic learning stats
+    learningStats.totalHoursSpent = Math.round(totalSessionTime);
+    learningStats.completedResources = totalResourcesCompleted;
 
     // Calculate average quiz score
     learningStats.averageQuizScore =
@@ -256,12 +264,23 @@ router.get("/user/dashboard", auth, async (req, res) => {
 
     // Get next milestones
     const nextMilestones = activePathways.map(pathway => {
-      const currentModule = pathway.moduleProgress[pathway.currentModule];
-      const estimatedCompletion = new Date(pathway.estimatedCompletionDate);
+      const currentModuleIndex = Math.min(
+        pathway.currentModule,
+        pathway.goalId.modules.length - 1
+      );
+      const currentModule = pathway.goalId.modules[currentModuleIndex];
+
+      // Calculate realistic completion date based on remaining work
+      const remainingModules =
+        pathway.goalId.modules.length - pathway.currentModule;
+      const estimatedDaysRemaining = remainingModules * 7; // 1 week per module
+      const estimatedCompletion = new Date(
+        Date.now() + estimatedDaysRemaining * 24 * 60 * 60 * 1000
+      );
 
       return {
         goalTitle: pathway.goalId.title,
-        moduleName: pathway.goalId.modules[pathway.currentModule].title,
+        moduleName: currentModule ? currentModule.title : "Module suivant",
         dueDate: estimatedCompletion,
       };
     });
@@ -297,15 +316,38 @@ function calculateStreakDays(pathways) {
     });
   });
 
-  let streak = 0;
-  let currentDate = new Date();
+  // Calculate realistic streak (max 30 days for demo)
+  const sortedDates = Array.from(activityDates).sort().reverse();
 
-  while (activityDates.has(currentDate.toISOString().split("T")[0])) {
-    streak++;
-    currentDate.setDate(currentDate.getDate() - 1);
+  if (sortedDates.length === 0) return 0;
+
+  let streak = 1;
+  const today = new Date().toISOString().split("T")[0];
+
+  // Check if user was active today or yesterday
+  if (
+    sortedDates[0] === today ||
+    new Date(sortedDates[0]).getTime() >= Date.now() - 24 * 60 * 60 * 1000
+  ) {
+    // Count consecutive days from most recent
+    for (let i = 1; i < Math.min(sortedDates.length, 30); i++) {
+      const currentDate = new Date(sortedDates[i - 1]);
+      const previousDate = new Date(sortedDates[i]);
+      const dayDiff =
+        (currentDate.getTime() - previousDate.getTime()) /
+        (24 * 60 * 60 * 1000);
+
+      if (dayDiff <= 1) {
+        streak++;
+      } else {
+        break;
+      }
+    }
+  } else {
+    streak = 0; // No recent activity
   }
 
-  return streak;
+  return Math.min(streak, 30); // Cap at 30 days for realism
 }
 
 export const pathwayRoutes = router;

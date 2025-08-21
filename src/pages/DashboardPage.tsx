@@ -132,22 +132,30 @@ function DashboardPage() {
 
           <div className="text-center py-12 glass-card rounded-xl p-8">
             <Brain className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-            <p className="text-gray-400 mb-6">
-              Vous n'avez pas encore de parcours d'apprentissage actif.
-            </p>
+            <div className="mb-6">
+              <h2 className="text-xl font-bold text-gray-100 mb-2">
+                🚀 Commencez votre parcours d'apprentissage !
+              </h2>
+              <p className="text-gray-400">
+                Vous n'avez pas encore de parcours actif. Explorez nos objectifs
+                ou passez l'évaluation pour des recommandations personnalisées.
+              </p>
+            </div>
             <div className="flex flex-col sm:flex-row justify-center gap-4">
               {!hasCompletedAssessment && (
                 <button
                   onClick={() => navigate("/assessment")}
-                  className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                  className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center justify-center"
                 >
+                  <HelpCircle className="w-5 h-5 mr-2" />
                   Faire l'évaluation
                 </button>
               )}
               <button
                 onClick={() => navigate("/goals")}
-                className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center"
               >
+                <BookOpen className="w-5 h-5 mr-2" />
                 Explorer les objectifs
               </button>
             </div>
@@ -363,13 +371,13 @@ function DashboardPage() {
             {dashboard.completedPathways.length > 0 && (
               <div>
                 <h2 className="text-xl font-bold text-gray-100 mb-6">
-                  Parcours complétés
+                  🏆 Parcours complétés avec succès
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {dashboard.completedPathways.map(pathway => (
                     <div
                       key={pathway._id}
-                      className="glass-card p-6 rounded-xl"
+                      className="glass-card p-6 rounded-xl bg-gradient-to-br from-green-500/10 to-green-600/10 border border-green-500/20"
                     >
                       <div className="flex items-center justify-between mb-4">
                         <h3 className="text-lg font-semibold text-gray-200">
@@ -379,15 +387,20 @@ function DashboardPage() {
                           <CheckCircle className="w-5 h-5 text-green-400" />
                         </div>
                       </div>
+                      <div className="mb-3 p-2 rounded-lg bg-green-500/10">
+                        <p className="text-green-400 text-sm font-medium">
+                          ✅ Parcours terminé avec succès
+                        </p>
+                      </div>
                       <div className="flex items-center justify-between text-sm text-gray-400">
                         <span>
                           Complété le {formatDate(pathway.lastAccessedAt)}
                         </span>
                         <button
                           onClick={() => navigate(`/pathways/${pathway._id}`)}
-                          className="text-purple-400 hover:text-purple-300 transition-colors"
+                          className="text-green-400 hover:text-green-300 transition-colors flex items-center"
                         >
-                          Voir les détails
+                          📊 Détails
                         </button>
                       </div>
                     </div>

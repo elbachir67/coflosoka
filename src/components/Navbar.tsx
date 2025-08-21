@@ -218,6 +218,18 @@ function Navbar() {
                     <Users className="w-4 h-4" />
                     <span>Communauté</span>
                   </Link>
+
+                  <Link
+                    to="/external-apis"
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center space-x-2 ${
+                      isActive("/external-apis")
+                        ? "bg-purple-500/20 text-purple-400 shadow-lg"
+                        : "text-gray-400 hover:text-gray-200 hover:bg-gray-800/50"
+                    }`}
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                    <span>APIs Externes</span>
+                  </Link>
                 </>
               )}
 
