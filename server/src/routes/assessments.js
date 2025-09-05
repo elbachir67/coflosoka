@@ -91,6 +91,7 @@ router.post("/submit", auth, async (req, res) => {
     const validCategories = [
       "math",
       "programming",
+      "python",
       "ml",
       "dl",
       "computer_vision",

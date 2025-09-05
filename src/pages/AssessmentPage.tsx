@@ -23,8 +23,8 @@ function AssessmentPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [userProfile, setUserProfile] = useState<UserProfile>({
-    mathLevel: "intermediate",
-    programmingLevel: "intermediate",
+    mathLevel: "beginner",
+    programmingLevel: "beginner",
     domain: "ml",
   });
   const [loading, setLoading] = useState(false);
@@ -92,15 +92,22 @@ function AssessmentPage() {
           setCurrentStep("math");
           setTimeout(() => {
             addBotMessage(
-              "Pour commencer, j'aimerais en savoir plus sur votre niveau en mathématiques. Quel est votre niveau ?",
-              ["Débutant", "Intermédiaire", "Avancé"]
+              "Pour commencer, j'aimerais évaluer votre niveau en mathématiques. Avez-vous déjà étudié les vecteurs et matrices ?",
+              [
+                "Jamais étudié",
+                "Notions de base",
+                "Niveau intermédiaire",
+                "Niveau avancé",
+              ]
             );
           }, 1000);
         }
         break;
 
       case "math":
-        const mathLevel = input.toLowerCase().includes("débutant")
+        const mathLevel = input.toLowerCase().includes("jamais")
+          ? "beginner"
+          : input.toLowerCase().includes("notions")
           ? "beginner"
           : input.toLowerCase().includes("avancé")
           ? "advanced"
@@ -108,40 +115,53 @@ function AssessmentPage() {
         setUserProfile(prev => ({ ...prev, mathLevel }));
         setCurrentStep("programming");
         setTimeout(() => {
-          addBotMessage("Et quel est votre niveau en programmation ?", [
-            "Débutant",
-            "Intermédiaire",
-            "Avancé",
-          ]);
+          addBotMessage(
+            "Maintenant, parlons de programmation. Avez-vous déjà programmé en Python ?",
+            [
+              "Jamais programmé",
+              "Autres langages mais pas Python",
+              "Python débutant",
+              "Python intermédiaire",
+              "Python avancé",
+            ]
+          );
         }, 1000);
         break;
 
       case "programming":
-        const progLevel = input.toLowerCase().includes("débutant")
-          ? "beginner"
-          : input.toLowerCase().includes("avancé")
-          ? "advanced"
-          : "intermediate";
+        const progLevel =
+          input.toLowerCase().includes("jamais") ||
+          input.toLowerCase().includes("autres")
+            ? "beginner"
+            : input.toLowerCase().includes("avancé") ||
+              input.toLowerCase().includes("intermédiaire")
+            ? "advanced"
+            : "intermediate";
         setUserProfile(prev => ({ ...prev, programmingLevel: progLevel }));
         setCurrentStep("domain");
         setTimeout(() => {
-          addBotMessage("Quel domaine de l'IA vous intéresse le plus ?", [
-            "Machine Learning",
-            "Deep Learning",
-            "Computer Vision",
-            "NLP",
-            "MLOps",
-          ]);
+          addBotMessage(
+            "Enfin, quel domaine de l'IA vous attire le plus pour commencer ?",
+            [
+              "Mathématiques pour l'IA",
+              "Programmation Python",
+              "Machine Learning",
+              "Deep Learning",
+              "Computer Vision",
+              "LLMs et IA Générative",
+            ]
+          );
         }, 1000);
         break;
 
       case "domain":
         const domainMap: { [key: string]: string } = {
+          "Mathématiques pour l'IA": "math",
+          "Programmation Python": "programming",
           "Machine Learning": "ml",
           "Deep Learning": "dl",
           "Computer Vision": "computer_vision",
-          NLP: "nlp",
-          MLOps: "mlops",
+          "LLMs et IA Générative": "nlp",
         };
 
         const selectedDomain =
@@ -162,6 +182,7 @@ function AssessmentPage() {
 
   const loadQuestions = async (domain: string) => {
     setLoading(true);
+
     try {
       const response = await fetch(
         `${api.assessments}/questions?domain=${domain}`,
@@ -192,9 +213,6 @@ function AssessmentPage() {
 
       setQuestions(questionsWithRandomizedOptions);
       setCurrentStep("quiz");
-      addBotMessage(
-        "Super ! Je vais maintenant vous poser quelques questions pour évaluer vos connaissances. Prenez votre temps pour répondre."
-      );
     } catch (error) {
       console.error("Error:", error);
       toast.error("Erreur lors du chargement des questions");
@@ -234,7 +252,7 @@ function AssessmentPage() {
         }
 
         // Mettre à jour le profil utilisateur
-        const profileResponse = await fetch(`${api.profiles}`, {
+        const profileResponse = await fetch(`${api.API_URL}/api/profiles`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
@@ -251,7 +269,13 @@ function AssessmentPage() {
         });
 
         if (!profileResponse.ok) {
-          throw new Error("Erreur lors de la mise à jour du profil");
+          const errorData = await profileResponse.json();
+          console.error("Profile update error:", errorData);
+          throw new Error(
+            `Erreur lors de la mise à jour du profil: ${
+              errorData.error || "Erreur inconnue"
+            }`
+          );
         }
 
         // Récompenser l'utilisateur pour avoir complété l'évaluation

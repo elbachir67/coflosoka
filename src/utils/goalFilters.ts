@@ -11,40 +11,64 @@ export function filterGoalsByUserProfile(
     };
   }
 
-  const { mathLevel, programmingLevel, preferredDomain } = profile.preferences;
+  // Extraire les niveaux depuis preferences ou directement depuis profile
+  const mathLevel = profile.preferences?.mathLevel || profile.mathLevel;
+  const programmingLevel =
+    profile.preferences?.programmingLevel || profile.programmingLevel;
+  const preferredDomain =
+    profile.preferences?.preferredDomain || profile.domain;
 
   // Calculer le score de correspondance pour chaque objectif
   const scoredGoals = goals.map(goal => {
     let matchScore = 0;
     let isRecommended = false;
 
-    // Vérifier la correspondance du domaine (40%)
-    if (goal.category === preferredDomain) {
-      matchScore += 40;
+    // Logique de recommandation progressive
+    // Si novice en maths -> recommander parcours maths
+    if (mathLevel === "beginner" && goal.category === "math") {
+      matchScore += 50;
       isRecommended = true;
     }
 
-    // Vérifier les prérequis (30%)
-    const hasRequiredSkills = goal.prerequisites.every(prereq => {
-      if (prereq.category.toLowerCase().includes("math")) {
-        return isLevelSufficient(mathLevel, getMaxSkillLevel(prereq.skills));
+    // Si novice en programmation -> recommander Python
+    if (programmingLevel === "beginner" && goal.category === "programming") {
+      matchScore += 45;
+      isRecommended = true;
+    }
+
+    // Si bases solides -> recommander domaine préféré
+    if (mathLevel !== "beginner" && programmingLevel !== "beginner") {
+      if (goal.category === preferredDomain) {
+        matchScore += 40;
+        isRecommended = true;
       }
-      if (prereq.category.toLowerCase().includes("programming")) {
-        return isLevelSufficient(
-          programmingLevel,
-          getMaxSkillLevel(prereq.skills)
-        );
-      }
-      return true;
-    });
+    }
+
+    // Vérifier les prérequis (25%)
+    const hasRequiredSkills =
+      goal.prerequisites?.every(prereq => {
+        if (prereq.category.toLowerCase().includes("math")) {
+          return isLevelSufficient(
+            mathLevel,
+            getMaxSkillLevelFromNamedSkills(prereq.skills)
+          );
+        }
+        if (prereq.category.toLowerCase().includes("programming")) {
+          return isLevelSufficient(
+            programmingLevel,
+            getMaxSkillLevelFromNamedSkills(prereq.skills)
+          );
+        }
+        return true;
+      }) ?? true;
 
     if (hasRequiredSkills) {
-      matchScore += 30;
+      matchScore += 25;
     } else {
       isRecommended = false;
     }
 
-    // Vérifier le niveau de difficulté (30%)
+    // Vérifier le niveau de difficulté (25%)
     const difficultyMatch = getDifficultyMatchScore(
       goal.level,
       mathLevel,
@@ -52,7 +76,7 @@ export function filterGoalsByUserProfile(
     );
     matchScore += difficultyMatch;
 
-    // Un objectif est recommandé s'il a un score > 70
+    // Un objectif est recommandé s'il a un score > 60
     isRecommended = isRecommended && matchScore > 70;
 
     return {
@@ -122,6 +146,17 @@ function getMaxSkillLevel(skills: { level: GoalDifficulty }[]): GoalDifficulty {
     const currentIndex = levels.indexOf(skill.level);
     const maxIndex = levels.indexOf(max);
     return currentIndex > maxIndex ? skill.level : max;
+  }, "beginner" as GoalDifficulty);
+}
+
+function getMaxSkillLevelFromNamedSkills(
+  skills: { name: string; level: string }[]
+): GoalDifficulty {
+  const levels = ["beginner", "intermediate", "advanced"];
+  return skills.reduce((max, skill) => {
+    const currentIndex = levels.indexOf(skill.level);
+    const maxIndex = levels.indexOf(max);
+    return currentIndex > maxIndex ? (skill.level as GoalDifficulty) : max;
   }, "beginner" as GoalDifficulty);
 }
 

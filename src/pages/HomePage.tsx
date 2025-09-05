@@ -429,20 +429,20 @@ const HomePage = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <CategoryCard
               icon={Brain}
-              title="Fondamentaux"
-              description="Mathématiques, statistiques et programmation essentiels pour l'IA"
+              title="Mathématiques IA"
+              description="Vecteurs, matrices, gradients avec analogies concrètes (alpiniste, GPS, voiture)"
               color="bg-blue-500/20"
             />
             <CategoryCard
-              icon={Database}
-              title="Data Science"
-              description="Analyse de données, feature engineering et visualisation"
+              icon={Code}
+              title="Python IA"
+              description="NumPy, Pandas, Matplotlib avec exemples sénégalais et projets pratiques"
               color="bg-green-500/20"
             />
             <CategoryCard
-              icon={Code}
+              icon={Database}
               title="Machine Learning"
-              description="Algorithmes classiques et apprentissage statistique"
+              description="Algorithmes ML avec cas d'usage africains et applications réelles"
               color="bg-purple-500/20"
             />
             <CategoryCard
@@ -454,13 +454,13 @@ const HomePage = () => {
             <CategoryCard
               icon={BookOpen}
               title="NLP"
-              description="Traitement du langage naturel et LLMs"
+              description="Traitement du langage naturel, Transformers et modèles de langage"
               color="bg-amber-500/20"
             />
             <CategoryCard
               icon={Sparkles}
               title="Computer Vision"
-              description="Vision par ordinateur et traitement d'images"
+              description="Vision par ordinateur, CNN et applications pratiques"
               color="bg-cyan-500/20"
             />
           </div>

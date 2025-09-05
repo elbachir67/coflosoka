@@ -59,16 +59,25 @@ router.put(
       "expert",
     ]),
     body("preferences.preferredDomain").isIn([
+      "math",
+      "programming",
+      "python",
       "ml",
       "dl",
       "computer_vision",
       "nlp",
+      "llm",
       "mlops",
     ]),
   ],
   validate,
   async (req, res) => {
     try {
+      logger.info(
+        `Updating profile for user ${req.user.id} with data:`,
+        req.body
+      );
+
       const profile = await LearnerProfile.findOneAndUpdate(
         { userId: req.user.id },
         {
@@ -84,6 +93,8 @@ router.put(
       res.json(profile);
     } catch (error) {
       logger.error("Error updating learner profile:", error);
+      logger.error("Request body:", req.body);
+      logger.error("Validation errors:", error.errors);
       res.status(400).json({ error: error.message });
     }
   }

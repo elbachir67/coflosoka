@@ -12,10 +12,12 @@ const assessmentSchema = new mongoose.Schema(
       enum: [
         "math",
         "programming",
+        "python",
         "ml",
         "dl",
         "computer_vision",
         "nlp",
+        "llm",
         "mlops",
       ],
     },

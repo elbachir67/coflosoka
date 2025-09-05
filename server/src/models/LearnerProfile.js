@@ -26,7 +26,17 @@ const learnerProfileSchema = new mongoose.Schema(
       },
       preferredDomain: {
         type: String,
-        enum: ["ml", "dl", "computer_vision", "nlp", "mlops"],
+        enum: [
+          "math",
+          "programming",
+          "python",
+          "ml",
+          "dl",
+          "computer_vision",
+          "nlp",
+          "llm",
+          "mlops",
+        ],
         required: true,
       },
     },
@@ -37,6 +47,7 @@ const learnerProfileSchema = new mongoose.Schema(
           enum: [
             "math",
             "programming",
+            "python",
             "ml",
             "dl",
             "computer_vision",

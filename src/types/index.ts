@@ -6,7 +6,10 @@ export type GoalCategory =
   | "computer_vision"
   | "nlp"
   | "data_science"
-  | "mlops";
+  | "mlops"
+  | "math"
+  | "programming"
+  | "llm";
 export type GoalDifficulty = "beginner" | "intermediate" | "advanced";
 
 export interface Resource {
@@ -63,6 +66,11 @@ export interface UserProfile {
   mathLevel: GoalDifficulty;
   programmingLevel: GoalDifficulty;
   domain: GoalCategory;
+  preferences?: {
+    mathLevel: GoalDifficulty;
+    programmingLevel: GoalDifficulty;
+    preferredDomain: GoalCategory;
+  };
 }
 
 // Goal Types
