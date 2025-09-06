@@ -225,31 +225,6 @@ function LoginPage() {
             </motion.button>
           </div>
         </form>
-
-        {/* Utilisateurs de test */}
-        <div className="border-t border-gray-700 pt-6">
-          <h3 className="text-sm font-medium text-gray-400 mb-3">
-            Comptes de démonstration :
-          </h3>
-          <div className="space-y-2">
-            {testUsers.map((user, index) => (
-              <motion.button
-                key={index}
-                whileHover={{
-                  scale: 1.02,
-                  backgroundColor: "rgba(75, 85, 99, 0.5)",
-                }}
-                onClick={() => fillTestUser(user)}
-                className="w-full text-left px-3 py-2 bg-gray-800/50 hover:bg-gray-700/50 rounded-lg text-sm text-gray-300 transition-colors"
-              >
-                <div className="font-medium">{user.email}</div>
-                <div className="text-gray-500 text-xs">
-                  Mot de passe: {user.password}
-                </div>
-              </motion.button>
-            ))}
-          </div>
-        </div>
       </motion.div>
     </div>
   );
