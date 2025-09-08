@@ -28,36 +28,49 @@ import { searchRoutes } from "./routes/search.js";
 
 import { config } from "./config/env.js";
 
+// Get the directory name of the current module
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Load environment variables from the root .env file
 dotenv.config({ path: path.resolve(__dirname, "../../.env") });
+
+// Verify critical environment variables
+const requiredEnvVars = ["MONGODB_URI", "JWT_SECRET", "PORT"];
+const missingEnvVars = requiredEnvVars.filter(varName => !process.env[varName]);
+
+if (missingEnvVars.length > 0) {
+  logger.error(
+    `Missing required environment variables: ${missingEnvVars.join(", ")}`
+  );
+  process.exit(1);
+}
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// CORS Configuration - ACCEPTER TOUT
-app.use(cors({
-  origin: true, // Accepte toutes les origines
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
-
-// Options preflight
-app.options('*', cors());
+app.use(
+  cors({
+    origin: [
+      "http://localhost:5173",
+      "http://localhost:4173",
+      "https://ucad-frontend-staging.vercel.app",
+      "https://ucad-frontend-staging-*.vercel.app", // Pour les previews
+    ],
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
+  })
+);
 
 app.use(express.json());
 app.use(morgan("dev"));
 
-// Serve static files
-app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
-
-// Health check
+// Health check route
 app.get("/health", (req, res) => {
   res.json({
     status: "OK",
-    environment: process.env.NODE_ENV || "development",
+    environment: process.env.NODE_ENV || "staging",
     timestamp: new Date().toISOString(),
   });
 });
@@ -71,9 +84,13 @@ app.use("/api/users", userRoutes);
 app.use("/api/profiles", learnerProfileRoutes);
 app.use("/api/pathways", pathwayRoutes);
 app.use("/api", quizRoutes);
-app.use("/api/ai", aiRoutes);
-app.use("/api/admin", adminRoutes);
+app.use("/api/ai", aiRoutes); // Nouvelles routes IA
+app.use("/api/admin", adminRoutes); // Routes d'administration
 app.use("/api/collaboration", collaborationRoutes);
+app.use("/api/forum", collaborationRoutes); // Alias pour compatibilité
+app.use("/api/study-groups", collaborationRoutes); // Alias pour les groupes d'étude
+app.use("/api/shared-resources", collaborationRoutes); // Alias pour les ressources partagées
+app.use("/api/peer-review", collaborationRoutes); // Alias pour la revue par les pairs
 app.use("/api/gamification", gamificationRoutes);
 app.use("/api/analytics", analyticsRoutes);
 app.use("/api/external", externalApisRoutes);
@@ -86,10 +103,14 @@ app.use(errorHandler);
 // Start server
 const startServer = async () => {
   try {
+    // Connect to MongoDB first
     await connectDB();
+
+    // Then start the server
     app.listen(PORT, () => {
       logger.info(`Server running on port ${PORT}`);
-      logger.info(`CORS enabled for all origins`);
+      logger.info(`Environment: ${process.env.NODE_ENV || "development"}`);
+      logger.info("JWT_SECRET is set:", !!process.env.JWT_SECRET);
     });
   } catch (error) {
     logger.error("Server startup error:", error);
