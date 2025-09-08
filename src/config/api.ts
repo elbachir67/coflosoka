@@ -1,4 +1,9 @@
-export const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+// Détection automatique du protocole et de l'hôte
+const protocol = window.location.protocol;
+const host = window.location.hostname;
+const port = window.location.port ? `:${window.location.port}` : '';
+
+export const API_URL = import.meta.env.VITE_API_URL || `${protocol}//${host}${port}`;
 
 export const api = {
   // Base URL
@@ -11,7 +16,7 @@ export const api = {
     profile: `${API_URL}/api/auth/profile`,
   },
 
-  // Base endpoints
+  // Reste du code identique...
   sections: `${API_URL}/api/sections`,
   steps: `${API_URL}/api/steps`,
   resources: `${API_URL}/api/resources`,
@@ -23,20 +28,11 @@ export const api = {
   users: `${API_URL}/api/users`,
   analytics: `${API_URL}/api/analytics`,
 
-  // Helper pour obtenir les ressources d'une étape
   stepResources: (stepId: string) => `${API_URL}/api/resources/step/${stepId}`,
-
-  // Helper pour obtenir les étapes d'une section
-  sectionSteps: (sectionId: string) =>
-    `${API_URL}/api/steps/section/${sectionId}`,
-
-  // Helper pour les évaluations
+  sectionSteps: (sectionId: string) => `${API_URL}/api/steps/section/${sectionId}`,
   assessmentHistory: `${API_URL}/api/assessments/history`,
   assessmentResults: (id: string) => `${API_URL}/api/assessments/${id}`,
-  assessmentQuestions: (domain: string) =>
-    `${API_URL}/api/assessments/questions?domain=${domain}`,
-
-  // Helper pour les profils utilisateurs
+  assessmentQuestions: (domain: string) => `${API_URL}/api/assessments/questions?domain=${domain}`,
   userProfile: `${API_URL}/api/profiles`,
   userGoals: `${API_URL}/api/profiles/goals`,
   userCertificates: `${API_URL}/api/profiles/certificates`,
