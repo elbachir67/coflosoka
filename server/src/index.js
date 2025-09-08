@@ -100,3 +100,27 @@ const startServer = async () => {
 startServer();
 
 export default app;
+
+// Route publique pour tester Ollama
+app.get("/api/public/ollama-test", async (req, res) => {
+  try {
+    const response = await fetch("http://localhost:11434");
+    const text = await response.text();
+    
+    const modelsResponse = await fetch("http://localhost:11434/api/tags");
+    const models = await modelsResponse.json();
+    
+    res.json({
+      status: "OK",
+      ollamaResponse: text,
+      models: models.models || [],
+      timestamp: new Date()
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: "Error",
+      error: error.message,
+      ollama_url: process.env.OLLAMA_URL
+    });
+  }
+});
