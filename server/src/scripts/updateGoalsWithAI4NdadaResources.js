@@ -32,7 +32,7 @@ const AI4NDADA_RESOURCES = {
   math: [
     {
       title: "Les Vecteurs - Concepts Fondamentaux",
-      url: "http://ai4ndada01.surge.sh/modules/math/vectors.html",
+      url: "http://flow-ai.surge.sh/modules/math/vectors.html",
       type: "article",
       duration: 90,
       description:
@@ -40,7 +40,7 @@ const AI4NDADA_RESOURCES = {
     },
     {
       title: "Les Matrices - Transformations et Applications",
-      url: "http://ai4ndada01.surge.sh/modules/math/matrices.html",
+      url: "http://flow-ai.surge.sh/modules/math/matrices.html",
       type: "article",
       duration: 120,
       description:
@@ -48,7 +48,7 @@ const AI4NDADA_RESOURCES = {
     },
     {
       title: "Valeurs Propres et Vecteurs Propres",
-      url: "http://ai4ndada01.surge.sh/modules/math/eigenvalues.html",
+      url: "http://flow-ai.surge.sh/modules/math/eigenvalues.html",
       type: "article",
       duration: 150,
       description:
@@ -56,7 +56,7 @@ const AI4NDADA_RESOURCES = {
     },
     {
       title: "Les Dérivées - Mesure du Changement",
-      url: "http://ai4ndada01.surge.sh/modules/math/derivatives.html",
+      url: "http://flow-ai.surge.sh/modules/math/derivatives.html",
       type: "article",
       duration: 100,
       description:
@@ -64,7 +64,7 @@ const AI4NDADA_RESOURCES = {
     },
     {
       title: "Les Gradients - Optimisation Multivariable",
-      url: "http://ai4ndada01.surge.sh/modules/math/gradients.html",
+      url: "http://flow-ai.surge.sh/modules/math/gradients.html",
       type: "article",
       duration: 130,
       description:
@@ -72,7 +72,7 @@ const AI4NDADA_RESOURCES = {
     },
     {
       title: "Les Probabilités - Gestion de l'Incertitude",
-      url: "http://ai4ndada01.surge.sh/modules/math/probability.html",
+      url: "http://flow-ai.surge.sh/modules/math/probability.html",
       type: "article",
       duration: 110,
       description:
@@ -80,7 +80,7 @@ const AI4NDADA_RESOURCES = {
     },
     {
       title: "Les Statistiques - Analyse de Données",
-      url: "http://ai4ndada01.surge.sh/modules/math/statistics.html",
+      url: "http://flow-ai.surge.sh/modules/math/statistics.html",
       type: "article",
       duration: 140,
       description:
@@ -92,7 +92,7 @@ const AI4NDADA_RESOURCES = {
   python: [
     {
       title: "Python Bases - Écosystème IA",
-      url: "http://ai4ndada01.surge.sh/modules/python/basics.html",
+      url: "http://flow-ai.surge.sh/modules/python/basics.html",
       type: "article",
       duration: 180,
       description:
@@ -100,7 +100,7 @@ const AI4NDADA_RESOURCES = {
     },
     {
       title: "NumPy - Révolution du Calcul Numérique",
-      url: "http://ai4ndada01.surge.sh/modules/python/numpy.html",
+      url: "http://flow-ai.surge.sh/modules/python/numpy.html",
       type: "article",
       duration: 150,
       description:
@@ -108,7 +108,7 @@ const AI4NDADA_RESOURCES = {
     },
     {
       title: "Pandas - Excel Killer pour l'IA",
-      url: "http://ai4ndada01.surge.sh/modules/python/pandas.html",
+      url: "http://flow-ai.surge.sh/modules/python/pandas.html",
       type: "article",
       duration: 160,
       description:
@@ -116,7 +116,7 @@ const AI4NDADA_RESOURCES = {
     },
     {
       title: "Matplotlib - Visualisation Puissante",
-      url: "http://ai4ndada01.surge.sh/modules/python/matplotlib.html",
+      url: "http://flow-ai.surge.sh/modules/python/matplotlib.html",
       type: "article",
       duration: 120,
       description:
@@ -124,7 +124,7 @@ const AI4NDADA_RESOURCES = {
     },
     {
       title: "Algorithmes - Efficacité Cruciale en IA",
-      url: "http://ai4ndada01.surge.sh/modules/python/algorithms.html",
+      url: "http://flow-ai.surge.sh/modules/python/algorithms.html",
       type: "article",
       duration: 140,
       description:
@@ -136,7 +136,7 @@ const AI4NDADA_RESOURCES = {
   ml: [
     {
       title: "Introduction ML - Révolution de l'Apprentissage",
-      url: "http://ai4ndada01.surge.sh/modules/ml/introduction.html",
+      url: "http://flow-ai.surge.sh/modules/ml/introduction.html",
       type: "article",
       duration: 120,
       description:

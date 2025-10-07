@@ -52,7 +52,7 @@ const PROGRESSIVE_PATHWAYS = [
         resources: [
           {
             title: "Les Vecteurs - AI4Ndada",
-            url: "http://ai4ndada01.surge.sh/modules/math/vectors.html",
+            url: "http://flow-ai.surge.sh/modules/math/vectors.html",
             type: "article",
             duration: 90,
           },
@@ -94,7 +94,7 @@ const PROGRESSIVE_PATHWAYS = [
         resources: [
           {
             title: "Les Matrices - AI4Ndada",
-            url: "http://ai4ndada01.surge.sh/modules/math/matrices.html",
+            url: "http://flow-ai.surge.sh/modules/math/matrices.html",
             type: "article",
             duration: 120,
           },
@@ -136,7 +136,7 @@ const PROGRESSIVE_PATHWAYS = [
         resources: [
           {
             title: "Valeurs Propres et Vecteurs Propres - AI4Ndada",
-            url: "http://ai4ndada01.surge.sh/modules/math/eigenvalues.html",
+            url: "http://flow-ai.surge.sh/modules/math/eigenvalues.html",
             type: "article",
             duration: 150,
           },
@@ -172,13 +172,13 @@ const PROGRESSIVE_PATHWAYS = [
         resources: [
           {
             title: "Les Dérivées - AI4Ndada",
-            url: "http://ai4ndada01.surge.sh/modules/math/derivatives.html",
+            url: "http://flow-ai.surge.sh/modules/math/derivatives.html",
             type: "article",
             duration: 100,
           },
           {
             title: "Les Gradients - AI4Ndada",
-            url: "http://ai4ndada01.surge.sh/modules/math/gradients.html",
+            url: "http://flow-ai.surge.sh/modules/math/gradients.html",
             type: "article",
             duration: 130,
           },
@@ -214,13 +214,13 @@ const PROGRESSIVE_PATHWAYS = [
         resources: [
           {
             title: "Les Probabilités - AI4Ndada",
-            url: "http://ai4ndada01.surge.sh/modules/math/probability.html",
+            url: "http://flow-ai.surge.sh/modules/math/probability.html",
             type: "article",
             duration: 110,
           },
           {
             title: "Les Statistiques - AI4Ndada",
-            url: "http://ai4ndada01.surge.sh/modules/math/statistics.html",
+            url: "http://flow-ai.surge.sh/modules/math/statistics.html",
             type: "article",
             duration: 140,
           },
@@ -302,7 +302,7 @@ const PROGRESSIVE_PATHWAYS = [
         resources: [
           {
             title: "Python Bases - AI4Ndada",
-            url: "http://ai4ndada01.surge.sh/modules/python/basics.html",
+            url: "http://flow-ai.surge.sh/modules/python/basics.html",
             type: "article",
             duration: 180,
           },
@@ -344,7 +344,7 @@ const PROGRESSIVE_PATHWAYS = [
         resources: [
           {
             title: "NumPy - AI4Ndada",
-            url: "http://ai4ndada01.surge.sh/modules/python/numpy.html",
+            url: "http://flow-ai.surge.sh/modules/python/numpy.html",
             type: "article",
             duration: 150,
           },
@@ -386,7 +386,7 @@ const PROGRESSIVE_PATHWAYS = [
         resources: [
           {
             title: "Pandas - AI4Ndada",
-            url: "http://ai4ndada01.surge.sh/modules/python/pandas.html",
+            url: "http://flow-ai.surge.sh/modules/python/pandas.html",
             type: "article",
             duration: 160,
           },
@@ -428,13 +428,13 @@ const PROGRESSIVE_PATHWAYS = [
         resources: [
           {
             title: "Matplotlib - AI4Ndada",
-            url: "http://ai4ndada01.surge.sh/modules/python/matplotlib.html",
+            url: "http://flow-ai.surge.sh/modules/python/matplotlib.html",
             type: "article",
             duration: 120,
           },
           {
             title: "Algorithmes - AI4Ndada",
-            url: "http://ai4ndada01.surge.sh/modules/python/algorithms.html",
+            url: "http://flow-ai.surge.sh/modules/python/algorithms.html",
             type: "article",
             duration: 140,
           },
@@ -518,7 +518,7 @@ const PROGRESSIVE_PATHWAYS = [
         resources: [
           {
             title: "Introduction ML - AI4Ndada",
-            url: "http://ai4ndada01.surge.sh/modules/ml/introduction.html",
+            url: "http://flow-ai.surge.sh/modules/ml/introduction.html",
             type: "article",
             duration: 120,
           },
@@ -560,7 +560,7 @@ const PROGRESSIVE_PATHWAYS = [
         resources: [
           {
             title: "Régression Linéaire - AI4Ndada",
-            url: "http://ai4ndada01.surge.sh/modules/ml/linear-regression.html",
+            url: "http://flow-ai.surge.sh/modules/ml/linear-regression.html",
             type: "article",
             duration: 90,
           },
@@ -602,7 +602,7 @@ const PROGRESSIVE_PATHWAYS = [
         resources: [
           {
             title: "Classification - AI4Ndada",
-            url: "http://ai4ndada01.surge.sh/modules/ml/classification.html",
+            url: "http://flow-ai.surge.sh/modules/ml/classification.html",
             type: "article",
             duration: 100,
           },
@@ -643,7 +643,7 @@ const PROGRESSIVE_PATHWAYS = [
         resources: [
           {
             title: "Clustering - AI4Ndada",
-            url: "http://ai4ndada01.surge.sh/modules/ml/clustering.html",
+            url: "http://flow-ai.surge.sh/modules/ml/clustering.html",
             type: "article",
             duration: 90,
           },
@@ -679,7 +679,7 @@ const PROGRESSIVE_PATHWAYS = [
         resources: [
           {
             title: "Validation - AI4Ndada",
-            url: "http://ai4ndada01.surge.sh/modules/ml/validation.html",
+            url: "http://flow-ai.surge.sh/modules/ml/validation.html",
             type: "article",
             duration: 110,
           },
@@ -762,7 +762,7 @@ const PROGRESSIVE_PATHWAYS = [
         resources: [
           {
             title: "Perceptron - AI4Ndada",
-            url: "http://ai4ndada01.surge.sh/modules/dl/perceptron.html",
+            url: "http://flow-ai.surge.sh/modules/dl/perceptron.html",
             type: "article",
             duration: 90,
           },
@@ -804,7 +804,7 @@ const PROGRESSIVE_PATHWAYS = [
         resources: [
           {
             title: "Réseaux de Neurones - AI4Ndada",
-            url: "http://ai4ndada01.surge.sh/modules/dl/neural-networks.html",
+            url: "http://flow-ai.surge.sh/modules/dl/neural-networks.html",
             type: "article",
             duration: 120,
           },
@@ -839,7 +839,7 @@ const PROGRESSIVE_PATHWAYS = [
         resources: [
           {
             title: "Backpropagation - AI4Ndada",
-            url: "http://ai4ndada01.surge.sh/modules/dl/backpropagation.html",
+            url: "http://flow-ai.surge.sh/modules/dl/backpropagation.html",
             type: "article",
             duration: 130,
           },
@@ -874,7 +874,7 @@ const PROGRESSIVE_PATHWAYS = [
         resources: [
           {
             title: "CNN - AI4Ndada",
-            url: "http://ai4ndada01.surge.sh/modules/dl/cnn.html",
+            url: "http://flow-ai.surge.sh/modules/dl/cnn.html",
             type: "article",
             duration: 140,
           },
@@ -916,7 +916,7 @@ const PROGRESSIVE_PATHWAYS = [
         resources: [
           {
             title: "RNN/LSTM - AI4Ndada",
-            url: "http://ai4ndada01.surge.sh/modules/dl/rnn.html",
+            url: "http://flow-ai.surge.sh/modules/dl/rnn.html",
             type: "article",
             duration: 120,
           },
@@ -1005,7 +1005,7 @@ const PROGRESSIVE_PATHWAYS = [
         resources: [
           {
             title: "Attention - AI4Ndada",
-            url: "http://ai4ndada01.surge.sh/modules/llm/attention.html",
+            url: "http://flow-ai.surge.sh/modules/llm/attention.html",
             type: "article",
             duration: 120,
           },
@@ -1047,7 +1047,7 @@ const PROGRESSIVE_PATHWAYS = [
         resources: [
           {
             title: "Transformers - AI4Ndada",
-            url: "http://ai4ndada01.surge.sh/modules/llm/transformers.html",
+            url: "http://flow-ai.surge.sh/modules/llm/transformers.html",
             type: "article",
             duration: 150,
           },
@@ -1089,7 +1089,7 @@ const PROGRESSIVE_PATHWAYS = [
         resources: [
           {
             title: "GPT & BERT - AI4Ndada",
-            url: "http://ai4ndada01.surge.sh/modules/llm/gpt-bert.html",
+            url: "http://flow-ai.surge.sh/modules/llm/gpt-bert.html",
             type: "article",
             duration: 140,
           },
@@ -1131,7 +1131,7 @@ const PROGRESSIVE_PATHWAYS = [
         resources: [
           {
             title: "Fine-tuning - AI4Ndada",
-            url: "http://ai4ndada01.surge.sh/modules/llm/fine-tuning.html",
+            url: "http://flow-ai.surge.sh/modules/llm/fine-tuning.html",
             type: "article",
             duration: 120,
           },
@@ -1167,7 +1167,7 @@ const PROGRESSIVE_PATHWAYS = [
         resources: [
           {
             title: "Prompt Engineering - AI4Ndada",
-            url: "http://ai4ndada01.surge.sh/modules/llm/prompt-engineering.html",
+            url: "http://flow-ai.surge.sh/modules/llm/prompt-engineering.html",
             type: "article",
             duration: 110,
           },
