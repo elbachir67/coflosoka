@@ -2,7 +2,7 @@
 
 ## Vue d'ensemble
 
-L'Espace de Travail Pratique Intégré est une fonctionnalité qui permettra aux apprenants de pratiquer le code directement dans la plateforme IA4Nieup sans avoir à installer des outils localement. Cette fonctionnalité est essentielle pour réduire les frictions dans le parcours d'apprentissage et permettre une expérience pratique immédiate.
+L'Espace de Travail Pratique Intégré est une fonctionnalité qui permettra aux apprenants de pratiquer le code directement dans la plateforme AI4Nieup sans avoir à installer des outils localement. Cette fonctionnalité est essentielle pour réduire les frictions dans le parcours d'apprentissage et permettre une expérience pratique immédiate.
 
 ## Objectifs
 

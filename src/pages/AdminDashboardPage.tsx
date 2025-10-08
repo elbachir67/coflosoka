@@ -222,7 +222,7 @@ function AdminDashboardPage() {
             </h1>
             <p className="text-gray-400 mt-2 flex items-center">
               <Shield className="w-4 h-4 mr-2" />
-              Gestion et supervision de la plateforme IA4Nieup
+              Gestion et supervision de la plateforme AI4Nieup
             </p>
           </div>
           <div className="flex items-center space-x-2 bg-red-500/10 px-4 py-2 rounded-lg border border-red-500/20">

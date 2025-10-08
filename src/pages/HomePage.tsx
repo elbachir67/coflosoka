@@ -519,7 +519,7 @@ const HomePage = () => {
         {/* Footer */}
         <div className="border-t border-gray-800 pt-8 mt-16 text-center">
           <p className="text-gray-500 text-sm">
-            © 2025 IA4Nieup - Centre d'Excellence en Intelligence Artificielle
+            © 2025 AI4Nieup - Centre d'Excellence en Intelligence Artificielle
           </p>
         </div>
       </div>

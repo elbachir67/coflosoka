@@ -1,6 +1,6 @@
-# Plan de Développement par Phases pour IA4Nieup
+# Plan de Développement par Phases pour AI4Nieup
 
-Ce document présente un plan de développement structuré en phases pour l'implémentation des nouvelles fonctionnalités de la plateforme IA4Nieup.
+Ce document présente un plan de développement structuré en phases pour l'implémentation des nouvelles fonctionnalités de la plateforme AI4Nieup.
 
 ## Phase 1: Amélioration de l'Expérience d'Apprentissage
 

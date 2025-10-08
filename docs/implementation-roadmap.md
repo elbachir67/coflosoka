@@ -1,6 +1,6 @@
 # Feuille de Route d'Implémentation
 
-Ce document présente une feuille de route détaillée pour l'implémentation des nouvelles fonctionnalités de la plateforme IA4Nieup, organisée par phases et avec des estimations de temps.
+Ce document présente une feuille de route détaillée pour l'implémentation des nouvelles fonctionnalités de la plateforme AI4Nieup, organisée par phases et avec des estimations de temps.
 
 ## Vue d'ensemble
 

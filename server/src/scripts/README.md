@@ -1,6 +1,6 @@
 # Database Management Scripts
 
-This directory contains scripts for managing the database of the IA4Nieup platform.
+This directory contains scripts for managing the database of the AI4Nieup platform.
 
 ## Available Scripts
 

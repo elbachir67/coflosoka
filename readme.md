@@ -1,8 +1,8 @@
-# IA4Nieup - Plateforme d'Apprentissage en IA
+# AI4Nieup - Plateforme d'Apprentissage en IA
 
 ## Présentation du Projet
 
-IA4Nieup est une plateforme d'apprentissage adaptative et personnalisée pour maîtriser l'intelligence artificielle, de la théorie à la pratique. Ce projet fait partie de l'initiative AI Skilling du DiCentre de l'UCAD (Université Cheikh Anta Diop de Dakar).
+AI4Nieup est une plateforme d'apprentissage adaptative et personnalisée pour maîtriser l'intelligence artificielle, de la théorie à la pratique. Ce projet fait partie de l'initiative AI Skilling du DiCentre de l'UCAD (Université Cheikh Anta Diop de Dakar).
 
 ### Fonctionnalités Principales
 

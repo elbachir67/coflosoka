@@ -2,7 +2,7 @@
 
 ## Vue d'ensemble
 
-L'intégration d'outils d'IA générative dans la plateforme IA4Nieup vise à enrichir l'expérience d'apprentissage en permettant aux apprenants d'utiliser des modèles comme ChatGPT ou GitHub Copilot directement dans l'environnement d'apprentissage. Cette fonctionnalité permettra non seulement d'accélérer l'apprentissage, mais aussi de familiariser les apprenants avec l'utilisation pratique de ces outils dans un contexte professionnel.
+L'intégration d'outils d'IA générative dans la plateforme AI4Nieup vise à enrichir l'expérience d'apprentissage en permettant aux apprenants d'utiliser des modèles comme ChatGPT ou GitHub Copilot directement dans l'environnement d'apprentissage. Cette fonctionnalité permettra non seulement d'accélérer l'apprentissage, mais aussi de familiariser les apprenants avec l'utilisation pratique de ces outils dans un contexte professionnel.
 
 ## Objectifs
 

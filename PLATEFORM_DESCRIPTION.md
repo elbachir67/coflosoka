@@ -1,8 +1,8 @@
-# IA4Nieup - Plateforme d'Apprentissage Adaptatif en Intelligence Artificielle
+# AI4Nieup - Plateforme d'Apprentissage Adaptatif en Intelligence Artificielle
 
 ## 🎯 Vision et Mission
 
-**IA4Nieup** est une plateforme d'apprentissage innovante qui démocratise l'accès à l'intelligence artificielle en Afrique. Elle combine l'expertise pédagogique d'**AI4Ndada** avec des technologies d'apprentissage adaptatif pour offrir une expérience personnalisée, gamifiée et collaborative.
+**AI4Nieup** est une plateforme d'apprentissage innovante qui démocratise l'accès à l'intelligence artificielle en Afrique. Elle combine l'expertise pédagogique d'**AI4Ndada** avec des technologies d'apprentissage adaptatif pour offrir une expérience personnalisée, gamifiée et collaborative.
 
 ## 🚀 Objectifs Principaux
 
