@@ -26,6 +26,7 @@ import {
   BarChart3,
   Sparkles,
   Shield,
+  GraduationCap,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -217,6 +218,18 @@ function Navbar() {
                   >
                     <Users className="w-4 h-4" />
                     <span>Communauté</span>
+                  </Link>
+
+                  <Link
+                    to="/ai-tutor"
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center space-x-2 ${
+                      isActive("/ai-tutor")
+                        ? "bg-green-500/20 text-green-400 shadow-lg"
+                        : "text-gray-400 hover:text-gray-200 hover:bg-gray-800/50"
+                    }`}
+                  >
+                    <GraduationCap className="w-4 h-4" />
+                    <span>AI Tutor</span>
                   </Link>
 
                   <Link
@@ -831,6 +844,19 @@ function Navbar() {
                         >
                           <Users className="w-5 h-5" />
                           <span>Communauté</span>
+                        </Link>
+
+                        <Link
+                          to="/ai-tutor"
+                          className={`flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
+                            isActive("/ai-tutor")
+                              ? "bg-green-500/20 text-green-400"
+                              : "text-gray-300 hover:bg-gray-800/50 hover:text-white"
+                          }`}
+                          onClick={() => setMobileMenuOpen(false)}
+                        >
+                          <GraduationCap className="w-5 h-5" />
+                          <span>AI Tutor</span>
                         </Link>
 
                         <Link

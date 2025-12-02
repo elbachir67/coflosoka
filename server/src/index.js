@@ -25,6 +25,7 @@ import analyticsRoutes from "./routes/analytics.js";
 import externalApisRoutes from "./routes/externalApis.js";
 import { ollamaRoutes } from "./routes/ollama.js";
 import { searchRoutes } from "./routes/search.js";
+import { tutorRoutes } from "./routes/tutor.js";
 
 import { config } from "./config/env.js";
 
@@ -79,6 +80,7 @@ app.use("/api/analytics", analyticsRoutes);
 app.use("/api/external", externalApisRoutes);
 app.use("/api/ollama", ollamaRoutes);
 app.use("/api/search", searchRoutes);
+app.use("/api/tutor", tutorRoutes);
 
 // Error handling
 app.use(errorHandler);

@@ -8,6 +8,7 @@ export const API_URL = import.meta.env.VITE_API_URL || `${protocol}//${host}${po
 export const api = {
   // Base URL
   API_URL,
+  baseUrl: `${API_URL}/api`,
 
   // Auth endpoints
   auth: {
@@ -27,6 +28,7 @@ export const api = {
   pathways: `${API_URL}/api/pathways`,
   users: `${API_URL}/api/users`,
   analytics: `${API_URL}/api/analytics`,
+  tutor: `${API_URL}/api/tutor`,
 
   stepResources: (stepId: string) => `${API_URL}/api/resources/step/${stepId}`,
   sectionSteps: (sectionId: string) => `${API_URL}/api/steps/section/${sectionId}`,

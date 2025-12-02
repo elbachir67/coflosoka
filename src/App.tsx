@@ -20,6 +20,7 @@ import AnalyticsPage from "./pages/AnalyticsPage";
 import AchievementsPage from "./pages/AchievementsPage";
 import CollaborationPage from "./pages/CollaborationPage";
 import ExternalApisPage from "./pages/ExternalApisPage";
+import AITutorPage from "./pages/AITutorPage";
 import LevelUpModal from "./components/LevelUpModal";
 import XPNotification from "./components/XPNotification";
 import AchievementUnlocked from "./components/AchievementUnlocked";
@@ -172,6 +173,15 @@ function App() {
           element={
             <PrivateRoute>
               <ExternalApisPage />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/ai-tutor"
+          element={
+            <PrivateRoute>
+              <AITutorPage />
             </PrivateRoute>
           }
         />
