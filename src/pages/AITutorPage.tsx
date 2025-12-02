@@ -1,134 +1,79 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import {
-  GraduationCap,
-  Sparkles,
-  AlertTriangle,
-  CheckCircle,
-  Zap,
+  Send,
+  Sun,
+  Moon,
+  Globe,
+  Bot,
+  User,
+  BookOpen,
+  Target,
+  Lightbulb,
+  RefreshCw,
+  ChevronDown,
 } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
-import {
-  CategorySelector,
-  SuggestedQuestions,
-  TutorResponse,
-  TutorChat,
-} from "../components/AITutor";
 import { api } from "../config/api";
-
-interface Category {
-  id: string;
-  name: string;
-  icon: string;
-  description: string;
-  color: string;
-}
 
 interface Message {
   type: "user" | "assistant";
   content: string;
-  timestamp: Date;
 }
 
-interface TutorStatus {
-  ollamaAvailable: boolean;
-  tinyLlamaReady: boolean;
-  availableModels: string[];
-}
+const categories = [
+  { id: "ml", name: "Machine Learning" },
+  { id: "dl", name: "Deep Learning" },
+  { id: "nlp", name: "NLP" },
+  { id: "cv", name: "Computer Vision" },
+  { id: "math", name: "Maths" },
+  { id: "python", name: "Python" },
+];
+
+const defaultQuestions: Record<string, string[]> = {
+  ml: ["C'est quoi le Machine Learning ?", "Supervisé vs non supervisé ?", "C'est quoi l'overfitting ?"],
+  dl: ["C'est quoi un réseau de neurones ?", "Comment marche le backpropagation ?", "C'est quoi un CNN ?"],
+  nlp: ["C'est quoi le NLP ?", "Comment marche un tokenizer ?", "C'est quoi un Transformer ?"],
+  cv: ["C'est quoi la Computer Vision ?", "Comment marche une convolution ?", "C'est quoi le pooling ?"],
+  math: ["C'est quoi un gradient ?", "Comment marche la descente de gradient ?", "C'est quoi une matrice ?"],
+  python: ["C'est quoi NumPy ?", "Comment utiliser Pandas ?", "C'est quoi TensorFlow ?"],
+};
 
 function AITutorPage() {
   const { user } = useAuth();
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState("ml");
-  const [suggestedQuestions, setSuggestedQuestions] = useState<string[]>([]);
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [theme, setTheme] = useState<"light" | "dark">("dark");
   const [language, setLanguage] = useState<"fr" | "en">("fr");
-  const [error, setError] = useState<string | null>(null);
-  const [status, setStatus] = useState<TutorStatus | null>(null);
+  const [category, setCategory] = useState("ml");
+  const [showCategoryMenu, setShowCategoryMenu] = useState(false);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [input, setInput] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
 
-  // Charger les catégories au démarrage
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const response = await fetch(`${api.tutor}/categories`);
-        const data = await response.json();
-        if (data.success) {
-          setCategories(data.categories);
-        }
-      } catch (err) {
-        console.error("Error fetching categories:", err);
-        // Catégories par défaut si l'API échoue
-        setCategories([
-          { id: "ml", name: "Machine Learning", icon: "Brain", description: "Apprentissage automatique", color: "purple" },
-          { id: "dl", name: "Deep Learning", icon: "Network", description: "Réseaux profonds", color: "blue" },
-          { id: "nlp", name: "NLP", icon: "MessageSquare", description: "Traitement du langage", color: "green" },
-          { id: "cv", name: "Computer Vision", icon: "Eye", description: "Vision par ordinateur", color: "orange" },
-          { id: "math", name: "Maths pour l'IA", icon: "Calculator", description: "Fondements mathématiques", color: "red" },
-          { id: "python", name: "Python", icon: "Code", description: "Programmation Python", color: "yellow" },
-        ]);
-      }
-    };
+  const isDark = theme === "dark";
 
-    const checkStatus = async () => {
-      try {
-        const response = await fetch(`${api.tutor}/status`);
-        const data = await response.json();
-        if (data.success) {
-          setStatus(data.status);
-        }
-      } catch (err) {
-        console.error("Error checking status:", err);
-      }
-    };
-
-    fetchCategories();
-    checkStatus();
-  }, []);
-
-  // Charger les questions suggérées quand la catégorie change
-  useEffect(() => {
-    const fetchQuestions = async () => {
-      try {
-        const response = await fetch(
-          `${api.tutor}/questions/${selectedCategory}`
-        );
-        const data = await response.json();
-        if (data.success) {
-          setSuggestedQuestions(data.questions);
-        }
-      } catch (err) {
-        console.error("Error fetching questions:", err);
-        // Questions par défaut
-        setSuggestedQuestions([
-          "C'est quoi le Machine Learning ?",
-          "Comment ça fonctionne ?",
-          "À quoi ça sert ?",
-        ]);
-      }
-    };
-
-    fetchQuestions();
-  }, [selectedCategory]);
-
-  // Scroll automatique vers le bas
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const handleSendMessage = async (question: string) => {
-    if (!user) return;
+  const parseResponse = (content: string) => {
+    const sections = { definition: "", analogy: "", takeaway: "" };
+    const defMatch = content.match(/📖\s*(?:Définition|Definition)\s*:\s*([^🎯💡]*)/i);
+    const anaMatch = content.match(/🎯\s*(?:Analogie|Analogy)\s*:\s*([^📖💡]*)/i);
+    const keyMatch = content.match(/💡\s*(?:À retenir|Key takeaway)\s*:\s*([^📖🎯]*)/i);
+    if (defMatch) sections.definition = defMatch[1].trim();
+    if (anaMatch) sections.analogy = anaMatch[1].trim();
+    if (keyMatch) sections.takeaway = keyMatch[1].trim();
+    return sections;
+  };
 
-    // Ajouter le message utilisateur
-    const userMessage: Message = {
-      type: "user",
-      content: question,
-      timestamp: new Date(),
-    };
-    setMessages((prev) => [...prev, userMessage]);
+  const sendMessage = async (text: string) => {
+    if (!text.trim() || !user || isLoading) return;
+
+    setMessages((prev) => [...prev, { type: "user", content: text }]);
+    setInput("");
     setIsLoading(true);
-    setError(null);
 
     try {
       const response = await fetch(`${api.tutor}/ask`, {
@@ -137,171 +82,235 @@ function AITutorPage() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${user.token}`,
         },
-        body: JSON.stringify({
-          question,
-          category: selectedCategory,
-          language,
-        }),
+        body: JSON.stringify({ question: text, category, language }),
       });
-
       const data = await response.json();
-
       if (data.success) {
-        const assistantMessage: Message = {
-          type: "assistant",
-          content: data.data.answer,
-          timestamp: new Date(),
-        };
-        setMessages((prev) => [...prev, assistantMessage]);
-      } else {
-        setError(data.message || "Une erreur est survenue");
+        setMessages((prev) => [...prev, { type: "assistant", content: data.data.answer }]);
       }
     } catch (err) {
-      console.error("Error sending message:", err);
-      setError("Impossible de communiquer avec le tuteur. Veuillez réessayer.");
+      console.error(err);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleSelectQuestion = (question: string) => {
-    handleSendMessage(question);
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    sendMessage(input);
   };
 
-  const handleToggleLanguage = () => {
-    setLanguage((prev) => (prev === "fr" ? "en" : "fr"));
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage(input);
+    }
   };
 
-  const handleCategoryChange = (categoryId: string) => {
-    setSelectedCategory(categoryId);
-    // Réinitialiser la conversation lors du changement de catégorie
+  const clearChat = () => {
     setMessages([]);
-    setError(null);
   };
+
+  // Thème styles
+  const bg = isDark ? "bg-gray-950" : "bg-gray-50";
+  const cardBg = isDark ? "bg-gray-900" : "bg-white";
+  const border = isDark ? "border-gray-800" : "border-gray-200";
+  const text = isDark ? "text-gray-100" : "text-gray-900";
+  const textMuted = isDark ? "text-gray-400" : "text-gray-500";
+  const inputBg = isDark ? "bg-gray-800" : "bg-gray-100";
 
   return (
-    <div className="min-h-screen bg-[#0A0A0F] py-8">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-8"
-        >
-          <div className="inline-flex items-center justify-center p-3 bg-gradient-to-br from-purple-500/20 to-blue-500/20 rounded-2xl mb-4">
-            <GraduationCap className="w-10 h-10 text-purple-400" />
-          </div>
-          <h1 className="text-3xl sm:text-4xl font-bold text-white mb-2">
-            AI Basics Tutor
-          </h1>
-          <p className="text-gray-400 max-w-2xl mx-auto">
-            Apprenez les concepts de l'IA simplement avec des explications
-            claires et des analogies du quotidien
-          </p>
+    <div className={`min-h-screen ${bg} transition-colors duration-300`}>
+      <div className="max-w-4xl mx-auto px-4 py-6">
 
-          {/* Status indicator */}
-          <div className="flex items-center justify-center space-x-4 mt-4">
-            {status && (
-              <div
-                className={`flex items-center space-x-2 px-3 py-1.5 rounded-full text-xs ${
-                  status.ollamaAvailable
-                    ? "bg-green-500/10 text-green-400"
-                    : "bg-red-500/10 text-red-400"
-                }`}
-              >
-                {status.ollamaAvailable ? (
-                  <CheckCircle className="w-3 h-3" />
-                ) : (
-                  <AlertTriangle className="w-3 h-3" />
-                )}
-                <span>
-                  {status.ollamaAvailable ? "Tuteur disponible" : "Tuteur indisponible"}
-                </span>
-              </div>
-            )}
-            <div className="flex items-center space-x-2 px-3 py-1.5 rounded-full bg-purple-500/10 text-purple-400 text-xs">
-              <Zap className="w-3 h-3" />
-              <span>Propulsé par TinyLlama</span>
+        {/* Header compact */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center space-x-3">
+            <div className={`p-2 rounded-xl ${isDark ? "bg-blue-500/10" : "bg-blue-50"}`}>
+              <Bot className={`w-6 h-6 ${isDark ? "text-blue-400" : "text-blue-600"}`} />
+            </div>
+            <div>
+              <h1 className={`text-xl font-semibold ${text}`}>AI Tutor</h1>
+              <p className={`text-xs ${textMuted}`}>Apprenez simplement</p>
             </div>
           </div>
-        </motion.div>
 
-        {/* Catégories */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="mb-6"
-        >
-          <h2 className="text-sm font-medium text-gray-400 mb-3 flex items-center space-x-2">
-            <Sparkles className="w-4 h-4" />
-            <span>Choisissez une catégorie</span>
-          </h2>
-          <CategorySelector
-            categories={categories}
-            selectedCategory={selectedCategory}
-            onSelectCategory={handleCategoryChange}
-          />
-        </motion.div>
+          {/* Controls */}
+          <div className="flex items-center space-x-2">
+            {/* Language toggle */}
+            <button
+              onClick={() => setLanguage(language === "fr" ? "en" : "fr")}
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium ${inputBg} ${textMuted} hover:opacity-80 transition`}
+            >
+              {language.toUpperCase()}
+            </button>
 
-        {/* Zone principale */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Questions suggérées (sidebar gauche) */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.2 }}
-            className="lg:col-span-1"
-          >
-            <SuggestedQuestions
-              questions={suggestedQuestions}
-              onSelectQuestion={handleSelectQuestion}
-              isLoading={isLoading}
-            />
-          </motion.div>
-
-          {/* Zone de chat principale */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="lg:col-span-2 flex flex-col bg-gray-900/50 rounded-2xl border border-gray-800/50 overflow-hidden"
-            style={{ height: "600px" }}
-          >
-            {/* Zone des messages */}
-            <div className="flex-1 overflow-y-auto p-4">
-              <TutorResponse messages={messages} isLoading={isLoading} />
-              <div ref={messagesEndRef} />
-            </div>
-
-            {/* Zone de saisie */}
-            <div className="p-4 border-t border-gray-800/50">
-              <TutorChat
-                onSendMessage={handleSendMessage}
-                isLoading={isLoading}
-                language={language}
-                onToggleLanguage={handleToggleLanguage}
-                error={error}
-              />
-            </div>
-          </motion.div>
+            {/* Theme toggle */}
+            <button
+              onClick={() => setTheme(isDark ? "light" : "dark")}
+              className={`p-2 rounded-lg ${inputBg} ${textMuted} hover:opacity-80 transition`}
+            >
+              {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            </button>
+          </div>
         </div>
 
-        {/* Note informative */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.5 }}
-          className="mt-8 text-center"
-        >
-          <p className="text-xs text-gray-500">
-            Ce tuteur utilise TinyLlama pour générer des réponses. Les
-            explications sont simplifiées pour les débutants.
-            <br />
-            Pour des informations plus techniques, consultez les ressources de
-            la plateforme.
-          </p>
-        </motion.div>
+        {/* Category selector - compact */}
+        <div className="relative mb-4">
+          <button
+            onClick={() => setShowCategoryMenu(!showCategoryMenu)}
+            className={`flex items-center space-x-2 px-4 py-2 rounded-xl ${cardBg} border ${border} ${text} text-sm`}
+          >
+            <span>{categories.find((c) => c.id === category)?.name}</span>
+            <ChevronDown className={`w-4 h-4 ${textMuted}`} />
+          </button>
+
+          {showCategoryMenu && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className={`absolute top-full left-0 mt-2 ${cardBg} border ${border} rounded-xl shadow-lg z-10 overflow-hidden`}
+            >
+              {categories.map((c) => (
+                <button
+                  key={c.id}
+                  onClick={() => {
+                    setCategory(c.id);
+                    setShowCategoryMenu(false);
+                    clearChat();
+                  }}
+                  className={`block w-full text-left px-4 py-2 text-sm ${text} hover:${isDark ? "bg-gray-800" : "bg-gray-100"} transition`}
+                >
+                  {c.name}
+                </button>
+              ))}
+            </motion.div>
+          )}
+        </div>
+
+        {/* Chat container */}
+        <div className={`${cardBg} border ${border} rounded-2xl overflow-hidden`} style={{ height: "500px" }}>
+
+          {/* Messages */}
+          <div className="h-[380px] overflow-y-auto p-4 space-y-4">
+            {messages.length === 0 ? (
+              <div className="h-full flex flex-col items-center justify-center">
+                <Bot className={`w-12 h-12 ${textMuted} opacity-30 mb-4`} />
+                <p className={`${textMuted} text-sm mb-6`}>Posez une question ou choisissez ci-dessous</p>
+
+                {/* Quick questions */}
+                <div className="flex flex-wrap justify-center gap-2 max-w-md">
+                  {defaultQuestions[category]?.map((q, i) => (
+                    <button
+                      key={i}
+                      onClick={() => sendMessage(q)}
+                      className={`px-3 py-1.5 rounded-full text-xs ${inputBg} ${textMuted} hover:opacity-80 transition`}
+                    >
+                      {q}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <>
+                {messages.map((msg, i) => (
+                  <div key={i} className={`flex ${msg.type === "user" ? "justify-end" : "justify-start"}`}>
+                    {msg.type === "user" ? (
+                      <div className={`max-w-[80%] px-4 py-2 rounded-2xl rounded-tr-sm ${isDark ? "bg-blue-600" : "bg-blue-500"} text-white text-sm`}>
+                        {msg.content}
+                      </div>
+                    ) : (
+                      <div className={`max-w-[85%] ${inputBg} rounded-2xl rounded-tl-sm p-4`}>
+                        {(() => {
+                          const p = parseResponse(msg.content);
+                          const hasStructure = p.definition || p.analogy || p.takeaway;
+
+                          if (hasStructure) {
+                            return (
+                              <div className="space-y-3">
+                                {p.definition && (
+                                  <div className="flex items-start space-x-2">
+                                    <BookOpen className={`w-4 h-4 mt-0.5 ${isDark ? "text-blue-400" : "text-blue-600"}`} />
+                                    <p className={`text-sm ${text}`}>{p.definition}</p>
+                                  </div>
+                                )}
+                                {p.analogy && (
+                                  <div className="flex items-start space-x-2">
+                                    <Target className={`w-4 h-4 mt-0.5 ${isDark ? "text-orange-400" : "text-orange-600"}`} />
+                                    <p className={`text-sm ${text}`}>{p.analogy}</p>
+                                  </div>
+                                )}
+                                {p.takeaway && (
+                                  <div className="flex items-start space-x-2">
+                                    <Lightbulb className={`w-4 h-4 mt-0.5 ${isDark ? "text-yellow-400" : "text-yellow-600"}`} />
+                                    <p className={`text-sm ${text} font-medium`}>{p.takeaway}</p>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          }
+                          return <p className={`text-sm ${text}`}>{msg.content}</p>;
+                        })()}
+                      </div>
+                    )}
+                  </div>
+                ))}
+
+                {isLoading && (
+                  <div className="flex justify-start">
+                    <div className={`${inputBg} rounded-2xl rounded-tl-sm px-4 py-3`}>
+                      <div className="flex space-x-1">
+                        {[0, 1, 2].map((i) => (
+                          <motion.div
+                            key={i}
+                            animate={{ scale: [1, 1.2, 1] }}
+                            transition={{ repeat: Infinity, duration: 0.6, delay: i * 0.2 }}
+                            className={`w-2 h-2 rounded-full ${isDark ? "bg-blue-400" : "bg-blue-500"}`}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+                <div ref={messagesEndRef} />
+              </>
+            )}
+          </div>
+
+          {/* Input */}
+          <div className={`p-4 border-t ${border}`}>
+            <form onSubmit={handleSubmit} className="flex items-end space-x-2">
+              <textarea
+                ref={inputRef}
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder={language === "fr" ? "Posez votre question..." : "Ask your question..."}
+                rows={1}
+                className={`flex-1 px-4 py-3 rounded-xl ${inputBg} ${text} placeholder-gray-500 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/50`}
+              />
+              <button
+                type="submit"
+                disabled={!input.trim() || isLoading}
+                className={`p-3 rounded-xl transition ${
+                  input.trim() && !isLoading
+                    ? "bg-blue-500 hover:bg-blue-600 text-white"
+                    : `${inputBg} ${textMuted} cursor-not-allowed`
+                }`}
+              >
+                {isLoading ? (
+                  <RefreshCw className="w-5 h-5 animate-spin" />
+                ) : (
+                  <Send className="w-5 h-5" />
+                )}
+              </button>
+            </form>
+
+            <p className={`text-xs ${textMuted} mt-2 text-center`}>
+              {language === "fr" ? "Réponses en anglais plus précises" : "English responses are more accurate"}
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );
