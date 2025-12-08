@@ -2,7 +2,9 @@ import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { useGamification } from "../contexts/GamificationContext";
+import { useTheme } from "../contexts/ThemeContext";
 import GlobalSearch from "./GlobalSearch";
+import ThemeToggle from "./ThemeToggle";
 import {
   BookOpen,
   LogOut,
@@ -22,7 +24,6 @@ import {
   Search,
   Settings,
   Plus,
-  MessageSquare,
   BarChart3,
   Sparkles,
   Shield,
@@ -34,6 +35,9 @@ function Navbar() {
   const navigate = useNavigate();
   const { isAdmin, signOut, user, isAuthenticated } = useAuth();
   const { profile } = useGamification();
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
+
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -139,7 +143,11 @@ function Navbar() {
 
   return (
     <>
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-gray-900/95 backdrop-blur-xl border-b border-gray-800/50">
+      <nav className={`fixed top-0 left-0 right-0 z-50 backdrop-blur-xl border-b transition-colors duration-300 ${
+        isDark
+          ? "bg-gray-900/95 border-gray-800/50"
+          : "bg-white/95 border-slate-200"
+      }`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
@@ -157,10 +165,10 @@ function Navbar() {
                   </div>
                 </div>
                 <div className="hidden sm:block">
-                  <span className="text-xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
+                  <span className="text-xl font-bold bg-gradient-to-r from-purple-500 to-blue-500 bg-clip-text text-transparent">
                     AI4Nieup
                   </span>
-                  <div className="text-xs text-gray-400 -mt-1">
+                  <div className={`text-xs -mt-1 ${isDark ? "text-gray-400" : "text-slate-500"}`}>
                     AI Learning Platform
                   </div>
                 </div>
@@ -172,9 +180,11 @@ function Navbar() {
               <Link
                 to="/"
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center space-x-2 ${
-                  isActive("/")
-                    ? "bg-purple-500/20 text-purple-400 shadow-lg"
-                    : "text-gray-400 hover:text-gray-200 hover:bg-gray-800/50"
+                  isActive("/") && location.pathname === "/"
+                    ? "bg-purple-500/20 text-purple-500 shadow-lg"
+                    : isDark
+                    ? "text-gray-400 hover:text-gray-200 hover:bg-gray-800/50"
+                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
                 }`}
               >
                 <Home className="w-4 h-4" />
@@ -187,8 +197,10 @@ function Navbar() {
                     to="/dashboard"
                     className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center space-x-2 ${
                       isActive("/dashboard")
-                        ? "bg-purple-500/20 text-purple-400 shadow-lg"
-                        : "text-gray-400 hover:text-gray-200 hover:bg-gray-800/50"
+                        ? "bg-purple-500/20 text-purple-500 shadow-lg"
+                        : isDark
+                        ? "text-gray-400 hover:text-gray-200 hover:bg-gray-800/50"
+                        : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
                     }`}
                   >
                     <LayoutDashboard className="w-4 h-4" />
@@ -199,8 +211,10 @@ function Navbar() {
                     to="/goals"
                     className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center space-x-2 ${
                       isActive("/goals")
-                        ? "bg-purple-500/20 text-purple-400 shadow-lg"
-                        : "text-gray-400 hover:text-gray-200 hover:bg-gray-800/50"
+                        ? "bg-purple-500/20 text-purple-500 shadow-lg"
+                        : isDark
+                        ? "text-gray-400 hover:text-gray-200 hover:bg-gray-800/50"
+                        : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
                     }`}
                   >
                     <Target className="w-4 h-4" />
@@ -211,24 +225,14 @@ function Navbar() {
                     to="/collaboration"
                     className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center space-x-2 ${
                       isActive("/collaboration")
-                        ? "bg-purple-500/20 text-purple-400 shadow-lg"
-                        : "text-gray-400 hover:text-gray-200 hover:bg-gray-800/50"
+                        ? "bg-purple-500/20 text-purple-500 shadow-lg"
+                        : isDark
+                        ? "text-gray-400 hover:text-gray-200 hover:bg-gray-800/50"
+                        : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
                     }`}
                   >
                     <Users className="w-4 h-4" />
                     <span>Communauté</span>
-                  </Link>
-
-                  <Link
-                    to="/external-apis"
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center space-x-2 ${
-                      isActive("/external-apis")
-                        ? "bg-purple-500/20 text-purple-400 shadow-lg"
-                        : "text-gray-400 hover:text-gray-200 hover:bg-gray-800/50"
-                    }`}
-                  >
-                    <ExternalLink className="w-4 h-4" />
-                    <span>APIs Externes</span>
                   </Link>
                 </>
               )}
@@ -239,8 +243,10 @@ function Navbar() {
                   to="/admin/dashboard"
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center space-x-2 ${
                     isActive("/admin")
-                      ? "bg-red-500/20 text-red-400 shadow-lg"
-                      : "text-gray-400 hover:text-gray-200 hover:bg-gray-800/50"
+                      ? "bg-red-500/20 text-red-500 shadow-lg"
+                      : isDark
+                      ? "text-gray-400 hover:text-gray-200 hover:bg-gray-800/50"
+                      : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
                   }`}
                 >
                   <Settings className="w-4 h-4" />
@@ -254,17 +260,21 @@ function Navbar() {
               <div className="hidden md:block">
                 <button
                   onClick={toggleSearch}
-                  className="flex items-center space-x-2 px-4 py-2 bg-gray-800/50 hover:bg-gray-700/50 rounded-lg transition-all duration-200 border border-gray-700/50 hover:border-gray-600/50 group"
+                  className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-all duration-200 border group ${
+                    isDark
+                      ? "bg-gray-800/50 hover:bg-gray-700/50 border-gray-700/50 hover:border-gray-600/50"
+                      : "bg-slate-100 hover:bg-slate-200 border-slate-200 hover:border-slate-300"
+                  }`}
                 >
-                  <Search className="w-4 h-4 text-gray-400 group-hover:text-gray-300" />
-                  <span className="text-gray-400 group-hover:text-gray-300">
+                  <Search className={`w-4 h-4 ${isDark ? "text-gray-400 group-hover:text-gray-300" : "text-slate-500 group-hover:text-slate-700"}`} />
+                  <span className={isDark ? "text-gray-400 group-hover:text-gray-300" : "text-slate-500 group-hover:text-slate-700"}>
                     Rechercher...
                   </span>
-                  <div className="flex items-center space-x-1 text-xs text-gray-500">
-                    <kbd className="px-1.5 py-0.5 bg-gray-700 rounded text-xs">
+                  <div className="flex items-center space-x-1 text-xs">
+                    <kbd className={`px-1.5 py-0.5 rounded text-xs ${isDark ? "bg-gray-700 text-gray-400" : "bg-slate-200 text-slate-500"}`}>
                       ⌘
                     </kbd>
-                    <kbd className="px-1.5 py-0.5 bg-gray-700 rounded text-xs">
+                    <kbd className={`px-1.5 py-0.5 rounded text-xs ${isDark ? "bg-gray-700 text-gray-400" : "bg-slate-200 text-slate-500"}`}>
                       K
                     </kbd>
                   </div>
@@ -274,13 +284,20 @@ function Navbar() {
 
             {/* Right Side */}
             <div className="flex items-center space-x-3">
+              {/* Theme Toggle */}
+              <ThemeToggle />
+
               {/* Search button for mobile - Only for non-admin */}
               {!isAdmin && (
                 <button
                   onClick={toggleSearch}
-                  className="md:hidden p-2 rounded-lg bg-gray-800/50 hover:bg-gray-700/50 transition-colors"
+                  className={`md:hidden p-2 rounded-lg transition-colors ${
+                    isDark
+                      ? "bg-gray-800/50 hover:bg-gray-700/50"
+                      : "bg-slate-100 hover:bg-slate-200"
+                  }`}
                 >
-                  <Search className="w-5 h-5 text-gray-400" />
+                  <Search className={`w-5 h-5 ${isDark ? "text-gray-400" : "text-slate-500"}`} />
                 </button>
               )}
 
@@ -290,19 +307,23 @@ function Navbar() {
                   {profile && !isAdmin && (
                     <motion.div
                       whileHover={{ scale: 1.05 }}
-                      className="hidden sm:flex items-center space-x-3 bg-gradient-to-r from-purple-500/10 to-blue-500/10 px-4 py-2 rounded-lg border border-purple-500/20"
+                      className={`hidden sm:flex items-center space-x-3 px-4 py-2 rounded-lg border ${
+                        isDark
+                          ? "bg-gradient-to-r from-purple-500/10 to-blue-500/10 border-purple-500/20"
+                          : "bg-gradient-to-r from-purple-50 to-blue-50 border-purple-200"
+                      }`}
                     >
                       <div className="flex items-center space-x-1">
-                        <Zap className="w-4 h-4 text-yellow-400" />
-                        <span className="text-yellow-400 font-semibold">
+                        <Zap className="w-4 h-4 text-yellow-500" />
+                        <span className="text-yellow-500 font-semibold">
                           {profile.totalXP.toLocaleString()}
                         </span>
-                        <span className="text-gray-400 text-sm">XP</span>
+                        <span className={`text-sm ${isDark ? "text-gray-400" : "text-slate-500"}`}>XP</span>
                       </div>
-                      <div className="w-px h-4 bg-gray-600"></div>
+                      <div className={`w-px h-4 ${isDark ? "bg-gray-600" : "bg-slate-300"}`}></div>
                       <div className="flex items-center space-x-1">
-                        <Award className="w-4 h-4 text-purple-400" />
-                        <span className="text-purple-400 font-semibold">
+                        <Award className="w-4 h-4 text-purple-500" />
+                        <span className="text-purple-500 font-semibold">
                           {profile.level}
                         </span>
                       </div>
@@ -315,8 +336,8 @@ function Navbar() {
                       whileHover={{ scale: 1.05 }}
                       className="hidden sm:flex items-center space-x-2 bg-gradient-to-r from-red-500/10 to-purple-500/10 px-4 py-2 rounded-lg border border-red-500/20"
                     >
-                      <Shield className="w-4 h-4 text-red-400" />
-                      <span className="text-red-400 font-semibold text-sm">
+                      <Shield className="w-4 h-4 text-red-500" />
+                      <span className="text-red-500 font-semibold text-sm">
                         ADMIN
                       </span>
                     </motion.div>
@@ -329,9 +350,13 @@ function Navbar() {
                         whileHover={{ scale: 1.1 }}
                         whileTap={{ scale: 0.95 }}
                         onClick={toggleNotifications}
-                        className="relative p-2 rounded-lg bg-gray-800/50 hover:bg-gray-700/50 transition-colors"
+                        className={`relative p-2 rounded-lg transition-colors ${
+                          isDark
+                            ? "bg-gray-800/50 hover:bg-gray-700/50"
+                            : "bg-slate-100 hover:bg-slate-200"
+                        }`}
                       >
-                        <Bell className="w-5 h-5 text-gray-300" />
+                        <Bell className={`w-5 h-5 ${isDark ? "text-gray-300" : "text-slate-600"}`} />
                         {unreadNotificationsCount > 0 && (
                           <motion.span
                             initial={{ scale: 0 }}
@@ -349,14 +374,20 @@ function Navbar() {
                             initial={{ opacity: 0, y: 10, scale: 0.95 }}
                             animate={{ opacity: 1, y: 0, scale: 1 }}
                             exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                            className="absolute right-0 mt-2 w-80 bg-gray-900/95 backdrop-blur-xl rounded-xl shadow-2xl border border-gray-800/50 overflow-hidden"
+                            className={`absolute right-0 mt-2 w-80 backdrop-blur-xl rounded-xl shadow-2xl border overflow-hidden ${
+                              isDark
+                                ? "bg-gray-900/95 border-gray-800/50"
+                                : "bg-white border-slate-200"
+                            }`}
                           >
-                            <div className="p-4 border-b border-gray-800/50 flex justify-between items-center">
-                              <h3 className="font-semibold text-gray-200">
+                            <div className={`p-4 border-b flex justify-between items-center ${
+                              isDark ? "border-gray-800/50" : "border-slate-200"
+                            }`}>
+                              <h3 className={`font-semibold ${isDark ? "text-gray-200" : "text-slate-800"}`}>
                                 Notifications
                               </h3>
                               <button
-                                className="text-xs text-blue-400 hover:text-blue-300 transition-colors"
+                                className="text-xs text-blue-500 hover:text-blue-400 transition-colors"
                                 onClick={markAllNotificationsAsRead}
                               >
                                 Tout marquer comme lu
@@ -367,32 +398,32 @@ function Navbar() {
                                 notifications.map(notification => (
                                   <div
                                     key={notification.id}
-                                    className={`p-4 border-b border-gray-800/30 hover:bg-gray-800/30 transition-colors ${
-                                      !notification.read
-                                        ? "bg-purple-500/5"
-                                        : ""
+                                    className={`p-4 border-b transition-colors ${
+                                      isDark
+                                        ? `border-gray-800/30 hover:bg-gray-800/30 ${!notification.read ? "bg-purple-500/5" : ""}`
+                                        : `border-slate-100 hover:bg-slate-50 ${!notification.read ? "bg-purple-50" : ""}`
                                     }`}
                                   >
                                     <div className="flex justify-between items-start">
                                       <div className="flex-1">
-                                        <p className="font-medium text-gray-200 mb-1">
+                                        <p className={`font-medium mb-1 ${isDark ? "text-gray-200" : "text-slate-800"}`}>
                                           {notification.title}
                                         </p>
-                                        <p className="text-sm text-gray-400 mb-2">
+                                        <p className={`text-sm mb-2 ${isDark ? "text-gray-400" : "text-slate-600"}`}>
                                           {notification.message}
                                         </p>
-                                        <p className="text-xs text-gray-500">
+                                        <p className={`text-xs ${isDark ? "text-gray-500" : "text-slate-500"}`}>
                                           {notification.time}
                                         </p>
                                       </div>
                                       {!notification.read && (
-                                        <div className="w-2 h-2 bg-blue-400 rounded-full mt-2"></div>
+                                        <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
                                       )}
                                     </div>
                                   </div>
                                 ))
                               ) : (
-                                <div className="p-8 text-center text-gray-500">
+                                <div className={`p-8 text-center ${isDark ? "text-gray-500" : "text-slate-500"}`}>
                                   <Bell className="w-8 h-8 mx-auto mb-3 opacity-50" />
                                   <p>Aucune notification</p>
                                 </div>
@@ -412,8 +443,10 @@ function Navbar() {
                       onClick={toggleUserMenu}
                       className={`flex items-center space-x-3 px-3 py-2 rounded-lg transition-all duration-200 border ${
                         isAdmin
-                          ? "bg-red-800/50 hover:bg-red-700/50 border-red-700/50 hover:border-red-600/50"
-                          : "bg-gray-800/50 hover:bg-gray-700/50 border-gray-700/50 hover:border-gray-600/50"
+                          ? "bg-red-500/10 hover:bg-red-500/20 border-red-500/20"
+                          : isDark
+                          ? "bg-gray-800/50 hover:bg-gray-700/50 border-gray-700/50 hover:border-gray-600/50"
+                          : "bg-slate-100 hover:bg-slate-200 border-slate-200 hover:border-slate-300"
                       }`}
                     >
                       <div
@@ -432,14 +465,22 @@ function Navbar() {
                       <div className="hidden lg:block text-left">
                         <div
                           className={`text-sm font-medium max-w-[120px] truncate ${
-                            isAdmin ? "text-red-200" : "text-gray-200"
+                            isAdmin
+                              ? "text-red-500"
+                              : isDark
+                              ? "text-gray-200"
+                              : "text-slate-700"
                           }`}
                         >
                           {user?.email?.split("@")[0]}
                         </div>
                         <div
                           className={`text-xs ${
-                            isAdmin ? "text-red-400" : "text-gray-400"
+                            isAdmin
+                              ? "text-red-400"
+                              : isDark
+                              ? "text-gray-400"
+                              : "text-slate-500"
                           }`}
                         >
                           {isAdmin
@@ -449,7 +490,11 @@ function Navbar() {
                       </div>
                       <ChevronDown
                         className={`w-4 h-4 transition-transform duration-200 ${
-                          isAdmin ? "text-red-400" : "text-gray-400"
+                          isAdmin
+                            ? "text-red-400"
+                            : isDark
+                            ? "text-gray-400"
+                            : "text-slate-500"
                         } ${userMenuOpen ? "rotate-180" : ""}`}
                       />
                     </motion.button>
@@ -460,14 +505,20 @@ function Navbar() {
                           initial={{ opacity: 0, y: 10, scale: 0.95 }}
                           animate={{ opacity: 1, y: 0, scale: 1 }}
                           exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                          className="absolute right-0 mt-2 w-64 bg-gray-900/95 backdrop-blur-xl rounded-xl shadow-2xl border border-gray-800/50 overflow-hidden"
+                          className={`absolute right-0 mt-2 w-64 backdrop-blur-xl rounded-xl shadow-2xl border overflow-hidden ${
+                            isDark
+                              ? "bg-gray-900/95 border-gray-800/50"
+                              : "bg-white border-slate-200"
+                          }`}
                         >
                           {/* User Info */}
                           <div
-                            className={`p-4 border-b border-gray-800/50 ${
+                            className={`p-4 border-b ${
                               isAdmin
-                                ? "bg-gradient-to-r from-red-500/10 to-purple-500/10"
-                                : "bg-gradient-to-r from-purple-500/10 to-blue-500/10"
+                                ? "bg-gradient-to-r from-red-500/10 to-purple-500/10 border-red-500/20"
+                                : isDark
+                                ? "bg-gradient-to-r from-purple-500/10 to-blue-500/10 border-gray-800/50"
+                                : "bg-gradient-to-r from-purple-50 to-blue-50 border-slate-200"
                             }`}
                           >
                             <div className="flex items-center space-x-3">
@@ -487,14 +538,22 @@ function Navbar() {
                               <div>
                                 <p
                                   className={`font-semibold ${
-                                    isAdmin ? "text-red-200" : "text-gray-200"
+                                    isAdmin
+                                      ? "text-red-500"
+                                      : isDark
+                                      ? "text-gray-200"
+                                      : "text-slate-800"
                                   }`}
                                 >
                                   {user?.email?.split("@")[0]}
                                 </p>
                                 <p
                                   className={`text-sm ${
-                                    isAdmin ? "text-red-400" : "text-gray-400"
+                                    isAdmin
+                                      ? "text-red-400"
+                                      : isDark
+                                      ? "text-gray-400"
+                                      : "text-slate-500"
                                   }`}
                                 >
                                   {isAdmin
@@ -504,14 +563,14 @@ function Navbar() {
                                 {profile && !isAdmin && (
                                   <div className="flex items-center space-x-2 mt-1">
                                     <div className="flex items-center space-x-1">
-                                      <Zap className="w-3 h-3 text-yellow-400" />
-                                      <span className="text-xs text-yellow-400 font-medium">
+                                      <Zap className="w-3 h-3 text-yellow-500" />
+                                      <span className="text-xs text-yellow-500 font-medium">
                                         {profile.totalXP.toLocaleString()} XP
                                       </span>
                                     </div>
                                     <div className="flex items-center space-x-1">
-                                      <Award className="w-3 h-3 text-purple-400" />
-                                      <span className="text-xs text-purple-400 font-medium">
+                                      <Award className="w-3 h-3 text-purple-500" />
+                                      <span className="text-xs text-purple-500 font-medium">
                                         Niv. {profile.level}
                                       </span>
                                     </div>
@@ -528,7 +587,7 @@ function Navbar() {
                               <>
                                 <Link
                                   to="/admin/dashboard"
-                                  className="flex items-center space-x-3 px-4 py-3 text-sm text-red-300 hover:bg-red-500/10 hover:text-red-200 transition-colors"
+                                  className="flex items-center space-x-3 px-4 py-3 text-sm text-red-500 hover:bg-red-500/10 transition-colors"
                                   onClick={() => setUserMenuOpen(false)}
                                 >
                                   <Settings className="w-4 h-4" />
@@ -536,7 +595,7 @@ function Navbar() {
                                 </Link>
                                 <Link
                                   to="/admin/goals"
-                                  className="flex items-center space-x-3 px-4 py-3 text-sm text-red-300 hover:bg-red-500/10 hover:text-red-200 transition-colors"
+                                  className="flex items-center space-x-3 px-4 py-3 text-sm text-red-500 hover:bg-red-500/10 transition-colors"
                                   onClick={() => setUserMenuOpen(false)}
                                 >
                                   <Target className="w-4 h-4" />
@@ -544,7 +603,7 @@ function Navbar() {
                                 </Link>
                                 <Link
                                   to="/admin/users"
-                                  className="flex items-center space-x-3 px-4 py-3 text-sm text-red-300 hover:bg-red-500/10 hover:text-red-200 transition-colors"
+                                  className="flex items-center space-x-3 px-4 py-3 text-sm text-red-500 hover:bg-red-500/10 transition-colors"
                                   onClick={() => setUserMenuOpen(false)}
                                 >
                                   <Users className="w-4 h-4" />
@@ -552,7 +611,7 @@ function Navbar() {
                                 </Link>
                                 <Link
                                   to="/admin/goals/new"
-                                  className="flex items-center space-x-3 px-4 py-3 text-sm text-red-300 hover:bg-red-500/10 hover:text-red-200 transition-colors"
+                                  className="flex items-center space-x-3 px-4 py-3 text-sm text-red-500 hover:bg-red-500/10 transition-colors"
                                   onClick={() => setUserMenuOpen(false)}
                                 >
                                   <Plus className="w-4 h-4" />
@@ -564,7 +623,11 @@ function Navbar() {
                               <>
                                 <Link
                                   to="/dashboard"
-                                  className="flex items-center space-x-3 px-4 py-3 text-sm text-gray-300 hover:bg-gray-800/50 hover:text-white transition-colors"
+                                  className={`flex items-center space-x-3 px-4 py-3 text-sm transition-colors ${
+                                    isDark
+                                      ? "text-gray-300 hover:bg-gray-800/50 hover:text-white"
+                                      : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                                  }`}
                                   onClick={() => setUserMenuOpen(false)}
                                 >
                                   <LayoutDashboard className="w-4 h-4" />
@@ -572,7 +635,11 @@ function Navbar() {
                                 </Link>
                                 <Link
                                   to="/achievements"
-                                  className="flex items-center space-x-3 px-4 py-3 text-sm text-gray-300 hover:bg-gray-800/50 hover:text-white transition-colors"
+                                  className={`flex items-center space-x-3 px-4 py-3 text-sm transition-colors ${
+                                    isDark
+                                      ? "text-gray-300 hover:bg-gray-800/50 hover:text-white"
+                                      : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                                  }`}
                                   onClick={() => setUserMenuOpen(false)}
                                 >
                                   <Award className="w-4 h-4" />
@@ -580,40 +647,25 @@ function Navbar() {
                                 </Link>
                                 <Link
                                   to="/analytics"
-                                  className="flex items-center space-x-3 px-4 py-3 text-sm text-gray-300 hover:bg-gray-800/50 hover:text-white transition-colors"
+                                  className={`flex items-center space-x-3 px-4 py-3 text-sm transition-colors ${
+                                    isDark
+                                      ? "text-gray-300 hover:bg-gray-800/50 hover:text-white"
+                                      : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                                  }`}
                                   onClick={() => setUserMenuOpen(false)}
                                 >
                                   <BarChart3 className="w-4 h-4" />
                                   <span>Analytiques</span>
                                 </Link>
-                                <button
-                                  onClick={() => {
-                                    toggleSearch();
-                                    setUserMenuOpen(false);
-                                  }}
-                                  className="flex items-center space-x-3 px-4 py-3 text-sm text-gray-300 hover:bg-gray-800/50 hover:text-white transition-colors w-full text-left"
-                                >
-                                  <Search className="w-4 h-4" />
-                                  <span>Recherche globale</span>
-                                  <div className="ml-auto flex items-center space-x-1">
-                                    <kbd className="px-1.5 py-0.5 bg-gray-700 rounded text-xs">
-                                      ⌘K
-                                    </kbd>
-                                  </div>
-                                </button>
                               </>
                             )}
                           </div>
 
                           {/* Logout */}
-                          <div className="border-t border-gray-800/50">
+                          <div className={`border-t ${isDark ? "border-gray-800/50" : "border-slate-200"}`}>
                             <button
                               onClick={handleSignOut}
-                              className={`flex items-center space-x-3 px-4 py-3 text-sm transition-colors w-full text-left ${
-                                isAdmin
-                                  ? "text-red-400 hover:bg-red-500/10 hover:text-red-300"
-                                  : "text-red-400 hover:bg-red-500/10 hover:text-red-300"
-                              }`}
+                              className="flex items-center space-x-3 px-4 py-3 text-sm text-red-500 hover:bg-red-500/10 transition-colors w-full text-left"
                             >
                               <LogOut className="w-4 h-4" />
                               <span>Déconnexion</span>
@@ -628,7 +680,11 @@ function Navbar() {
                 <div className="flex items-center space-x-3">
                   <Link
                     to="/assessment"
-                    className="hidden sm:flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium text-gray-400 hover:text-gray-200 hover:bg-gray-800/50 transition-all duration-200"
+                    className={`hidden sm:flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                      isDark
+                        ? "text-gray-400 hover:text-gray-200 hover:bg-gray-800/50"
+                        : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                    }`}
                   >
                     <Brain className="w-4 h-4" />
                     <span>Évaluation</span>
@@ -645,12 +701,16 @@ function Navbar() {
               {/* Mobile menu button */}
               <button
                 onClick={toggleMobileMenu}
-                className="lg:hidden p-2 rounded-lg bg-gray-800/50 hover:bg-gray-700/50 transition-colors"
+                className={`lg:hidden p-2 rounded-lg transition-colors ${
+                  isDark
+                    ? "bg-gray-800/50 hover:bg-gray-700/50"
+                    : "bg-slate-100 hover:bg-slate-200"
+                }`}
               >
                 {mobileMenuOpen ? (
-                  <X className="w-5 h-5 text-gray-300" />
+                  <X className={`w-5 h-5 ${isDark ? "text-gray-300" : "text-slate-600"}`} />
                 ) : (
-                  <Menu className="w-5 h-5 text-gray-300" />
+                  <Menu className={`w-5 h-5 ${isDark ? "text-gray-300" : "text-slate-600"}`} />
                 )}
               </button>
             </div>
@@ -664,7 +724,11 @@ function Navbar() {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
-              className="lg:hidden bg-gray-900/98 backdrop-blur-xl border-t border-gray-800/50"
+              className={`lg:hidden backdrop-blur-xl border-t ${
+                isDark
+                  ? "bg-gray-900/98 border-gray-800/50"
+                  : "bg-white/98 border-slate-200"
+              }`}
             >
               <div className="px-4 py-4 space-y-2">
                 {/* User info for mobile */}
@@ -673,7 +737,9 @@ function Navbar() {
                     className={`flex items-center space-x-3 p-3 rounded-lg border mb-4 ${
                       isAdmin
                         ? "bg-gradient-to-r from-red-500/10 to-purple-500/10 border-red-500/20"
-                        : "bg-gradient-to-r from-purple-500/10 to-blue-500/10 border-purple-500/20"
+                        : isDark
+                        ? "bg-gradient-to-r from-purple-500/10 to-blue-500/10 border-purple-500/20"
+                        : "bg-gradient-to-r from-purple-50 to-blue-50 border-purple-200"
                     }`}
                   >
                     <div
@@ -692,14 +758,22 @@ function Navbar() {
                     <div className="flex-1">
                       <p
                         className={`font-medium ${
-                          isAdmin ? "text-red-200" : "text-gray-200"
+                          isAdmin
+                            ? "text-red-500"
+                            : isDark
+                            ? "text-gray-200"
+                            : "text-slate-800"
                         }`}
                       >
                         {user?.email?.split("@")[0]}
                       </p>
                       <p
                         className={`text-sm ${
-                          isAdmin ? "text-red-400" : "text-gray-400"
+                          isAdmin
+                            ? "text-red-400"
+                            : isDark
+                            ? "text-gray-400"
+                            : "text-slate-500"
                         }`}
                       >
                         {isAdmin
@@ -709,13 +783,13 @@ function Navbar() {
                     </div>
                     {profile && !isAdmin && (
                       <div className="text-right">
-                        <div className="flex items-center space-x-1 text-yellow-400">
+                        <div className="flex items-center space-x-1 text-yellow-500">
                           <Zap className="w-3 h-3" />
                           <span className="text-sm font-medium">
                             {profile.totalXP}
                           </span>
                         </div>
-                        <div className="flex items-center space-x-1 text-purple-400">
+                        <div className="flex items-center space-x-1 text-purple-500">
                           <Award className="w-3 h-3" />
                           <span className="text-sm font-medium">
                             Niv. {profile.level}
@@ -730,9 +804,11 @@ function Navbar() {
                 <Link
                   to="/"
                   className={`flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
-                    isActive("/")
-                      ? "bg-purple-500/20 text-purple-400"
-                      : "text-gray-300 hover:bg-gray-800/50 hover:text-white"
+                    isActive("/") && location.pathname === "/"
+                      ? "bg-purple-500/20 text-purple-500"
+                      : isDark
+                      ? "text-gray-300 hover:bg-gray-800/50 hover:text-white"
+                      : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                   }`}
                   onClick={() => setMobileMenuOpen(false)}
                 >
@@ -747,7 +823,7 @@ function Navbar() {
                       <>
                         <Link
                           to="/admin/dashboard"
-                          className="flex items-center space-x-3 px-4 py-3 rounded-lg text-sm text-red-300 hover:bg-red-500/10 hover:text-red-200 transition-colors"
+                          className="flex items-center space-x-3 px-4 py-3 rounded-lg text-sm text-red-500 hover:bg-red-500/10 transition-colors"
                           onClick={() => setMobileMenuOpen(false)}
                         >
                           <Settings className="w-5 h-5" />
@@ -755,7 +831,7 @@ function Navbar() {
                         </Link>
                         <Link
                           to="/admin/goals"
-                          className="flex items-center space-x-3 px-4 py-3 rounded-lg text-sm text-red-300 hover:bg-red-500/10 hover:text-red-200 transition-colors"
+                          className="flex items-center space-x-3 px-4 py-3 rounded-lg text-sm text-red-500 hover:bg-red-500/10 transition-colors"
                           onClick={() => setMobileMenuOpen(false)}
                         >
                           <Target className="w-5 h-5" />
@@ -763,19 +839,11 @@ function Navbar() {
                         </Link>
                         <Link
                           to="/admin/users"
-                          className="flex items-center space-x-3 px-4 py-3 rounded-lg text-sm text-red-300 hover:bg-red-500/10 hover:text-red-200 transition-colors"
+                          className="flex items-center space-x-3 px-4 py-3 rounded-lg text-sm text-red-500 hover:bg-red-500/10 transition-colors"
                           onClick={() => setMobileMenuOpen(false)}
                         >
                           <Users className="w-5 h-5" />
                           <span>Gérer Utilisateurs</span>
-                        </Link>
-                        <Link
-                          to="/admin/goals/new"
-                          className="flex items-center space-x-3 px-4 py-3 rounded-lg text-sm text-red-300 hover:bg-red-500/10 hover:text-red-200 transition-colors"
-                          onClick={() => setMobileMenuOpen(false)}
-                        >
-                          <Plus className="w-5 h-5" />
-                          <span>Nouvel Objectif</span>
                         </Link>
                       </>
                     ) : (
@@ -785,8 +853,10 @@ function Navbar() {
                           to="/dashboard"
                           className={`flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
                             isActive("/dashboard")
-                              ? "bg-purple-500/20 text-purple-400"
-                              : "text-gray-300 hover:bg-gray-800/50 hover:text-white"
+                              ? "bg-purple-500/20 text-purple-500"
+                              : isDark
+                              ? "text-gray-300 hover:bg-gray-800/50 hover:text-white"
+                              : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                           }`}
                           onClick={() => setMobileMenuOpen(false)}
                         >
@@ -798,8 +868,10 @@ function Navbar() {
                           to="/goals"
                           className={`flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
                             isActive("/goals")
-                              ? "bg-purple-500/20 text-purple-400"
-                              : "text-gray-300 hover:bg-gray-800/50 hover:text-white"
+                              ? "bg-purple-500/20 text-purple-500"
+                              : isDark
+                              ? "text-gray-300 hover:bg-gray-800/50 hover:text-white"
+                              : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                           }`}
                           onClick={() => setMobileMenuOpen(false)}
                         >
@@ -808,24 +880,13 @@ function Navbar() {
                         </Link>
 
                         <Link
-                          to="/assessment"
-                          className={`flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
-                            isActive("/assessment")
-                              ? "bg-purple-500/20 text-purple-400"
-                              : "text-gray-300 hover:bg-gray-800/50 hover:text-white"
-                          }`}
-                          onClick={() => setMobileMenuOpen(false)}
-                        >
-                          <Brain className="w-5 h-5" />
-                          <span>Évaluation</span>
-                        </Link>
-
-                        <Link
                           to="/collaboration"
                           className={`flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
                             isActive("/collaboration")
-                              ? "bg-purple-500/20 text-purple-400"
-                              : "text-gray-300 hover:bg-gray-800/50 hover:text-white"
+                              ? "bg-purple-500/20 text-purple-500"
+                              : isDark
+                              ? "text-gray-300 hover:bg-gray-800/50 hover:text-white"
+                              : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                           }`}
                           onClick={() => setMobileMenuOpen(false)}
                         >
@@ -837,8 +898,10 @@ function Navbar() {
                           to="/achievements"
                           className={`flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
                             isActive("/achievements")
-                              ? "bg-purple-500/20 text-purple-400"
-                              : "text-gray-300 hover:bg-gray-800/50 hover:text-white"
+                              ? "bg-purple-500/20 text-purple-500"
+                              : isDark
+                              ? "text-gray-300 hover:bg-gray-800/50 hover:text-white"
+                              : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                           }`}
                           onClick={() => setMobileMenuOpen(false)}
                         >
@@ -847,46 +910,19 @@ function Navbar() {
                         </Link>
 
                         <Link
-                          to="/external-apis"
-                          className={`flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
-                            isActive("/external-apis")
-                              ? "bg-purple-500/20 text-purple-400"
-                              : "text-gray-300 hover:bg-gray-800/50 hover:text-white"
-                          }`}
-                          onClick={() => setMobileMenuOpen(false)}
-                        >
-                          <ExternalLink className="w-5 h-5" />
-                          <span>APIs Externes</span>
-                        </Link>
-
-                        <Link
                           to="/analytics"
                           className={`flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
                             isActive("/analytics")
-                              ? "bg-purple-500/20 text-purple-400"
-                              : "text-gray-300 hover:bg-gray-800/50 hover:text-white"
+                              ? "bg-purple-500/20 text-purple-500"
+                              : isDark
+                              ? "text-gray-300 hover:bg-gray-800/50 hover:text-white"
+                              : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                           }`}
                           onClick={() => setMobileMenuOpen(false)}
                         >
                           <BarChart3 className="w-5 h-5" />
                           <span>Analytiques</span>
                         </Link>
-
-                        <button
-                          onClick={() => {
-                            toggleSearch();
-                            setMobileMenuOpen(false);
-                          }}
-                          className="flex items-center space-x-3 px-4 py-3 text-sm text-gray-300 hover:bg-gray-800/50 hover:text-white transition-colors w-full text-left"
-                        >
-                          <Search className="w-4 h-4" />
-                          <span>Recherche globale</span>
-                          <div className="ml-auto flex items-center space-x-1">
-                            <kbd className="px-1.5 py-0.5 bg-gray-700 rounded text-xs">
-                              ⌘K
-                            </kbd>
-                          </div>
-                        </button>
                       </>
                     )}
                   </>
@@ -894,13 +930,17 @@ function Navbar() {
                   <>
                     <Link
                       to="/assessment"
-                      className="flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-300 hover:bg-gray-800/50 hover:text-white transition-colors"
+                      className={`flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+                        isDark
+                          ? "text-gray-300 hover:bg-gray-800/50 hover:text-white"
+                          : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                      }`}
                       onClick={() => setMobileMenuOpen(false)}
                     >
                       <Brain className="w-5 h-5" />
                       <span>Évaluation</span>
                     </Link>
-                    <div className="border-t border-gray-800/50 pt-4">
+                    <div className={`border-t pt-4 ${isDark ? "border-gray-800/50" : "border-slate-200"}`}>
                       <Link
                         to="/login"
                         className="flex items-center justify-center space-x-2 px-4 py-3 rounded-lg bg-gradient-to-r from-purple-600 to-blue-600 text-white font-medium hover:from-purple-700 hover:to-blue-700 transition-all duration-200"
@@ -915,13 +955,13 @@ function Navbar() {
 
                 {/* Logout */}
                 {isAuthenticated && (
-                  <div className="border-t border-gray-800/50 mt-2">
+                  <div className={`border-t mt-2 ${isDark ? "border-gray-800/50" : "border-slate-200"}`}>
                     <button
                       onClick={() => {
                         handleSignOut();
                         setMobileMenuOpen(false);
                       }}
-                      className="flex items-center space-x-3 px-4 py-3 rounded-lg text-sm text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors w-full text-left"
+                      className="flex items-center space-x-3 px-4 py-3 rounded-lg text-sm text-red-500 hover:bg-red-500/10 transition-colors w-full text-left"
                     >
                       <LogOut className="w-5 h-5" />
                       <span>Déconnexion</span>

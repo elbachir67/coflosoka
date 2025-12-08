@@ -2,6 +2,7 @@ import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { useAuth } from "./contexts/AuthContext";
 import { useGamification } from "./contexts/GamificationContext";
+import { useTheme } from "./contexts/ThemeContext";
 import Navbar from "./components/Navbar";
 import HomePage from "./pages/HomePage";
 import GoalsExplorerPage from "./pages/GoalsExplorerPage";
@@ -61,6 +62,9 @@ function PrivateRoute({
 }
 
 function App() {
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
+
   const {
     showLevelUp,
     setShowLevelUp,
@@ -79,7 +83,9 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0A0A0F]">
+    <div className={`min-h-screen transition-colors duration-300 ${
+      isDark ? "bg-[#0A0A0F]" : "bg-slate-50"
+    }`}>
       <Navbar />
       <Routes>
         <Route path="/" element={<HomePage />} />

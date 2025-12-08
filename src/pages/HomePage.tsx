@@ -1,83 +1,18 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import { useTheme } from "../contexts/ThemeContext";
 import {
   Brain,
   Target,
   ArrowRight,
-  Bot,
-  Clock,
   Sparkles,
-  Code,
-  Database,
   BookOpen,
-  HelpCircle,
-  Rocket,
   Users,
   Award,
-  Zap,
-  BarChart,
-  Lightbulb,
   ChevronRight,
-  Play,
-  Star,
 } from "lucide-react";
 import { motion } from "framer-motion";
-
-const CategoryCard = ({
-  icon: Icon,
-  title,
-  description,
-  color,
-}: {
-  icon: typeof Brain;
-  title: string;
-  description: string;
-  color: string;
-}) => (
-  <motion.div
-    whileHover={{ scale: 1.05 }}
-    whileTap={{ scale: 0.98 }}
-    className="glass-card rounded-xl p-6 transition-all duration-300"
-  >
-    <div className={`p-2 rounded-lg ${color} w-fit mb-4`}>
-      <Icon className="w-6 h-6 text-gray-100" />
-    </div>
-    <h3 className="text-lg font-bold text-gray-100 mb-2">{title}</h3>
-    <p className="text-gray-400 text-sm">{description}</p>
-  </motion.div>
-);
-
-const ActionCard = ({
-  icon: Icon,
-  title,
-  description,
-  color,
-  to,
-}: {
-  icon: typeof Brain;
-  title: string;
-  description: string;
-  color: string;
-  to: string;
-}) => (
-  <Link
-    to={to}
-    className="glass-card rounded-xl p-6 transform hover:scale-105 transition-all duration-300 group"
-  >
-    <div className="flex items-center space-x-4 mb-4">
-      <div className={`p-3 rounded-lg ${color}`}>
-        <Icon className="w-6 h-6 text-gray-100" />
-      </div>
-      <h3 className="text-xl font-bold text-gray-100">{title}</h3>
-    </div>
-    <p className="text-gray-400 mb-4">{description}</p>
-    <div className="flex items-center text-gray-300 group-hover:text-gray-100">
-      <span className="mr-2">En savoir plus</span>
-      <ArrowRight className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" />
-    </div>
-  </Link>
-);
 
 const FeatureCard = ({
   icon: Icon,
@@ -87,438 +22,305 @@ const FeatureCard = ({
   icon: typeof Brain;
   title: string;
   description: string;
-}) => (
-  <motion.div
-    whileHover={{ y: -5 }}
-    className="glass-card rounded-xl p-6 hover:bg-gray-800/30 transition-colors duration-300"
-  >
-    <div className="flex items-center mb-4">
-      <div className="p-2 rounded-lg bg-purple-500/20 mr-3">
-        <Icon className="w-5 h-5 text-purple-400" />
-      </div>
-      <h3 className="text-lg font-bold text-gray-100">{title}</h3>
-    </div>
-    <p className="text-gray-400 text-sm">{description}</p>
-  </motion.div>
-);
+}) => {
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
 
-const TestimonialCard = ({
-  name,
-  role,
-  quote,
-  avatar,
-}: {
-  name: string;
-  role: string;
-  quote: string;
-  avatar: string;
-}) => (
-  <motion.div whileHover={{ y: -5 }} className="glass-card rounded-xl p-6">
-    <div className="flex items-center mb-4">
-      <img
-        src={avatar}
-        alt={name}
-        className="w-12 h-12 rounded-full object-cover mr-4 border-2 border-purple-500"
-      />
-      <div>
-        <h4 className="text-lg font-bold text-gray-100">{name}</h4>
-        <p className="text-sm text-gray-400">{role}</p>
+  return (
+    <motion.div
+      whileHover={{ y: -5 }}
+      className={`rounded-2xl p-6 transition-all duration-300 ${
+        isDark
+          ? "bg-gray-800/50 hover:bg-gray-800/70 border border-gray-700/50"
+          : "bg-white hover:shadow-lg border border-slate-200"
+      }`}
+    >
+      <div
+        className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 ${
+          isDark ? "bg-purple-500/20" : "bg-purple-100"
+        }`}
+      >
+        <Icon className={`w-6 h-6 ${isDark ? "text-purple-400" : "text-purple-600"}`} />
       </div>
-    </div>
-    <p className="text-gray-300 italic">"{quote}"</p>
-    <div className="mt-4 flex">
-      {[1, 2, 3, 4, 5].map(star => (
-        <Star key={star} className="w-4 h-4 text-yellow-400" fill="#FBBF24" />
-      ))}
-    </div>
-  </motion.div>
-);
+      <h3 className={`text-lg font-semibold mb-2 ${isDark ? "text-white" : "text-slate-900"}`}>
+        {title}
+      </h3>
+      <p className={`text-sm leading-relaxed ${isDark ? "text-gray-400" : "text-slate-600"}`}>
+        {description}
+      </p>
+    </motion.div>
+  );
+};
 
 const HomePage = () => {
   const { isAuthenticated } = useAuth();
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
 
   return (
-    <div className="min-h-screen bg-[#0A0A0F] relative overflow-hidden">
-      {/* Background Effects */}
-      <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?q=80&w=2074')] bg-cover bg-center opacity-10" />
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#0A0A0F]/50 to-[#0A0A0F]" />
+    <div
+      className={`min-h-screen transition-colors duration-300 ${
+        isDark ? "bg-[#0A0A0F]" : "bg-slate-50"
+      }`}
+    >
+      {/* Hero Section - Sobre et épuré */}
+      <div className="relative overflow-hidden">
+        {/* Subtle background gradient */}
+        <div
+          className={`absolute inset-0 ${
+            isDark
+              ? "bg-gradient-to-br from-purple-900/20 via-transparent to-blue-900/20"
+              : "bg-gradient-to-br from-purple-100/50 via-transparent to-blue-100/50"
+          }`}
+        />
 
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16">
-        {/* Hero Section */}
-        <div className="text-center mb-16">
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="text-4xl md:text-6xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 animate-gradient bg-300"
-          >
-            Votre Parcours en Intelligence Artificielle
-          </motion.h1>
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="text-lg md:text-xl text-gray-400 max-w-3xl mx-auto mb-8"
-          >
-            Une formation adaptative et personnalisée pour maîtriser l'IA, de la
-            théorie à la pratique
-          </motion.p>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.4 }}
-            className="flex flex-wrap justify-center gap-4"
-          >
-            <Link
-              to="/assessment"
-              className="px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl hover:from-purple-700 hover:to-blue-700 transition-all duration-300 flex items-center"
+        <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-24">
+          <div className="text-center max-w-3xl mx-auto">
+            {/* Badge */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="inline-flex items-center space-x-2 mb-6"
             >
-              <HelpCircle className="w-5 h-5 mr-2" />
-              Commencer l'évaluation
-            </Link>
-            {isAuthenticated && (
-              <Link
-                to="/dashboard"
-                className="px-6 py-3 bg-gray-800 text-white rounded-xl hover:bg-gray-700 transition-all duration-300 flex items-center"
+              <span
+                className={`px-4 py-1.5 rounded-full text-sm font-medium ${
+                  isDark
+                    ? "bg-purple-500/10 text-purple-400 border border-purple-500/20"
+                    : "bg-purple-100 text-purple-700"
+                }`}
               >
-                <Target className="w-5 h-5 mr-2" />
-                Mon tableau de bord
+                <Sparkles className="w-4 h-4 inline mr-1.5" />
+                Plateforme d'apprentissage IA
+              </span>
+            </motion.div>
+
+            {/* Main Heading */}
+            <motion.h1
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className={`text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight ${
+                isDark ? "text-white" : "text-slate-900"
+              }`}
+            >
+              Apprenez l'Intelligence
+              <br />
+              <span className="bg-gradient-to-r from-purple-500 to-blue-500 bg-clip-text text-transparent">
+                Artificielle
+              </span>
+            </motion.h1>
+
+            {/* Subtitle */}
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className={`text-lg md:text-xl mb-10 max-w-2xl mx-auto ${
+                isDark ? "text-gray-400" : "text-slate-600"
+              }`}
+            >
+              Une formation personnalisée et adaptative pour maîtriser l'IA,
+              de la théorie à la pratique.
+            </motion.p>
+
+            {/* CTA Buttons */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+              className="flex flex-col sm:flex-row items-center justify-center gap-4"
+            >
+              <Link
+                to="/assessment"
+                className="w-full sm:w-auto px-8 py-3.5 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-medium hover:from-purple-700 hover:to-blue-700 transition-all duration-300 flex items-center justify-center shadow-lg hover:shadow-xl"
+              >
+                Commencer l'évaluation
+                <ArrowRight className="w-5 h-5 ml-2" />
               </Link>
-            )}
-          </motion.div>
+              {isAuthenticated && (
+                <Link
+                  to="/dashboard"
+                  className={`w-full sm:w-auto px-8 py-3.5 rounded-xl font-medium transition-all duration-300 flex items-center justify-center ${
+                    isDark
+                      ? "bg-gray-800 text-white hover:bg-gray-700 border border-gray-700"
+                      : "bg-white text-slate-700 hover:bg-slate-100 border border-slate-200 shadow-sm"
+                  }`}
+                >
+                  <Target className="w-5 h-5 mr-2" />
+                  Mon tableau de bord
+                </Link>
+              )}
+            </motion.div>
+          </div>
         </div>
+      </div>
 
-        {/* Featured Courses Section */}
-        <div className="mb-20">
-          <div className="flex justify-between items-center mb-8">
-            <h2 className="text-2xl font-bold text-gray-100">
-              Parcours populaires
+      {/* Features Section */}
+      <div className={`py-20 ${isDark ? "bg-gray-900/30" : "bg-white"}`}>
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className={`text-2xl md:text-3xl font-bold mb-4 ${isDark ? "text-white" : "text-slate-900"}`}>
+              Pourquoi nous choisir ?
             </h2>
-            <Link
-              to="/goals"
-              className="text-purple-400 hover:text-purple-300 flex items-center"
-            >
-              Voir tous les parcours
-              <ChevronRight className="w-4 h-4 ml-1" />
-            </Link>
+            <p className={`max-w-2xl mx-auto ${isDark ? "text-gray-400" : "text-slate-600"}`}>
+              Une approche unique combinant personnalisation et ressources de qualité
+            </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <motion.div
-              whileHover={{ scale: 1.03 }}
-              className="glass-card rounded-xl overflow-hidden"
-            >
-              <div className="h-40 bg-gradient-to-r from-blue-500/30 to-purple-500/30 relative">
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <Brain className="w-16 h-16 text-white/70" />
-                </div>
-              </div>
-              <div className="p-6">
-                <div className="flex justify-between items-start mb-2">
-                  <h3 className="text-xl font-bold text-gray-100">
-                    Fondamentaux du Machine Learning
-                  </h3>
-                  <span className="px-2 py-1 bg-green-500/20 text-green-400 rounded-full text-xs">
-                    Débutant
-                  </span>
-                </div>
-                <p className="text-gray-400 mb-4">
-                  Maîtrisez les concepts de base du machine learning avec une
-                  approche pratique et théorique solide.
-                </p>
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center text-gray-500">
-                    <Clock className="w-4 h-4 mr-1" />
-                    <span>8 semaines</span>
-                  </div>
-                  <Link
-                    to="/goals"
-                    className="flex items-center text-purple-400 hover:text-purple-300"
-                  >
-                    <Play className="w-4 h-4 mr-1" />
-                    Commencer
-                  </Link>
-                </div>
-              </div>
-            </motion.div>
-
-            <motion.div
-              whileHover={{ scale: 1.03 }}
-              className="glass-card rounded-xl overflow-hidden"
-            >
-              <div className="h-40 bg-gradient-to-r from-green-500/30 to-blue-500/30 relative">
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <Bot className="w-16 h-16 text-white/70" />
-                </div>
-              </div>
-              <div className="p-6">
-                <div className="flex justify-between items-start mb-2">
-                  <h3 className="text-xl font-bold text-gray-100">
-                    Deep Learning Avancé
-                  </h3>
-                  <span className="px-2 py-1 bg-purple-500/20 text-purple-400 rounded-full text-xs">
-                    Avancé
-                  </span>
-                </div>
-                <p className="text-gray-400 mb-4">
-                  Plongez dans les architectures de réseaux de neurones profonds
-                  et leurs applications modernes.
-                </p>
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center text-gray-500">
-                    <Clock className="w-4 h-4 mr-1" />
-                    <span>16 semaines</span>
-                  </div>
-                  <Link
-                    to="/goals"
-                    className="flex items-center text-purple-400 hover:text-purple-300"
-                  >
-                    <Play className="w-4 h-4 mr-1" />
-                    Commencer
-                  </Link>
-                </div>
-              </div>
-            </motion.div>
-
-            <motion.div
-              whileHover={{ scale: 1.03 }}
-              className="glass-card rounded-xl overflow-hidden"
-            >
-              <div className="h-40 bg-gradient-to-r from-orange-500/30 to-red-500/30 relative">
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <Database className="w-16 h-16 text-white/70" />
-                </div>
-              </div>
-              <div className="p-6">
-                <div className="flex justify-between items-start mb-2">
-                  <h3 className="text-xl font-bold text-gray-100">
-                    Computer Vision Pratique
-                  </h3>
-                  <span className="px-2 py-1 bg-blue-500/20 text-blue-400 rounded-full text-xs">
-                    Intermédiaire
-                  </span>
-                </div>
-                <p className="text-gray-400 mb-4">
-                  Développez des applications de vision par ordinateur pour
-                  résoudre des problèmes réels.
-                </p>
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center text-gray-500">
-                    <Clock className="w-4 h-4 mr-1" />
-                    <span>12 semaines</span>
-                  </div>
-                  <Link
-                    to="/goals"
-                    className="flex items-center text-purple-400 hover:text-purple-300"
-                  >
-                    <Play className="w-4 h-4 mr-1" />
-                    Commencer
-                  </Link>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        </div>
-
-        {/* Stats Section */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-20">
-          <motion.div
-            whileHover={{ y: -5 }}
-            className="glass-card rounded-xl p-6 text-center"
-          >
-            <div className="text-3xl font-bold text-purple-400 mb-2">15+</div>
-            <p className="text-gray-300">Parcours d'apprentissage</p>
-          </motion.div>
-          <motion.div
-            whileHover={{ y: -5 }}
-            className="glass-card rounded-xl p-6 text-center"
-          >
-            <div className="text-3xl font-bold text-blue-400 mb-2">200+</div>
-            <p className="text-gray-300">Ressources pédagogiques</p>
-          </motion.div>
-          <motion.div
-            whileHover={{ y: -5 }}
-            className="glass-card rounded-xl p-6 text-center"
-          >
-            <div className="text-3xl font-bold text-green-400 mb-2">1000+</div>
-            <p className="text-gray-300">Apprenants actifs</p>
-          </motion.div>
-        </div>
-
-        {/* Main Action Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-20 max-w-4xl mx-auto">
-          <ActionCard
-            icon={HelpCircle}
-            title="Évaluation Personnalisée"
-            description="Découvrez votre niveau actuel et obtenez des recommandations sur mesure pour votre parcours d'apprentissage"
-            color="bg-purple-500/20"
-            to="/assessment"
-          />
-          {isAuthenticated ? (
-            <ActionCard
-              icon={Target}
-              title="Objectifs d'Apprentissage"
-              description="Explorez nos parcours structurés et choisissez celui qui correspond à vos ambitions professionnelles"
-              color="bg-blue-500/20"
-              to="/goals"
-            />
-          ) : (
-            <ActionCard
-              icon={Target}
-              title="Commencer votre Parcours"
-              description="Passez l'évaluation pour accéder à des objectifs d'apprentissage personnalisés"
-              color="bg-blue-500/20"
-              to="/assessment"
-            />
-          )}
-        </div>
-
-        {/* Features Section */}
-        <div className="mb-20">
-          <h2 className="text-3xl font-bold text-center text-gray-100 mb-4">
-            Pourquoi choisir notre plateforme ?
-          </h2>
-          <p className="text-center text-gray-400 mb-10 max-w-3xl mx-auto">
-            Notre approche unique combine évaluation personnalisée, parcours
-            adaptatifs et ressources de qualité
-          </p>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <FeatureCard
-              icon={Rocket}
-              title="Parcours Personnalisés"
-              description="Des recommandations adaptées à votre profil, vos compétences et vos objectifs professionnels"
+              icon={Brain}
+              title="Parcours Adaptatifs"
+              description="Des recommandations basées sur votre niveau et vos objectifs professionnels."
             />
             <FeatureCard
-              icon={Lightbulb}
-              title="Apprentissage Adaptatif"
-              description="Le contenu s'adapte à votre progression et à votre style d'apprentissage"
-            />
-            <FeatureCard
-              icon={BarChart}
-              title="Suivi de Progression"
-              description="Visualisez votre évolution et identifiez vos points forts et axes d'amélioration"
+              icon={BookOpen}
+              title="Contenu Structuré"
+              description="Des modules progressifs couvrant tous les aspects de l'IA moderne."
             />
             <FeatureCard
               icon={Users}
               title="Communauté Active"
-              description="Échangez avec d'autres apprenants et experts du domaine"
+              description="Échangez avec d'autres apprenants et experts du domaine."
             />
             <FeatureCard
               icon={Award}
-              title="Certifications Reconnues"
-              description="Validez vos compétences avec des certifications valorisées par les employeurs"
-            />
-            <FeatureCard
-              icon={Zap}
-              title="Ressources à Jour"
-              description="Contenu régulièrement mis à jour pour suivre l'évolution rapide de l'IA"
+              title="Certifications"
+              description="Validez vos compétences avec des certifications reconnues."
             />
           </div>
         </div>
+      </div>
 
-        {/* Domains Grid */}
-        <div className="mb-20">
-          <h2 className="text-3xl font-bold text-center text-gray-100 mb-4">
-            Domaines d'Expertise
-          </h2>
-          <p className="text-center text-gray-400 mb-10">
-            Explorez les différentes branches de l'IA et trouvez votre voie
-          </p>
+      {/* Quick Start Section */}
+      <div className="py-20">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Card 1 */}
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              className={`rounded-2xl p-8 transition-all duration-300 ${
+                isDark
+                  ? "bg-gradient-to-br from-purple-900/30 to-purple-800/10 border border-purple-500/20"
+                  : "bg-gradient-to-br from-purple-50 to-purple-100/50 border border-purple-200"
+              }`}
+            >
+              <div
+                className={`w-14 h-14 rounded-xl flex items-center justify-center mb-6 ${
+                  isDark ? "bg-purple-500/20" : "bg-purple-200"
+                }`}
+              >
+                <Brain className={`w-7 h-7 ${isDark ? "text-purple-400" : "text-purple-600"}`} />
+              </div>
+              <h3 className={`text-xl font-bold mb-3 ${isDark ? "text-white" : "text-slate-900"}`}>
+                Évaluation Personnalisée
+              </h3>
+              <p className={`mb-6 ${isDark ? "text-gray-400" : "text-slate-600"}`}>
+                Découvrez votre niveau actuel et obtenez des recommandations sur mesure pour votre parcours d'apprentissage.
+              </p>
+              <Link
+                to="/assessment"
+                className={`inline-flex items-center font-medium ${
+                  isDark ? "text-purple-400 hover:text-purple-300" : "text-purple-600 hover:text-purple-700"
+                }`}
+              >
+                Commencer
+                <ChevronRight className="w-4 h-4 ml-1" />
+              </Link>
+            </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <CategoryCard
-              icon={Brain}
-              title="Mathématiques IA"
-              description="Vecteurs, matrices, gradients avec analogies concrètes (alpiniste, GPS, voiture)"
-              color="bg-blue-500/20"
-            />
-            <CategoryCard
-              icon={Code}
-              title="Python IA"
-              description="NumPy, Pandas, Matplotlib avec exemples sénégalais et projets pratiques"
-              color="bg-green-500/20"
-            />
-            <CategoryCard
-              icon={Database}
-              title="Machine Learning"
-              description="Algorithmes ML avec cas d'usage africains et applications réelles"
-              color="bg-purple-500/20"
-            />
-            <CategoryCard
-              icon={Bot}
-              title="Deep Learning"
-              description="Réseaux de neurones et architectures avancées"
-              color="bg-pink-500/20"
-            />
-            <CategoryCard
-              icon={BookOpen}
-              title="NLP"
-              description="Traitement du langage naturel, Transformers et modèles de langage"
-              color="bg-amber-500/20"
-            />
-            <CategoryCard
-              icon={Sparkles}
-              title="Computer Vision"
-              description="Vision par ordinateur, CNN et applications pratiques"
-              color="bg-cyan-500/20"
-            />
+            {/* Card 2 */}
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              className={`rounded-2xl p-8 transition-all duration-300 ${
+                isDark
+                  ? "bg-gradient-to-br from-blue-900/30 to-blue-800/10 border border-blue-500/20"
+                  : "bg-gradient-to-br from-blue-50 to-blue-100/50 border border-blue-200"
+              }`}
+            >
+              <div
+                className={`w-14 h-14 rounded-xl flex items-center justify-center mb-6 ${
+                  isDark ? "bg-blue-500/20" : "bg-blue-200"
+                }`}
+              >
+                <Target className={`w-7 h-7 ${isDark ? "text-blue-400" : "text-blue-600"}`} />
+              </div>
+              <h3 className={`text-xl font-bold mb-3 ${isDark ? "text-white" : "text-slate-900"}`}>
+                Objectifs d'Apprentissage
+              </h3>
+              <p className={`mb-6 ${isDark ? "text-gray-400" : "text-slate-600"}`}>
+                Explorez nos parcours structurés et choisissez celui qui correspond à vos ambitions.
+              </p>
+              <Link
+                to={isAuthenticated ? "/goals" : "/assessment"}
+                className={`inline-flex items-center font-medium ${
+                  isDark ? "text-blue-400 hover:text-blue-300" : "text-blue-600 hover:text-blue-700"
+                }`}
+              >
+                Explorer
+                <ChevronRight className="w-4 h-4 ml-1" />
+              </Link>
+            </motion.div>
           </div>
         </div>
+      </div>
 
-        {/* Testimonials */}
-        <div className="mb-20">
-          <h2 className="text-3xl font-bold text-center text-gray-100 mb-4">
-            Ce que disent nos apprenants
-          </h2>
-          <p className="text-center text-gray-400 mb-10">
-            Découvrez les expériences de ceux qui ont suivi nos parcours
-          </p>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <TestimonialCard
-              name="Serigne Modou Guèye"
-              role="Data Scientist chez Synapsis"
-              quote="Cette plateforme m'a permis de passer de débutant à expert en ML en seulement 6 mois. Les parcours sont parfaitement structurés et les ressources sont de grande qualité."
-              avatar="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
-            />
-            <TestimonialCard
-              name="Lamine Ba"
-              role="ML Engineer chez Forge ESP"
-              quote="Les quiz et évaluations m'ont permis d'identifier mes lacunes et de me concentrer sur les compétences essentielles. J'ai pu décrocher mon poste actuel grâce à cette formation."
-              avatar="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
-            />
-            <TestimonialCard
-              name="Amina Ndiaye"
-              role="Chercheuse IA au Curi"
-              quote="La qualité pédagogique est exceptionnelle. J'apprécie particulièrement l'approche progressive et la diversité des ressources proposées. Je recommande vivement cette plateforme."
-              avatar="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
-            />
+      {/* Stats Section - Minimal */}
+      <div className={`py-16 ${isDark ? "bg-gray-900/50" : "bg-slate-100"}`}>
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-3 gap-8">
+            <div className="text-center">
+              <div className={`text-3xl md:text-4xl font-bold mb-2 ${isDark ? "text-purple-400" : "text-purple-600"}`}>
+                15+
+              </div>
+              <div className={`text-sm ${isDark ? "text-gray-400" : "text-slate-600"}`}>
+                Parcours disponibles
+              </div>
+            </div>
+            <div className="text-center">
+              <div className={`text-3xl md:text-4xl font-bold mb-2 ${isDark ? "text-blue-400" : "text-blue-600"}`}>
+                200+
+              </div>
+              <div className={`text-sm ${isDark ? "text-gray-400" : "text-slate-600"}`}>
+                Ressources
+              </div>
+            </div>
+            <div className="text-center">
+              <div className={`text-3xl md:text-4xl font-bold mb-2 ${isDark ? "text-green-400" : "text-green-600"}`}>
+                1000+
+              </div>
+              <div className={`text-sm ${isDark ? "text-gray-400" : "text-slate-600"}`}>
+                Apprenants
+              </div>
+            </div>
           </div>
         </div>
+      </div>
 
-        {/* CTA Section */}
-        <div className="text-center mb-10">
-          <h2 className="text-3xl font-bold text-gray-100 mb-4">
-            Prêt à Commencer ?
+      {/* Final CTA */}
+      <div className="py-20">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className={`text-2xl md:text-3xl font-bold mb-4 ${isDark ? "text-white" : "text-slate-900"}`}>
+            Prêt à commencer ?
           </h2>
-          <p className="text-gray-400 mb-8 max-w-2xl mx-auto">
-            Évaluez vos compétences et commencez votre parcours personnalisé dès
-            aujourd'hui
+          <p className={`mb-8 ${isDark ? "text-gray-400" : "text-slate-600"}`}>
+            Évaluez vos compétences et démarrez votre parcours personnalisé dès aujourd'hui.
           </p>
-
           <Link
             to="/assessment"
-            className="inline-flex items-center px-8 py-3 text-lg font-medium text-white bg-gradient-to-r from-purple-600 to-blue-600 rounded-xl hover:from-purple-700 hover:to-blue-700 transition-all duration-300"
+            className="inline-flex items-center px-8 py-3.5 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-medium hover:from-purple-700 hover:to-blue-700 transition-all duration-300 shadow-lg hover:shadow-xl"
           >
             Commencer l'évaluation
-            <ArrowRight className="ml-2 w-5 h-5" />
+            <ArrowRight className="w-5 h-5 ml-2" />
           </Link>
         </div>
+      </div>
 
-        {/* Footer */}
-        <div className="border-t border-gray-800 pt-8 mt-16 text-center">
-          <p className="text-gray-500 text-sm">
+      {/* Footer */}
+      <div className={`py-8 border-t ${isDark ? "border-gray-800" : "border-slate-200"}`}>
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <p className={`text-center text-sm ${isDark ? "text-gray-500" : "text-slate-500"}`}>
             © 2025 AI4Nieup - Centre d'Excellence en Intelligence Artificielle
           </p>
         </div>
